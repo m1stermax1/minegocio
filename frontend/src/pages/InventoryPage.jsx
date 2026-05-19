@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import Sidebar from '../components/Sidebar.jsx';
 import SearchBar from '../components/SearchBar.jsx';
 import InventoryTable from '../components/InventoryTable.jsx';
@@ -12,6 +12,8 @@ function InventoryPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [loadingInventory, setLoadingInventory] = useState(true);
   const [loadingProviders, setLoadingProviders] = useState(false);
+  const [notification, setNotification] = useState('');
+  const inventoryTableRef = useRef(null);
 
   async function loadInventory() {
     try {
@@ -26,24 +28,24 @@ function InventoryPage() {
     }
   }
 
+  async function loadProviders() {
+    try {
+      setLoadingProviders(true);
+      const data = await fetchProviders();
+      setProviders(data);
+    } catch (error) {
+      console.error('Error cargando proveedoras:', error);
+      setProviders([]);
+    } finally {
+      setLoadingProviders(false);
+    }
+  }
+
   useEffect(() => {
-    loadInventory();
+    loadProviders();
   }, []);
 
   useEffect(() => {
-    async function loadProviders() {
-      try {
-        setLoadingProviders(true);
-        const data = await fetchProviders();
-        setProviders(data);
-      } catch (error) {
-        console.error('Error cargando proveedoras:', error);
-        setProviders([]);
-      } finally {
-        setLoadingProviders(false);
-      }
-    }
-
     if (activeView === 'providers') {
       loadProviders();
     }
@@ -52,6 +54,18 @@ function InventoryPage() {
       loadInventory();
     }
   }, [activeView]);
+
+  const handleItemAdded = () => {
+    loadInventory();
+    setNotification('Item agregado correctamente a la lista.');
+    window.setTimeout(() => setNotification(''), 3200);
+  };
+
+  const handleAddItem = () => {
+    if (inventoryTableRef.current) {
+      inventoryTableRef.current.openAddItemModal();
+    }
+  };
 
   const filteredInventory = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -103,9 +117,39 @@ function InventoryPage() {
         </div>
 
         <section className="page-panel">
-          <SearchBar query={searchQuery} onChange={setSearchQuery} />
+          <div className="controls-row">
+            <SearchBar query={searchQuery} onChange={setSearchQuery} />
+            {isInventory && (
+              <div className="controls-buttons">
+                <button
+                  className="primary-btn"
+                  type="button"
+                  onClick={handleAddItem}
+                >
+                  Agregar item
+                </button>
+                <button
+                  className="bulk-action-btn"
+                  disabled={!inventoryTableRef.current?.getSelectedCount?.()}
+                >
+                  Acción masiva
+                </button>
+              </div>
+            )}
+          </div>
+          {notification && (
+            <div className="toast-notification">
+              {notification}
+            </div>
+          )}
           {isInventory ? (
-            <InventoryTable items={filteredInventory} loading={loadingInventory} />
+            <InventoryTable
+              ref={inventoryTableRef}
+              items={filteredInventory}
+              loading={loadingInventory}
+              onItemAdded={handleItemAdded}
+              providers={providers}
+            />
           ) : (
             <ProvidersTable items={filteredProviders} loading={loadingProviders} />
           )}

@@ -22,4 +22,9 @@ export async function updateInventoryRowStatus(id, estado) {
   return response.data;
 }
 
+export async function addInventoryItem(item) {
+  const response = await api.post('/inventory', item);
+  return response.data;
+}
+
 export default api;

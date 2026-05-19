@@ -2,10 +2,11 @@ import { google } from "googleapis";
 import dotenv from "dotenv";
 
 dotenv.config();
+console.log(process.env.GOOGLE_PRIVATE_KEY);
 
 const SCOPES = ["https://www.googleapis.com/auth/spreadsheets"];
 
-export async function getInventoryData() {
+async function getSheetsClient() {
   const spreadsheetId = process.env.SPREADSHEET_ID;
 
   if (!spreadsheetId) {
@@ -16,37 +17,34 @@ export async function getInventoryData() {
     credentials: {
       type: "service_account",
       project_id: process.env.GOOGLE_PROJECT_ID,
-      private_key_id: process.env.GOOGLE_PRIVATE_KEY_ID,
-
-      private_key: process.env.GOOGLE_PRIVATE_KEY.replace(
-        /\\n/g,
-        "\n",
-      ),
-
+      private_key_id: process.env.GOOGLE_PRIVATE_KEY_ID.replace(/\\n/g, "\n"),
+      private_key: process.env.GOOGLE_PRIVATE_KEY,
       client_email: process.env.GOOGLE_CLIENT_EMAIL,
       client_id: process.env.GOOGLE_CLIENT_ID,
     },
-
     scopes: SCOPES,
   });
 
   const client = await auth.getClient();
+  return {
+    sheets: google.sheets({ version: "v4", auth: client }),
+    spreadsheetId,
+  };
+}
 
-  const sheets = google.sheets({
-    version: "v4",
-    auth: client,
-  });
+export async function getInventoryData() {
+  const { sheets, spreadsheetId } = await getSheetsClient();
 
   const response = await sheets.spreadsheets.get({
     spreadsheetId,
-    ranges: ["local!A:E"],
+    ranges: ["LOCAL MAXI!A:E"],
     includeGridData: true,
   });
 
   const rows =
     response.data.sheets[0].data[0].rowData || [];
 
-  return rows.slice(0, 10).map((row, index) => {
+  return rows.map((row, index) => {
     const cells = row.values || [];
 
     // CELDA CODIGO (columna A)
@@ -88,40 +86,11 @@ export async function getInventoryData() {
 }
 
 export async function getProvidersData() {
-  const spreadsheetId = process.env.SPREADSHEET_ID;
-
-  if (!spreadsheetId) {
-    throw new Error("Falta SPREADSHEET_ID en .env");
-  }
-
-  const auth = new google.auth.GoogleAuth({
-    credentials: {
-      type: "service_account",
-      project_id: process.env.GOOGLE_PROJECT_ID,
-      private_key_id: process.env.GOOGLE_PRIVATE_KEY_ID,
-
-      private_key: process.env.GOOGLE_PRIVATE_KEY.replace(
-        /\\n/g,
-        "\n",
-      ),
-
-      client_email: process.env.GOOGLE_CLIENT_EMAIL,
-      client_id: process.env.GOOGLE_CLIENT_ID,
-    },
-
-    scopes: SCOPES,
-  });
-
-  const client = await auth.getClient();
-
-  const sheets = google.sheets({
-    version: "v4",
-    auth: client,
-  });
+  const { sheets, spreadsheetId } = await getSheetsClient();
 
   const response = await sheets.spreadsheets.get({
     spreadsheetId,
-    ranges: ["local!A:F"],
+    ranges: ["LOCAL MAXI!A:F"],
     includeGridData: true,
   });
 
@@ -156,52 +125,54 @@ export async function getProvidersData() {
   }).filter((item) => item.nombre);
 }
 
+export async function getProvidersList() {
+  const { sheets, spreadsheetId } = await getSheetsClient();
+
+  const response = await sheets.spreadsheets.get({
+    spreadsheetId,
+    ranges: ["LOCAL MAXI!D:D"],
+    includeGridData: true,
+  });
+
+  const rows =
+    response.data.sheets[0].data[0].rowData || [];
+
+  // Extraer valores únicos de la columna D (proveedora)
+  const providersSet = new Set();
+  
+  rows.forEach((row) => {
+    const cells = row.values || [];
+    const proveedora = cells[0]?.formattedValue?.trim();
+    
+    if (proveedora && proveedora.toLowerCase() !== "proveedora") {
+      providersSet.add(proveedora);
+    }
+  });
+
+  // Convertir a array de objetos
+  return Array.from(providersSet).map((nombre, index) => ({
+    id: index,
+    nombre,
+  }));
+}
+
 export async function setInventoryRowStatus(rowIndex, estado) {
-  const spreadsheetId = process.env.SPREADSHEET_ID;
-
-  if (!spreadsheetId) {
-    throw new Error("Falta SPREADSHEET_ID en .env");
-  }
-
-  const auth = new google.auth.GoogleAuth({
-    credentials: {
-      type: "service_account",
-      project_id: process.env.GOOGLE_PROJECT_ID,
-      private_key_id: process.env.GOOGLE_PRIVATE_KEY_ID,
-
-      private_key: process.env.GOOGLE_PRIVATE_KEY.replace(
-        /\\n/g,
-        "\n",
-      ),
-
-      client_email: process.env.GOOGLE_CLIENT_EMAIL,
-      client_id: process.env.GOOGLE_CLIENT_ID,
-    },
-
-    scopes: SCOPES,
-  });
-
-  const client = await auth.getClient();
-
-  const sheets = google.sheets({
-    version: "v4",
-    auth: client,
-  });
+  const { sheets, spreadsheetId } = await getSheetsClient();
 
   const metadata = await sheets.spreadsheets.get({
     spreadsheetId,
-    ranges: ["local!A:A"],
+    ranges: ["LOCAL MAXI!A:A"],
     includeGridData: false,
     fields: "sheets.properties",
   });
 
   const sheet = metadata.data.sheets?.find(
     (sheetItem) =>
-      sheetItem.properties?.title?.toLowerCase() === "local",
+      sheetItem.properties?.title?.toLowerCase() === "LOCAL MAXI",
   );
 
   if (!sheet) {
-    throw new Error("No se encontró la hoja 'local'");
+    throw new Error("No se encontró la hoja 'LOCAL MAXI'");
   }
 
   const sheetId = sheet.properties.sheetId;
@@ -232,6 +203,27 @@ export async function setInventoryRowStatus(rowIndex, estado) {
           },
         },
       ],
+    },
+  });
+}
+
+export async function appendInventoryItems(items) {
+  const { sheets, spreadsheetId } = await getSheetsClient();
+
+  const values = items.map((item, index) => [
+    `AUTO-${Date.now()}-${index + 1}`,
+    item.nombre,
+    item.precio?.toString() || '',
+    item.proveedora || '',
+  ]);
+
+  await sheets.spreadsheets.values.append({
+    spreadsheetId,
+    range: 'LOCAL MAXI!A:D',
+    valueInputOption: 'RAW',
+    insertDataOption: 'INSERT_ROWS',
+    requestBody: {
+      values,
     },
   });
 }
