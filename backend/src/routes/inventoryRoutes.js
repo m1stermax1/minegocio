@@ -1,7 +1,7 @@
 import express from 'express';
 import {
   getInventoryData,
-  getProvidersList,
+  getProvidersData,
   setInventoryRowStatus,
   appendInventoryItems,
 } from '../services/sheetsService.js';
@@ -20,7 +20,7 @@ router.get('/', async (req, res) => {
 
 router.get('/providers', async (req, res) => {
   try {
-    const providers = await getProvidersList();
+    const providers = await getProvidersData();
     res.json(providers);
   } catch (error) {
     console.error('Error al cargar proveedoras:', error);
@@ -55,8 +55,12 @@ router.post('/', async (req, res) => {
   }
 
   try {
-    await appendInventoryItems(preparedItems);
-    res.json({ success: true });
+    const result = await appendInventoryItems(preparedItems);
+    const barcodeUrls = result.generatedBarcodes.map(({ codigo, fileName }) => ({
+      codigo,
+      url: `/barcodes/${fileName}`,
+    }));
+    res.json({ success: true, barcodes: barcodeUrls });
   } catch (error) {
     console.error('Error agregando item en Sheets:', error);
     res.status(500).json({ error: 'No se pudo agregar el item' });

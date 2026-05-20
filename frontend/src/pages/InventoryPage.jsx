@@ -1,18 +1,18 @@
-import { useEffect, useMemo, useState, useRef } from 'react';
-import Sidebar from '../components/Sidebar.jsx';
-import SearchBar from '../components/SearchBar.jsx';
-import InventoryTable from '../components/InventoryTable.jsx';
-import ProvidersTable from '../components/ProvidersTable.jsx';
-import { fetchInventory, fetchProviders } from '../services/api.js';
+import { useEffect, useMemo, useState, useRef } from "react";
+import Sidebar from "../components/Sidebar.jsx";
+import SearchBar from "../components/SearchBar.jsx";
+import InventoryTable from "../components/InventoryTable.jsx";
+import ProvidersTable from "../components/ProvidersTable.jsx";
+import { fetchInventory, fetchProviders } from "../services/api.js";
 
 function InventoryPage() {
-  const [activeView, setActiveView] = useState('inventory');
+  const [activeView, setActiveView] = useState("inventory");
   const [inventory, setInventory] = useState([]);
   const [providers, setProviders] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [loadingInventory, setLoadingInventory] = useState(true);
   const [loadingProviders, setLoadingProviders] = useState(false);
-  const [notification, setNotification] = useState('');
+  const [notification, setNotification] = useState("");
   const inventoryTableRef = useRef(null);
 
   async function loadInventory() {
@@ -21,7 +21,7 @@ function InventoryPage() {
       const data = await fetchInventory();
       setInventory(data);
     } catch (error) {
-      console.error('Error cargando inventario:', error);
+      console.error("Error cargando inventario:", error);
       setInventory([]);
     } finally {
       setLoadingInventory(false);
@@ -34,7 +34,7 @@ function InventoryPage() {
       const data = await fetchProviders();
       setProviders(data);
     } catch (error) {
-      console.error('Error cargando proveedoras:', error);
+      console.error("Error cargando proveedoras:", error);
       setProviders([]);
     } finally {
       setLoadingProviders(false);
@@ -46,19 +46,19 @@ function InventoryPage() {
   }, []);
 
   useEffect(() => {
-    if (activeView === 'providers') {
+    if (activeView === "providers" || activeView === "pagos") {
       loadProviders();
     }
 
-    if (activeView === 'inventory') {
+    if (activeView === "inventory" || activeView === "ventas") {
       loadInventory();
     }
   }, [activeView]);
 
   const handleItemAdded = () => {
     loadInventory();
-    setNotification('Item agregado correctamente a la lista.');
-    window.setTimeout(() => setNotification(''), 3200);
+    setNotification("Item agregado correctamente a la lista.");
+    window.setTimeout(() => setNotification(""), 3200);
   };
 
   const handleAddItem = () => {
@@ -87,23 +87,44 @@ function InventoryPage() {
     }
 
     return providers.filter((item) => {
-      const codigo = item.codigo?.toLowerCase() || '';
-      const nombre = item.nombre?.toLowerCase() || '';
-      const descripcion = item.descripcion?.toLowerCase() || '';
-      const precio = item.precio?.toString().toLowerCase() || '';
-      const estado = item.estado?.toLowerCase() || '';
+      const codigo = item.codigo?.toLowerCase() || "";
+      const nombre = item.nombre?.toLowerCase() || "";
+      const descripcion = item.descripcion?.toLowerCase() || "";
+      const precio = item.precio?.toString().toLowerCase() || "";
+      const estado = item.estado?.toLowerCase() || "";
+      const pago = item.pago?.toLowerCase() || "";
       return (
         codigo.includes(query) ||
         nombre.includes(query) ||
         descripcion.includes(query) ||
         precio.includes(query) ||
-        estado.includes(query)
+        estado.includes(query) ||
+        pago.includes(query)
       );
     });
   }, [providers, searchQuery]);
 
-  const pageTitle = activeView === 'inventory' ? 'Inventario' : 'Proveedoras';
-  const isInventory = activeView === 'inventory';
+  const filteredSales = useMemo(() => {
+    return filteredInventory.filter((item) => item.estado?.toLowerCase() === 'vendido');
+  }, [filteredInventory]);
+
+  const filteredPayments = useMemo(() => {
+    return filteredProviders.filter((item) => item.pago?.toLowerCase() === 'pagado');
+  }, [filteredProviders]);
+
+  const pageTitle =
+    activeView === "inventory"
+      ? "Inventario"
+      : activeView === "providers"
+      ? "Proveedoras"
+      : activeView === "ventas"
+      ? "Ventas"
+      : "Pagos";
+
+  const isInventory = activeView === "inventory";
+  const isProviders = activeView === "providers";
+  const isSales = activeView === "ventas";
+  const isPayments = activeView === "pagos";
 
   return (
     <div className="layout">
@@ -136,11 +157,21 @@ function InventoryPage() {
                 </button>
               </div>
             )}
+            {isProviders && (
+              <div className="controls-buttons">
+                <button
+                  className="primary-btn"
+                  type="button"
+                  onClick={handleAddItem}
+                >
+                  Agregar proveedora
+                </button>
+           
+              </div>
+            )}
           </div>
           {notification && (
-            <div className="toast-notification">
-              {notification}
-            </div>
+            <div className="toast-notification">{notification}</div>
           )}
           {isInventory ? (
             <InventoryTable
@@ -150,8 +181,27 @@ function InventoryPage() {
               onItemAdded={handleItemAdded}
               providers={providers}
             />
+          ) : isSales ? (
+            <InventoryTable
+              items={filteredSales}
+              loading={loadingInventory}
+              providers={providers}
+              showSelection={false}
+            />
+          ) : isPayments ? (
+            <InventoryTable
+              items={filteredPayments.map((item) => ({
+                ...item,
+                proveedora: item.nombre,
+              }))}
+              loading={loadingProviders}
+              showSelection={false}
+            />
           ) : (
-            <ProvidersTable items={filteredProviders} loading={loadingProviders} />
+            <ProvidersTable
+              items={filteredProviders}
+              loading={loadingProviders}
+            />
           )}
         </section>
       </main>

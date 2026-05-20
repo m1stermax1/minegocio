@@ -1,10 +1,43 @@
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import bwipjs from "bwip-js";
 import { google } from "googleapis";
 import dotenv from "dotenv";
 
 dotenv.config();
-console.log(process.env.GOOGLE_PRIVATE_KEY);
 
 const SCOPES = ["https://www.googleapis.com/auth/spreadsheets"];
+
+function getCellText(cell) {
+  return cell?.formattedValue?.toString().trim() || "";
+}
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const BARCODES_DIR = path.join(__dirname, "..", "..", "barcodes");
+fs.mkdirSync(BARCODES_DIR, { recursive: true });
+
+function generateBarcodeSvg(code) {
+  const svgString = bwipjs.toSVG({
+    bcid: "code128",
+    text: code,
+    scale: 3,
+    height: 40,
+    includetext: true,
+    textxalign: "center",
+    textsize: 13,
+    backgroundcolor: "FFFFFF",
+    paddingwidth: 10,
+    paddingheight: 10,
+  });
+
+  const safeCode = code.replace(/[^A-Za-z0-9_-]/g, "_");
+  const fileName = `${safeCode}.svg`;
+  const filePath = path.join(BARCODES_DIR, fileName);
+  fs.writeFileSync(filePath, svgString, "utf8");
+  return { fileName, filePath };
+}
 
 async function getSheetsClient() {
   const spreadsheetId = process.env.SPREADSHEET_ID;
@@ -41,48 +74,43 @@ export async function getInventoryData() {
     includeGridData: true,
   });
 
-  const rows =
-    response.data.sheets[0].data[0].rowData || [];
+  const rows = response.data.sheets[0].data[0].rowData || [];
 
-  return rows.map((row, index) => {
-    const cells = row.values || [];
+  return rows
+    .filter((row) => {
+      const cells = row.values || [];
 
-    // CELDA CODIGO (columna A)
-    const codigoCell = cells[0];
+      // verifica si alguna celda tiene contenido
+      return cells.some((cell) => {
+        const value =
+          cell?.formattedValue ||
+          cell?.effectiveValue?.stringValue ||
+          cell?.effectiveValue?.numberValue;
 
-    // TEXTO
-    const codigo =
-      codigoCell?.formattedValue || "";
+        return value !== undefined && value !== "";
+      });
+    })
+    .map((row, index) => {
+      const cells = row.values || [];
 
-    // COLOR DE FONDO
-    const bg =
-      codigoCell?.effectiveFormat?.backgroundColor;
+      const codigo = getCellText(cells[0]);
+      const descripcion = getCellText(cells[1]);
+      const precio = getCellText(cells[2]);
+      const proveedora = getCellText(cells[3]) || "mío";
 
-    // Detectar verde
-    const isGreen =
-      bg &&
-      bg.green > 0.5 &&
-      bg.red < 0.5;
+      const bg = cells[0]?.effectiveFormat?.backgroundColor;
 
-    return {
-      id: index,
+      const isGreen = bg && bg.green > 0.5 && bg.red < 0.5;
 
-      codigo,
-
-      descripcion:
-        cells[1]?.formattedValue || "",
-
-      precio:
-        cells[2]?.formattedValue || "",
-
-      proveedora:
-        cells[3]?.formattedValue || "mío",
-
-      estado: isGreen
-        ? "vendido"
-        : "en stock",
-    };
-  });
+      return {
+        id: index,
+        codigo,
+        descripcion,
+        precio,
+        proveedora,
+        estado: isGreen ? "vendido" : "en stock",
+      };
+    });
 }
 
 export async function getProvidersData() {
@@ -94,35 +122,32 @@ export async function getProvidersData() {
     includeGridData: true,
   });
 
-  const rows =
-    response.data.sheets[0].data[0].rowData || [];
+  const rows = response.data.sheets[0].data[0].rowData || [];
 
-  return rows.map((row, index) => {
-    const cells = row.values || [];
-    const codigo = cells[0]?.formattedValue || "";
-    const precioRaw = cells[2]?.formattedValue || "";
-    const precioNumber = Number(precioRaw);
-    const pagoRaw = cells[5]?.formattedValue?.toString().trim().toLowerCase() || "";
+  return rows
+    .map((row, index) => {
+      const cells = row.values || [];
+      const codigo = getCellText(cells[0]);
+      const descripcion = getCellText(cells[1]);
+      const precioRaw = getCellText(cells[2]);
+      const nombre = getCellText(cells[3]);
+      const pagoRaw = getCellText(cells[5]).toLowerCase();
 
-    const bg =
-      cells[0]?.effectiveFormat?.backgroundColor;
+      const bg = cells[0]?.effectiveFormat?.backgroundColor;
+      const isGreen = bg && bg.green > 0.5 && bg.red < 0.5;
 
-    const isGreen =
-      bg &&
-      bg.green > 0.5 &&
-      bg.red < 0.5;
-
-    return {
-      id: index,
-      codigo,
-      nombre: cells[3]?.formattedValue || "",
-      descripcion: cells[1]?.formattedValue || "",
-      precio: precioRaw,
-      ganancia: !Number.isNaN(precioNumber) ? "25%" : "25%",
-      estado: isGreen ? "vendido" : "en stock",
-      pago: pagoRaw ? "pagado" : "impago",
-    };
-  }).filter((item) => item.nombre);
+      return {
+        id: index,
+        codigo,
+        nombre,
+        descripcion,
+        precio: precioRaw,
+        ganancia: "25%",
+        estado: isGreen ? "vendido" : "en stock",
+        pago: pagoRaw ? "pagado" : "impago",
+      };
+    })
+    .filter((item) => item.nombre);
 }
 
 export async function getProvidersList() {
@@ -134,16 +159,15 @@ export async function getProvidersList() {
     includeGridData: true,
   });
 
-  const rows =
-    response.data.sheets[0].data[0].rowData || [];
+  const rows = response.data.sheets[0].data[0].rowData || [];
 
   // Extraer valores únicos de la columna D (proveedora)
   const providersSet = new Set();
-  
+
   rows.forEach((row) => {
     const cells = row.values || [];
     const proveedora = cells[0]?.formattedValue?.trim();
-    
+
     if (proveedora && proveedora.toLowerCase() !== "proveedora") {
       providersSet.add(proveedora);
     }
@@ -167,8 +191,7 @@ export async function setInventoryRowStatus(rowIndex, estado) {
   });
 
   const sheet = metadata.data.sheets?.find(
-    (sheetItem) =>
-      sheetItem.properties?.title?.toLowerCase() === "LOCAL MAXI",
+    (sheetItem) => sheetItem.properties?.title?.toLowerCase() === "local maxi",
   );
 
   if (!sheet) {
@@ -192,11 +215,32 @@ export async function setInventoryRowStatus(rowIndex, estado) {
               startRowIndex: rowIndex,
               endRowIndex: rowIndex + 1,
               startColumnIndex: 0,
-              endColumnIndex: 1,
+              endColumnIndex: 4,
             },
             cell: {
               userEnteredFormat: {
                 backgroundColor,
+              },
+            },
+            fields: "userEnteredFormat.backgroundColor",
+          },
+        },
+        {
+          repeatCell: {
+            range: {
+              sheetId,
+              startRowIndex: rowIndex,
+              endRowIndex: rowIndex + 1,
+              startColumnIndex: 4,
+              endColumnIndex: 5,
+            },
+            cell: {
+              userEnteredFormat: {
+                backgroundColor: {
+                  red: 1,
+                  green: 0,
+                  blue: 0,
+                },
               },
             },
             fields: "userEnteredFormat.backgroundColor",
@@ -210,20 +254,47 @@ export async function setInventoryRowStatus(rowIndex, estado) {
 export async function appendInventoryItems(items) {
   const { sheets, spreadsheetId } = await getSheetsClient();
 
-  const values = items.map((item, index) => [
-    `AUTO-${Date.now()}-${index + 1}`,
-    item.nombre,
-    item.precio?.toString() || '',
-    item.proveedora || '',
-  ]);
-
-  await sheets.spreadsheets.values.append({
+  const response = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: 'LOCAL MAXI!A:D',
-    valueInputOption: 'RAW',
-    insertDataOption: 'INSERT_ROWS',
+    range: "LOCAL MAXI!A:B",
+    majorDimension: "COLUMNS",
+  });
+
+  const columnAValues = (response.data.values && response.data.values[0]) || [];
+  const columnBValues = (response.data.values && response.data.values[1]) || [];
+  let lastNonEmptyRowB = 0;
+
+  for (let i = columnBValues.length - 1; i >= 0; i--) {
+    if (columnBValues[i]?.toString().trim()) {
+      lastNonEmptyRowB = i + 1; // rows are 1-based
+      break;
+    }
+  }
+
+  const startRow = lastNonEmptyRowB + 1;
+  const generatedBarcodes = [];
+
+  const values = items.map((item) => {
+    const codigo = `INV-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+    const { fileName } = generateBarcodeSvg(codigo);
+    generatedBarcodes.push({ codigo, fileName });
+
+    return [
+      codigo,
+      item.nombre || "",
+      item.precio?.toString() || "",
+      item.proveedora || "",
+    ];
+  });
+
+  await sheets.spreadsheets.values.update({
+    spreadsheetId,
+    range: `LOCAL MAXI!A${startRow}:D${startRow + values.length - 1}`,
+    valueInputOption: "RAW",
     requestBody: {
       values,
     },
   });
+
+  return { generatedBarcodes };
 }

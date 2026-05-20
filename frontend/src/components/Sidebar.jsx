@@ -1,5 +1,5 @@
 import { AiOutlineAppstore } from 'react-icons/ai';
-import { FiBox } from 'react-icons/fi';
+import { FiBox, FiTrendingUp, FiCreditCard } from 'react-icons/fi';
 
 function Sidebar({ activeView, onViewChange }) {
   return (
@@ -27,6 +27,22 @@ function Sidebar({ activeView, onViewChange }) {
         >
           <FiBox className="menu-icon" />
           <span>Proveedoras</span>
+        </button>
+        <button
+          className={`menu-item ${activeView === 'ventas' ? 'active' : ''}`}
+          type="button"
+          onClick={() => onViewChange('ventas')}
+        >
+          <FiTrendingUp className="menu-icon" />
+          <span>Ventas</span>
+        </button>
+        <button
+          className={`menu-item ${activeView === 'pagos' ? 'active' : ''}`}
+          type="button"
+          onClick={() => onViewChange('pagos')}
+        >
+          <FiCreditCard className="menu-icon" />
+          <span>Pagos</span>
         </button>
       </nav>
     </aside>

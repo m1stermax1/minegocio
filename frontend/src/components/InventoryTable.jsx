@@ -2,7 +2,7 @@ import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { FaCheck } from "react-icons/fa";
 import { updateInventoryRowStatus, addInventoryItem } from "../services/api.js";
 
-const InventoryTable = forwardRef(function InventoryTable({ items, loading, onItemAdded, providers = [] }, ref) {
+const InventoryTable = forwardRef(function InventoryTable({ items, loading, onItemAdded, providers = [], showSelection = true }, ref) {
   const [selectedItems, setSelectedItems] = useState([]);
   const [tableItems, setTableItems] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -12,6 +12,7 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
     { nombre: "", precio: "", proveedora: "" },
   ]);
   const [providerDropdown, setProviderDropdown] = useState([]);
+  const [generatedBarcodes, setGeneratedBarcodes] = useState([]);
 
   useEffect(() => {
     setProviderDropdown((prev) => {
@@ -28,6 +29,7 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
     openAddItemModal: () => {
       setFormError("");
       setPendingItems([{ nombre: "", precio: "", proveedora: "" }]);
+      setGeneratedBarcodes([]);
       setShowModal(true);
     },
     getSelectedCount: () => selectedItems.length,
@@ -85,6 +87,15 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
       console.error('Error actualizando estado en Sheets:', error);
     }
   };
+
+  const formatInventoryPrice = (value) => {
+    const amount = Number(value);
+    return Number.isFinite(amount)
+      ? `$ ${Math.round(amount * 1000).toLocaleString('es-AR')}`
+      : '-';
+  };
+
+  const formatText = (value) => value?.toString().trim() || '-';
 
   const openModal = () => {
     setFormError("");
@@ -155,7 +166,8 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
     setIsSaving(true);
 
     try {
-      await addInventoryItem(itemsToSend);
+      const result = await addInventoryItem(itemsToSend);
+      setGeneratedBarcodes(result.barcodes || []);
       closeModal();
       onItemAdded?.();
     } catch (error) {
@@ -194,11 +206,27 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
           No se encontraron productos.
         </div>
       ) : (
-        <table className="inventory-table">
-        <thead>
+        <>
+          {generatedBarcodes.length > 0 && (
+            <div className="barcode-result">
+              <p className="barcode-result-title">Códigos de barra generados</p>
+              <ul className="barcode-list">
+                {generatedBarcodes.map((barcode) => (
+                  <li key={barcode.codigo}>
+                    <strong>{barcode.codigo}</strong> —
+                    <a href={barcode.url} target="_blank" rel="noreferrer">
+                      Descargar SVG
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <table className="inventory-table">
+          <thead>
           <tr>
-            <th>Acción</th>
-            <th>Código</th>
+            {showSelection && <th>Acción</th>}
             <th>Descripción</th>
             <th>Precio</th>
             <th>Proveedor</th>
@@ -217,29 +245,28 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
               }
             >
 
-              {/* CHECK */}
-              <td>
-                <button
-                  className={`check-btn ${
-                    isSelected(item.id)
-                      ? "active"
-                      : ""
-                  }`}
-                  onClick={() =>
-                    toggleSelect(item.id)
-                  }
-                >
-                  <FaCheck />
-                </button>
-              </td>
+              {showSelection && (
+                <td>
+                  <button
+                    className={`check-btn ${
+                      isSelected(item.id)
+                        ? "active"
+                        : ""
+                    }`}
+                    onClick={() =>
+                      toggleSelect(item.id)
+                    }
+                  >
+                    <FaCheck />
+                  </button>
+                </td>
+              )}
 
-              <td>{item.codigo}</td>
+              <td>{formatText(item.descripcion)}</td>
 
-              <td>{item.descripcion}</td>
+              <td>{formatInventoryPrice(item.precio)}</td>
 
-              <td>$ {(item.precio * 1000).toLocaleString("es-AR")}</td>
-
-              <td>{item.proveedora}</td>
+              <td>{formatText(item.proveedora)}</td>
 
               {/* STATUS */}
               <td>
@@ -258,6 +285,7 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
           ))}
         </tbody>
       </table>
+        </>
       )}
 
       {showModal && (
@@ -294,7 +322,7 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
                   </div>
 
                   <div className="form-row-fields">
-                    <div className="form-group">
+                      <div className="form-group">
                       <label htmlFor={`nombre-${index}`}>Nombre del producto</label>
                       <input
                         id={`nombre-${index}`}

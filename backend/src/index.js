@@ -18,11 +18,9 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use('/barcodes', express.static(path.join(__dirname, '..', 'barcodes')));
 
 app.use("/inventory", inventoryRoutes);
-
-console.log(process.env.GOOGLE_PRIVATE_KEY_ID);
-console.log(process.env.GOOGLE_PRIVATE_KEY);
 
 const port = process.env.PORT || 3001;
 
