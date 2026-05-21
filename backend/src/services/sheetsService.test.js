@@ -58,6 +58,13 @@ describe('sheetsService', () => {
                       { formattedValue: ' COD123 ' },
                       { formattedValue: ' Producto prueba ' },
                       { formattedValue: '150' },
+                      {},
+                      {},
+                      {},
+                      {},
+                      {},
+                      {},
+                      {},
                       { formattedValue: 'Proveedor X' },
                     ],
                     effectiveFormat: {
@@ -98,9 +105,14 @@ describe('sheetsService', () => {
                       { formattedValue: ' COD456 ' },
                       { formattedValue: ' Producto proveedora ' },
                       { formattedValue: '220' },
-                      { formattedValue: 'Proveedor Y' },
                       {},
-                      { formattedValue: 'PAGADO' },
+                      {},
+                      {},
+                      {},
+                      {},
+                      { formattedValue: 'si' },
+                      {},
+                      { formattedValue: 'Proveedor Y' },
                     ],
                     effectiveFormat: {
                       backgroundColor: { red: 1, green: 1, blue: 1 },
@@ -129,7 +141,7 @@ describe('sheetsService', () => {
     ]);
   });
 
-  it('colorea columnas A-F cuando cambia a vendido', async () => {
+  it('colorea A-H, K y L en verde, I y J en rojo, y guarda timestamp en E cuando cambia a vendido', async () => {
     mockGet.mockResolvedValueOnce({
       data: {
         sheets: [
@@ -145,32 +157,127 @@ describe('sheetsService', () => {
 
     await setInventoryRowStatus(4, 'vendido');
 
-    expect(mockBatchUpdate).toHaveBeenCalledWith({
-      spreadsheetId: 'spreadsheet-id',
-      requestBody: {
-        requests: [
+    const batchCall = mockBatchUpdate.mock.calls[0][0];
+    expect(batchCall.spreadsheetId).toBe('spreadsheet-id');
+    expect(batchCall.requestBody.requests).toHaveLength(4);
+
+    expect(batchCall.requestBody.requests[0]).toEqual({
+      repeatCell: {
+        range: {
+          sheetId: 123,
+          startRowIndex: 4,
+          endRowIndex: 5,
+          startColumnIndex: 0,
+          endColumnIndex: 8,
+        },
+        cell: {
+          userEnteredFormat: {
+            backgroundColor: {
+              red: 0.46666667,
+              green: 0.76862745,
+              blue: 0.16470588,
+            },
+          },
+        },
+        fields: 'userEnteredFormat.backgroundColor',
+      },
+    });
+
+    expect(batchCall.requestBody.requests[1]).toEqual({
+      repeatCell: {
+        range: {
+          sheetId: 123,
+          startRowIndex: 4,
+          endRowIndex: 5,
+          startColumnIndex: 8,
+          endColumnIndex: 10,
+        },
+        cell: {
+          userEnteredFormat: {
+            backgroundColor: {
+              red: 1,
+              green: 0,
+              blue: 0,
+            },
+          },
+        },
+        fields: 'userEnteredFormat.backgroundColor',
+      },
+    });
+
+    expect(batchCall.requestBody.requests[2]).toEqual({
+      repeatCell: {
+        range: {
+          sheetId: 123,
+          startRowIndex: 4,
+          endRowIndex: 5,
+          startColumnIndex: 10,
+          endColumnIndex: 12,
+        },
+        cell: {
+          userEnteredFormat: {
+            backgroundColor: {
+              red: 0.46666667,
+              green: 0.76862745,
+              blue: 0.16470588,
+            },
+          },
+        },
+        fields: 'userEnteredFormat.backgroundColor',
+      },
+    });
+
+    expect(batchCall.requestBody.requests[3]).toEqual({
+      repeatCell: {
+        range: {
+          sheetId: 123,
+          startRowIndex: 4,
+          endRowIndex: 5,
+          startColumnIndex: 4,
+          endColumnIndex: 5,
+        },
+        cell: {
+          userEnteredValue: {
+            stringValue: expect.any(String),
+          },
+        },
+        fields: 'userEnteredValue',
+      },
+    });
+  });
+
+  it('borra la fecha de venta en E cuando cambia a en stock', async () => {
+    mockGet.mockResolvedValueOnce({
+      data: {
+        sheets: [
           {
-            repeatCell: {
-              range: {
-                sheetId: 123,
-                startRowIndex: 4,
-                endRowIndex: 5,
-                startColumnIndex: 0,
-                endColumnIndex: 6,
-              },
-              cell: {
-                userEnteredFormat: {
-                  backgroundColor: {
-                    red: 0.46666667,
-                    green: 0.76862745,
-                    blue: 0.16470588,
-                  },
-                },
-              },
-              fields: 'userEnteredFormat.backgroundColor',
+            properties: {
+              title: 'LOCAL MAXI',
+              sheetId: 123,
             },
           },
         ],
+      },
+    });
+
+    await setInventoryRowStatus(4, 'en stock');
+
+    const batchCall = mockBatchUpdate.mock.calls[0][0];
+    expect(batchCall.requestBody.requests[3]).toEqual({
+      repeatCell: {
+        range: {
+          sheetId: 123,
+          startRowIndex: 4,
+          endRowIndex: 5,
+          startColumnIndex: 4,
+          endColumnIndex: 5,
+        },
+        cell: {
+          userEnteredValue: {
+            stringValue: '',
+          },
+        },
+        fields: 'userEnteredValue',
       },
     });
   });
@@ -197,5 +304,37 @@ describe('sheetsService', () => {
     expect(result.generatedBarcodes[0].codigo).toMatch(/^INV-/);
     expect(result.generatedBarcodes[1].codigo).toMatch(/^INV-/);
     expect(mockValuesUpdate).toHaveBeenCalledTimes(1);
+
+    const updateCall = mockValuesUpdate.mock.calls[0][0];
+    expect(updateCall.range).toBe('LOCAL MAXI!A2:L3');
+    expect(updateCall.requestBody.values).toHaveLength(2);
+    expect(updateCall.requestBody.values[0]).toEqual([
+      expect.any(String),
+      'Item A',
+      '100',
+      '0',
+      '',
+      '',
+      '60',
+      '',
+      'no',
+      '',
+      'P1',
+      expect.any(String),
+    ]);
+    expect(updateCall.requestBody.values[1]).toEqual([
+      expect.any(String),
+      'Item B',
+      '200',
+      '0',
+      '',
+      '',
+      '120',
+      '',
+      'no',
+      '',
+      'P2',
+      expect.any(String),
+    ]);
   });
 });

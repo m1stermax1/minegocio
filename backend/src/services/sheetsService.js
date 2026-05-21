@@ -70,7 +70,7 @@ export async function getInventoryData() {
 
   const response = await sheets.spreadsheets.get({
     spreadsheetId,
-    ranges: ["LOCAL MAXI!A:E"],
+    ranges: ["LOCAL MAXI!A:K"],
     includeGridData: true,
   });
 
@@ -80,7 +80,6 @@ export async function getInventoryData() {
     .filter((row) => {
       const cells = row.values || [];
 
-      // verifica si alguna celda tiene contenido
       return cells.some((cell) => {
         const value =
           cell?.formattedValue ||
@@ -96,7 +95,7 @@ export async function getInventoryData() {
       const codigo = getCellText(cells[0]);
       const descripcion = getCellText(cells[1]);
       const precio = getCellText(cells[2]);
-      const proveedora = getCellText(cells[3]) || "mío";
+      const proveedora = getCellText(cells[10]) || "mío";
 
       const bg = cells[0]?.effectiveFormat?.backgroundColor;
 
@@ -118,7 +117,7 @@ export async function getProvidersData() {
 
   const response = await sheets.spreadsheets.get({
     spreadsheetId,
-    ranges: ["LOCAL MAXI!A:F"],
+    ranges: ["LOCAL MAXI!A:K"],
     includeGridData: true,
   });
 
@@ -130,8 +129,9 @@ export async function getProvidersData() {
       const codigo = getCellText(cells[0]);
       const descripcion = getCellText(cells[1]);
       const precioRaw = getCellText(cells[2]);
-      const nombre = getCellText(cells[3]);
-      const pagoRaw = getCellText(cells[5]).toLowerCase();
+      const nombre = getCellText(cells[10]);
+      const pagoRaw = getCellText(cells[8]).toLowerCase();
+      const isPaid = ["si", "pagado", "yes", "true"].includes(pagoRaw);
 
       const bg = cells[0]?.effectiveFormat?.backgroundColor;
       const isGreen = bg && bg.green > 0.5 && bg.red < 0.5;
@@ -144,7 +144,7 @@ export async function getProvidersData() {
         precio: precioRaw,
         ganancia: "25%",
         estado: isGreen ? "vendido" : "en stock",
-        pago: pagoRaw ? "pagado" : "impago",
+        pago: isPaid ? "pagado" : "impago",
       };
     })
     .filter((item) => item.nombre);
@@ -155,13 +155,13 @@ export async function getProvidersList() {
 
   const response = await sheets.spreadsheets.get({
     spreadsheetId,
-    ranges: ["LOCAL MAXI!D:D"],
+    ranges: ["LOCAL MAXI!K:K"],
     includeGridData: true,
   });
 
   const rows = response.data.sheets[0].data[0].rowData || [];
 
-  // Extraer valores únicos de la columna D (proveedora)
+  // Extraer valores únicos de la columna K (proveedora)
   const providersSet = new Set();
 
   rows.forEach((row) => {
@@ -200,9 +200,15 @@ export async function setInventoryRowStatus(rowIndex, estado) {
 
   const sheetId = sheet.properties.sheetId;
   const isVendido = estado?.toLowerCase() === "vendido";
-  const backgroundColor = isVendido
+  const greenBackground = isVendido
     ? { red: 0.46666667, green: 0.76862745, blue: 0.16470588 }
     : { red: 1, green: 1, blue: 1 };
+  const redBackground = isVendido
+    ? { red: 1, green: 0, blue: 0 }
+    : { red: 1, green: 1, blue: 1 };
+  const fechaVentaValue = isVendido
+    ? { userEnteredValue: { stringValue: new Date().toISOString().replace('T', ' ').split('.')[0] } }
+    : { userEnteredValue: { stringValue: '' } };
 
   await sheets.spreadsheets.batchUpdate({
     spreadsheetId,
@@ -215,11 +221,45 @@ export async function setInventoryRowStatus(rowIndex, estado) {
               startRowIndex: rowIndex,
               endRowIndex: rowIndex + 1,
               startColumnIndex: 0,
-              endColumnIndex: 4,
+              endColumnIndex: 8,
             },
             cell: {
               userEnteredFormat: {
-                backgroundColor,
+                backgroundColor: greenBackground,
+              },
+            },
+            fields: "userEnteredFormat.backgroundColor",
+          },
+        },
+        {
+          repeatCell: {
+            range: {
+              sheetId,
+              startRowIndex: rowIndex,
+              endRowIndex: rowIndex + 1,
+              startColumnIndex: 8,
+              endColumnIndex: 10,
+            },
+            cell: {
+              userEnteredFormat: {
+                backgroundColor: redBackground,
+              },
+            },
+            fields: "userEnteredFormat.backgroundColor",
+          },
+        },
+        {
+          repeatCell: {
+            range: {
+              sheetId,
+              startRowIndex: rowIndex,
+              endRowIndex: rowIndex + 1,
+              startColumnIndex: 10,
+              endColumnIndex: 12,
+            },
+            cell: {
+              userEnteredFormat: {
+                backgroundColor: greenBackground,
               },
             },
             fields: "userEnteredFormat.backgroundColor",
@@ -234,16 +274,8 @@ export async function setInventoryRowStatus(rowIndex, estado) {
               startColumnIndex: 4,
               endColumnIndex: 5,
             },
-            cell: {
-              userEnteredFormat: {
-                backgroundColor: {
-                  red: 1,
-                  green: 0,
-                  blue: 0,
-                },
-              },
-            },
-            fields: "userEnteredFormat.backgroundColor",
+            cell: fechaVentaValue,
+            fields: "userEnteredValue",
           },
         },
       ],
@@ -279,17 +311,30 @@ export async function appendInventoryItems(items) {
     const { fileName } = generateBarcodeSvg(codigo);
     generatedBarcodes.push({ codigo, fileName });
 
+    const precioNumber = Number(item.precio) || 0;
+    const porcentajeDueña = precioNumber * 0.6;
+
+    const fechaCarga = new Date().toISOString().split('T')[0];
+
     return [
       codigo,
       item.nombre || "",
-      item.precio?.toString() || "",
+      item.precio?.toString() || "0",
+      "0",
+      "",
+      "",
+      porcentajeDueña.toString(),
+      "",
+      "no",
+      "",
       item.proveedora || "",
+      fechaCarga,
     ];
   });
 
   await sheets.spreadsheets.values.update({
     spreadsheetId,
-    range: `LOCAL MAXI!A${startRow}:D${startRow + values.length - 1}`,
+    range: `LOCAL MAXI!A${startRow}:L${startRow + values.length - 1}`,
     valueInputOption: "RAW",
     requestBody: {
       values,
