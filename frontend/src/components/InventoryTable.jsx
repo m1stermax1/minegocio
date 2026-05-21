@@ -13,6 +13,10 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
   ]);
   const [providerDropdown, setProviderDropdown] = useState([]);
   const [generatedBarcodes, setGeneratedBarcodes] = useState([]);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [pendingItemId, setPendingItemId] = useState(null);
+  const [manualPrice, setManualPrice] = useState("");
+
 
   useEffect(() => {
     setProviderDropdown((prev) => {
@@ -68,25 +72,64 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
         ? "en stock"
         : "vendido";
 
+    // If changing to "vendido", open payment modal
+    if (nextState === "vendido") {
+      setPendingItemId(itemId);
+      setManualPrice("");
+      setShowPaymentModal(true);
+    } else {
+      // If changing to "en stock", just update without modal
+      setTableItems((prevItems) =>
+        prevItems.map((item) => {
+          if (item.id === itemId) {
+            return {
+              ...item,
+              estado: nextState,
+            };
+          }
+          return item;
+        }),
+      );
+
+      try {
+        await updateInventoryRowStatus(itemId, nextState);
+      } catch (error) {
+        console.error('Error actualizando estado en Sheets:', error);
+      }
+    }
+  };
+
+  const handlePaymentConfirm = async (metodoPago) => {
+    if (!pendingItemId) return;
+
     setTableItems((prevItems) =>
       prevItems.map((item) => {
-        if (item.id === itemId) {
+        if (item.id === pendingItemId) {
           return {
             ...item,
-            estado: nextState,
+            estado: "vendido",
           };
         }
-
         return item;
       }),
     );
 
     try {
-      await updateInventoryRowStatus(itemId, nextState);
+      await updateInventoryRowStatus(
+        pendingItemId,
+        "vendido",
+        metodoPago,
+        manualPrice || undefined
+      );
     } catch (error) {
       console.error('Error actualizando estado en Sheets:', error);
+    } finally {
+      setShowPaymentModal(false);
+      setPendingItemId(null);
+      setManualPrice("");
     }
   };
+
 
   const formatInventoryPrice = (value) => {
     const amount = Number(value);
@@ -414,6 +457,75 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showPaymentModal && (
+        <div className="modal-backdrop" role="dialog" aria-modal="true">
+          <div className="modal payment-modal">
+            <div className="modal-header">
+              <div>
+                <p className="eyebrow">Vender producto</p>
+                <h2>Selecciona método de pago</h2>
+              </div>
+              <button
+                type="button"
+                className="modal-close"
+                onClick={() => setShowPaymentModal(false)}
+                aria-label="Cerrar modal"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="modal-content payment-content">
+              <div className="form-group">
+                <label htmlFor="manual-price">Precio de venta (opcional)</label>
+                <input
+                  id="manual-price"
+                  className="form-input"
+                  type="number"
+                  value={manualPrice}
+                  onChange={(event) => setManualPrice(event.target.value)}
+                  placeholder="Si dejas vacío, se calculará automáticamente"
+                  step="0.01"
+                  min="0"
+                />
+              </div>
+
+              <div className="payment-methods">
+                <button
+                  type="button"
+                  className="payment-method-btn"
+                  onClick={() => handlePaymentConfirm('efectivo')}
+                >
+                  Efectivo
+                </button>
+                <button
+                  type="button"
+                  className="payment-method-btn"
+                  onClick={() => handlePaymentConfirm('transferencia')}
+                >
+                  Transferencia
+                </button>
+                <button
+                  type="button"
+                  className="payment-method-btn"
+                  onClick={() => handlePaymentConfirm('debito/credito')}
+                >
+                  Débito/Crédito
+                </button>
+              </div>
+
+              <button
+                type="button"
+                className="secondary-btn full-width"
+                onClick={() => setShowPaymentModal(false)}
+              >
+                Cancelar
+              </button>
+            </div>
           </div>
         </div>
       )}

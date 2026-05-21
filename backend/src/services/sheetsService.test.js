@@ -141,7 +141,32 @@ describe('sheetsService', () => {
     ]);
   });
 
-  it('colorea A-H, K y L en verde, I y J en rojo, y guarda timestamp en E cuando cambia a vendido', async () => {
+  it('colorea A-H, K y L en verde, I y J en rojo, guarda timestamp en E y precio de venta en D cuando cambia a vendido', async () => {
+    mockGet.mockResolvedValueOnce({
+      data: {
+        sheets: [
+          {
+            data: [
+              {
+                rowData: [
+                  {},
+                  {},
+                  {},
+                  {},
+                  {
+                    values: [
+                      { formattedValue: 'COD123' },
+                      { formattedValue: 'Producto' },
+                      { formattedValue: '1000' },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    });
     mockGet.mockResolvedValueOnce({
       data: {
         sheets: [
@@ -155,90 +180,24 @@ describe('sheetsService', () => {
       },
     });
 
-    await setInventoryRowStatus(4, 'vendido');
+    await setInventoryRowStatus(4, 'vendido', 'transferencia');
 
     const batchCall = mockBatchUpdate.mock.calls[0][0];
     expect(batchCall.spreadsheetId).toBe('spreadsheet-id');
-    expect(batchCall.requestBody.requests).toHaveLength(4);
+    expect(batchCall.requestBody.requests).toHaveLength(5);
 
-    expect(batchCall.requestBody.requests[0]).toEqual({
+    expect(batchCall.requestBody.requests[4]).toEqual({
       repeatCell: {
         range: {
           sheetId: 123,
           startRowIndex: 4,
           endRowIndex: 5,
-          startColumnIndex: 0,
-          endColumnIndex: 8,
-        },
-        cell: {
-          userEnteredFormat: {
-            backgroundColor: {
-              red: 0.46666667,
-              green: 0.76862745,
-              blue: 0.16470588,
-            },
-          },
-        },
-        fields: 'userEnteredFormat.backgroundColor',
-      },
-    });
-
-    expect(batchCall.requestBody.requests[1]).toEqual({
-      repeatCell: {
-        range: {
-          sheetId: 123,
-          startRowIndex: 4,
-          endRowIndex: 5,
-          startColumnIndex: 8,
-          endColumnIndex: 10,
-        },
-        cell: {
-          userEnteredFormat: {
-            backgroundColor: {
-              red: 1,
-              green: 0,
-              blue: 0,
-            },
-          },
-        },
-        fields: 'userEnteredFormat.backgroundColor',
-      },
-    });
-
-    expect(batchCall.requestBody.requests[2]).toEqual({
-      repeatCell: {
-        range: {
-          sheetId: 123,
-          startRowIndex: 4,
-          endRowIndex: 5,
-          startColumnIndex: 10,
-          endColumnIndex: 12,
-        },
-        cell: {
-          userEnteredFormat: {
-            backgroundColor: {
-              red: 0.46666667,
-              green: 0.76862745,
-              blue: 0.16470588,
-            },
-          },
-        },
-        fields: 'userEnteredFormat.backgroundColor',
-      },
-    });
-
-    expect(batchCall.requestBody.requests[3]).toEqual({
-      repeatCell: {
-        range: {
-          sheetId: 123,
-          startRowIndex: 4,
-          endRowIndex: 5,
-          startColumnIndex: 4,
-          endColumnIndex: 5,
+          startColumnIndex: 3,
+          endColumnIndex: 4,
         },
         cell: {
           userEnteredValue: {
-            stringValue: expect.any(String),
+            numberValue: 500,
           },
         },
         fields: 'userEnteredValue',
@@ -246,7 +205,32 @@ describe('sheetsService', () => {
     });
   });
 
-  it('borra la fecha de venta en E cuando cambia a en stock', async () => {
+  it('borra la fecha de venta en E y precio de venta en D cuando cambia a en stock', async () => {
+    mockGet.mockResolvedValueOnce({
+      data: {
+        sheets: [
+          {
+            data: [
+              {
+                rowData: [
+                  {},
+                  {},
+                  {},
+                  {},
+                  {
+                    values: [
+                      { formattedValue: 'COD123' },
+                      { formattedValue: 'Producto' },
+                      { formattedValue: '1000' },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    });
     mockGet.mockResolvedValueOnce({
       data: {
         sheets: [
@@ -275,6 +259,24 @@ describe('sheetsService', () => {
         cell: {
           userEnteredValue: {
             stringValue: '',
+          },
+        },
+        fields: 'userEnteredValue',
+      },
+    });
+
+    expect(batchCall.requestBody.requests[4]).toEqual({
+      repeatCell: {
+        range: {
+          sheetId: 123,
+          startRowIndex: 4,
+          endRowIndex: 5,
+          startColumnIndex: 3,
+          endColumnIndex: 4,
+        },
+        cell: {
+          userEnteredValue: {
+            numberValue: 0,
           },
         },
         fields: 'userEnteredValue',

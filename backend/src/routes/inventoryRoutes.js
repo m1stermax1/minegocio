@@ -69,7 +69,7 @@ router.post('/', async (req, res) => {
 
 router.put('/:id/status', async (req, res) => {
   const rowIndex = Number(req.params.id);
-  const { estado } = req.body;
+  const { estado, metodoPago, precioVentaManual } = req.body;
 
   if (Number.isNaN(rowIndex) || rowIndex < 0) {
     return res.status(400).json({ error: 'ID de fila inválido' });
@@ -80,7 +80,7 @@ router.put('/:id/status', async (req, res) => {
   }
 
   try {
-    await setInventoryRowStatus(rowIndex, estado);
+    await setInventoryRowStatus(rowIndex, estado, metodoPago, precioVentaManual);
     res.json({ success: true });
   } catch (error) {
     console.error('Error actualizando estado en Sheets:', error);

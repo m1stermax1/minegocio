@@ -180,26 +180,62 @@ export async function getProvidersList() {
   }));
 }
 
-export async function setInventoryRowStatus(rowIndex, estado) {
+export async function setInventoryRowStatus(rowIndex, estado, metodoPago, precioVentaManual) {
   const { sheets, spreadsheetId } = await getSheetsClient();
 
   const metadata = await sheets.spreadsheets.get({
+    spreadsheetId,
+    ranges: ["LOCAL MAXI!A:C"],
+    includeGridData: true,
+    fields: "sheets.data.rowData",
+  });
+
+  const sheet = metadata.data.sheets?.[0];
+  if (!sheet) {
+    throw new Error("No se encontró la hoja 'LOCAL MAXI'");
+  }
+
+  const sheetMetadata = await sheets.spreadsheets.get({
     spreadsheetId,
     ranges: ["LOCAL MAXI!A:A"],
     includeGridData: false,
     fields: "sheets.properties",
   });
 
-  const sheet = metadata.data.sheets?.find(
+  const sheetData = sheetMetadata.data.sheets?.find(
     (sheetItem) => sheetItem.properties?.title?.toLowerCase() === "local maxi",
   );
 
-  if (!sheet) {
+  if (!sheetData) {
     throw new Error("No se encontró la hoja 'LOCAL MAXI'");
   }
 
-  const sheetId = sheet.properties.sheetId;
+  const sheetId = sheetData.properties.sheetId;
   const isVendido = estado?.toLowerCase() === "vendido";
+  
+  let precioVentaValue = { userEnteredValue: { numberValue: 0 } };
+  
+  if (isVendido) {
+    const rowData = sheet.data?.[0]?.rowData?.[rowIndex];
+    const precioSuggeridoCell = rowData?.values?.[2];
+    const precioSuggeridoRaw = getCellText(precioSuggeridoCell);
+    const precioSuggeridoNum = Number(precioSuggeridoRaw) || 0;
+    
+    let precioVenta = precioVentaManual ? Number(precioVentaManual) : 0;
+    
+    if (!precioVentaManual && metodoPago) {
+      if (metodoPago === 'efectivo') {
+        precioVenta = precioSuggeridoNum * 0.10;
+      } else if (metodoPago === 'transferencia') {
+        precioVenta = precioSuggeridoNum * 0.5;
+      } else if (metodoPago === 'debito/credito') {
+        precioVenta = precioSuggeridoNum - (precioSuggeridoNum * 0.0559);
+      }
+    }
+    
+    precioVentaValue = { userEnteredValue: { numberValue: precioVenta } };
+  }
+  
   const greenBackground = isVendido
     ? { red: 0.46666667, green: 0.76862745, blue: 0.16470588 }
     : { red: 1, green: 1, blue: 1 };
@@ -275,6 +311,19 @@ export async function setInventoryRowStatus(rowIndex, estado) {
               endColumnIndex: 5,
             },
             cell: fechaVentaValue,
+            fields: "userEnteredValue",
+          },
+        },
+        {
+          repeatCell: {
+            range: {
+              sheetId,
+              startRowIndex: rowIndex,
+              endRowIndex: rowIndex + 1,
+              startColumnIndex: 3,
+              endColumnIndex: 4,
+            },
+            cell: precioVentaValue,
             fields: "userEnteredValue",
           },
         },

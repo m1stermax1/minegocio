@@ -17,8 +17,12 @@ export async function fetchProviders() {
   return response.data;
 }
 
-export async function updateInventoryRowStatus(id, estado) {
-  const response = await api.put(`/inventory/${id}/status`, { estado });
+export async function updateInventoryRowStatus(id, estado, metodoPago, precioVentaManual) {
+  const response = await api.put(`/inventory/${id}/status`, { 
+    estado, 
+    metodoPago, 
+    precioVentaManual 
+  });
   return response.data;
 }
 
