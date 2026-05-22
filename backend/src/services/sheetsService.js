@@ -185,7 +185,7 @@ export async function setInventoryRowStatus(rowIndex, estado, metodoPago, precio
 
   const metadata = await sheets.spreadsheets.get({
     spreadsheetId,
-    ranges: ["LOCAL MAXI!A:C"],
+    ranges: ["LOCAL MAXI!A:G"],
     includeGridData: true,
     fields: "sheets.data.rowData",
   });
@@ -214,6 +214,8 @@ export async function setInventoryRowStatus(rowIndex, estado, metodoPago, precio
   const isVendido = estado?.toLowerCase() === "vendido";
   
   let precioVentaValue = { userEnteredValue: { numberValue: 0 } };
+  let metodoPagoValue = { userEnteredValue: { stringValue: '' } };
+  let gananciaValue = { userEnteredValue: { numberValue: 0 } };
   
   if (isVendido) {
     const rowData = sheet.data?.[0]?.rowData?.[rowIndex];
@@ -221,19 +223,27 @@ export async function setInventoryRowStatus(rowIndex, estado, metodoPago, precio
     const precioSuggeridoRaw = getCellText(precioSuggeridoCell);
     const precioSuggeridoNum = Number(precioSuggeridoRaw) || 0;
     
+    const porcentajeDueñaCell = rowData?.values?.[6];
+    const porcentajeDueñaRaw = getCellText(porcentajeDueñaCell);
+    const porcentajeDueñaNum = Number(porcentajeDueñaRaw) || 0;
+    
     let precioVenta = precioVentaManual ? Number(precioVentaManual) : 0;
     
     if (!precioVentaManual && metodoPago) {
       if (metodoPago === 'efectivo') {
-        precioVenta = precioSuggeridoNum * 0.10;
+        precioVenta = precioSuggeridoNum * 0.90; // 10% discount
       } else if (metodoPago === 'transferencia') {
-        precioVenta = precioSuggeridoNum * 0.5;
+        precioVenta = precioSuggeridoNum * 0.95; // 5% discount
       } else if (metodoPago === 'debito/credito') {
-        precioVenta = precioSuggeridoNum - (precioSuggeridoNum * 0.0559);
+        precioVenta = precioSuggeridoNum * 0.9441; // 5.59% discount
       }
     }
     
+    const ganancia = precioVenta - porcentajeDueñaNum;
+    
     precioVentaValue = { userEnteredValue: { numberValue: precioVenta } };
+    metodoPagoValue = { userEnteredValue: { stringValue: metodoPago || 'sin especificar' } };
+    gananciaValue = { userEnteredValue: { numberValue: ganancia } };
   }
   
   const greenBackground = isVendido
@@ -324,6 +334,32 @@ export async function setInventoryRowStatus(rowIndex, estado, metodoPago, precio
               endColumnIndex: 4,
             },
             cell: precioVentaValue,
+            fields: "userEnteredValue",
+          },
+        },
+        {
+          repeatCell: {
+            range: {
+              sheetId,
+              startRowIndex: rowIndex,
+              endRowIndex: rowIndex + 1,
+              startColumnIndex: 5,
+              endColumnIndex: 6,
+            },
+            cell: metodoPagoValue,
+            fields: "userEnteredValue",
+          },
+        },
+        {
+          repeatCell: {
+            range: {
+              sheetId,
+              startRowIndex: rowIndex,
+              endRowIndex: rowIndex + 1,
+              startColumnIndex: 7,
+              endColumnIndex: 8,
+            },
+            cell: gananciaValue,
             fields: "userEnteredValue",
           },
         },

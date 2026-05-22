@@ -15,7 +15,7 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
   const [generatedBarcodes, setGeneratedBarcodes] = useState([]);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [pendingItemId, setPendingItemId] = useState(null);
-  const [manualPrice, setManualPrice] = useState("");
+  const [saleNotification, setSaleNotification] = useState("");
 
 
   useEffect(() => {
@@ -75,7 +75,6 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
     // If changing to "vendido", open payment modal
     if (nextState === "vendido") {
       setPendingItemId(itemId);
-      setManualPrice("");
       setShowPaymentModal(true);
     } else {
       // If changing to "en stock", just update without modal
@@ -102,6 +101,20 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
   const handlePaymentConfirm = async (metodoPago) => {
     if (!pendingItemId) return;
 
+    // Get the current item to access its price
+    const currentItem = tableItems.find((item) => item.id === pendingItemId);
+    if (!currentItem) return;
+
+    // Calculate discount based on payment method
+    let discountedPrice = currentItem.precio;
+    if (metodoPago === 'efectivo') {
+      discountedPrice = currentItem.precio * 0.90; // 10% discount
+    } else if (metodoPago === 'transferencia') {
+      discountedPrice = currentItem.precio * 0.95; // 5% discount
+    } else if (metodoPago === 'debito/credito') {
+      discountedPrice = currentItem.precio * 0.9441; // 5.59% discount
+    }
+
     setTableItems((prevItems) =>
       prevItems.map((item) => {
         if (item.id === pendingItemId) {
@@ -119,14 +132,18 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
         pendingItemId,
         "vendido",
         metodoPago,
-        manualPrice || undefined
+        discountedPrice
       );
+      
+      setShowPaymentModal(false);
+      setSaleNotification("Venta cargada correctamente");
+      setTimeout(() => setSaleNotification(""), 3200);
     } catch (error) {
       console.error('Error actualizando estado en Sheets:', error);
+      setSaleNotification("Error al cargar la venta");
+      setTimeout(() => setSaleNotification(""), 3200);
     } finally {
-      setShowPaymentModal(false);
       setPendingItemId(null);
-      setManualPrice("");
     }
   };
 
@@ -243,6 +260,10 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
 
   return (
     <div className="table-wrapper">
+
+      {saleNotification && (
+        <div className="toast-notification">{saleNotification}</div>
+      )}
 
       {!hasItems ? (
         <div className="table-state">
@@ -480,20 +501,6 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
             </div>
 
             <div className="modal-content payment-content">
-              <div className="form-group">
-                <label htmlFor="manual-price">Precio de venta (opcional)</label>
-                <input
-                  id="manual-price"
-                  className="form-input"
-                  type="number"
-                  value={manualPrice}
-                  onChange={(event) => setManualPrice(event.target.value)}
-                  placeholder="Si dejas vacío, se calculará automáticamente"
-                  step="0.01"
-                  min="0"
-                />
-              </div>
-
               <div className="payment-methods">
                 <button
                   type="button"
@@ -517,14 +524,6 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
                   Débito/Crédito
                 </button>
               </div>
-
-              <button
-                type="button"
-                className="secondary-btn full-width"
-                onClick={() => setShowPaymentModal(false)}
-              >
-                Cancelar
-              </button>
             </div>
           </div>
         </div>
