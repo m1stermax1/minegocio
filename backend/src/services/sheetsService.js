@@ -180,6 +180,68 @@ export async function getProvidersList() {
   }));
 }
 
+export async function getProvidersListComplete() {
+  const { sheets, spreadsheetId } = await getSheetsClient();
+
+  try {
+    const response = await sheets.spreadsheets.get({
+      spreadsheetId,
+      ranges: ["proveedoras maxi!A:D"],
+      includeGridData: true,
+    });
+
+    const rows = response.data.sheets[0]?.data[0]?.rowData || [];
+
+    return rows
+      .slice(1)
+      .filter((row) => {
+        const cells = row.values || [];
+        return cells.some((cell) => {
+          const value =
+            cell?.formattedValue ||
+            cell?.effectiveValue?.stringValue ||
+            cell?.effectiveValue?.numberValue;
+          return value !== undefined && value !== "";
+        });
+      })
+      .map((row, index) => {
+        const cells = row.values || [];
+        return {
+          id: index,
+          nombre: getCellText(cells[0]),
+          apellido: getCellText(cells[1]),
+          telefono: getCellText(cells[2]),
+          notas: getCellText(cells[3]),
+        };
+      });
+  } catch (err) {
+    console.warn(
+      'proveedoras maxi sheet not found, returning empty list:',
+      err.message,
+    );
+    return [];
+  }
+}
+
+export async function addNewProvider(nombre, apellido, telefono, notas = '') {
+  const { sheets, spreadsheetId } = await getSheetsClient();
+
+  const values = [[nombre, apellido, telefono, notas]];
+
+  try {
+    await sheets.spreadsheets.values.append({
+      spreadsheetId,
+      range: 'proveedoras maxi!A:D',
+      valueInputOption: 'RAW',
+      requestBody: { values },
+    });
+
+    return { success: true, nombre, apellido, telefono };
+  } catch (err) {
+    throw new Error(`Failed to add provider: ${err.message}`);
+  }
+}
+
 export async function setInventoryRowStatus(rowIndex, estado, metodoPago, precioVentaManual) {
   const { sheets, spreadsheetId } = await getSheetsClient();
 

@@ -1,4 +1,4 @@
-import { AiOutlineAppstore } from 'react-icons/ai';
+import { AiOutlineAppstore, AiOutlineDashboard } from 'react-icons/ai';
 import { FiBox, FiTrendingUp, FiCreditCard } from 'react-icons/fi';
 
 function Sidebar({ activeView, onViewChange }) {
@@ -12,6 +12,14 @@ function Sidebar({ activeView, onViewChange }) {
       </div>
 
       <nav className="menu">
+        <button
+          className={`menu-item ${activeView === 'dashboard' ? 'active' : ''}`}
+          type="button"
+          onClick={() => onViewChange('dashboard')}
+        >
+          <AiOutlineDashboard className="menu-icon" />
+          <span>Dashboard</span>
+        </button>
         <button
           className={`menu-item ${activeView === 'inventory' ? 'active' : ''}`}
           type="button"

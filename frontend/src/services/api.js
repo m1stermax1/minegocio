@@ -17,6 +17,21 @@ export async function fetchProviders() {
   return response.data;
 }
 
+export async function fetchProvidersComplete() {
+  const response = await api.get('/inventory/providers-list');
+  return response.data;
+}
+
+export async function addProvider(nombre, apellido, telefono, notas = '') {
+  const response = await api.post('/inventory/providers', {
+    nombre,
+    apellido,
+    telefono,
+    notas,
+  });
+  return response.data;
+}
+
 export async function updateInventoryRowStatus(id, estado, metodoPago, precioVentaManual) {
   const response = await api.put(`/inventory/${id}/status`, { 
     estado, 
@@ -28,6 +43,11 @@ export async function updateInventoryRowStatus(id, estado, metodoPago, precioVen
 
 export async function addInventoryItem(item) {
   const response = await api.post('/inventory', item);
+  return response.data;
+}
+
+export async function fetchDashboardCounts() {
+  const response = await api.get('/inventory/counts');
   return response.data;
 }
 

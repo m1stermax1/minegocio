@@ -3,6 +3,7 @@ import Sidebar from "../components/Sidebar.jsx";
 import SearchBar from "../components/SearchBar.jsx";
 import InventoryTable from "../components/InventoryTable.jsx";
 import ProvidersTable from "../components/ProvidersTable.jsx";
+import DashboardPage from "./DashboardPage.jsx";
 import { fetchInventory, fetchProviders } from "../services/api.js";
 
 function InventoryPage() {
@@ -105,26 +106,38 @@ function InventoryPage() {
   }, [providers, searchQuery]);
 
   const filteredSales = useMemo(() => {
-    return filteredInventory.filter((item) => item.estado?.toLowerCase() === 'vendido');
+    return filteredInventory.filter(
+      (item) => item.estado?.toLowerCase() === "vendido",
+    );
   }, [filteredInventory]);
 
   const filteredPayments = useMemo(() => {
-    return filteredProviders.filter((item) => item.pago?.toLowerCase() === 'pagado');
+    return filteredProviders.filter(
+      (item) => item.pago?.toLowerCase() === "pagado",
+    );
   }, [filteredProviders]);
 
   const pageTitle =
     activeView === "inventory"
       ? "Inventario"
-      : activeView === "providers"
-      ? "Proveedoras"
-      : activeView === "ventas"
-      ? "Ventas"
-      : "Pagos";
+      : activeView === "dashboard"
+        ? "Dashboard"
+        : activeView === "providers"
+          ? "Proveedoras"
+          : activeView === "ventas"
+            ? "Ventas"
+            : "Pagos";
+
+  const [showProvidersModal, setShowProvidersModal] = useState(false);
+    const handleProvidersModalClose = () => {
+    setShowProvidersModal(false);
+  };
 
   const isInventory = activeView === "inventory";
   const isProviders = activeView === "providers";
   const isSales = activeView === "ventas";
   const isPayments = activeView === "pagos";
+  const isDashboard = activeView === "dashboard";
 
   return (
     <div className="layout">
@@ -147,14 +160,14 @@ function InventoryPage() {
                   type="button"
                   onClick={handleAddItem}
                 >
-                  Agregar item
+                  Agregar producto
                 </button>
-                <button
+                {/* <button
                   className="bulk-action-btn"
                   disabled={!inventoryTableRef.current?.getSelectedCount?.()}
                 >
                   Acción masiva
-                </button>
+                </button> */}
               </div>
             )}
             {isProviders && (
@@ -162,18 +175,19 @@ function InventoryPage() {
                 <button
                   className="primary-btn"
                   type="button"
-                  onClick={handleAddItem}
+                  onClick={() => setShowProvidersModal(true)}
                 >
-                  Agregar proveedora
+                  + Nueva Proveedora
                 </button>
-           
               </div>
             )}
           </div>
           {notification && (
             <div className="toast-notification">{notification}</div>
           )}
-          {isInventory ? (
+          {isDashboard ? (
+            <DashboardPage />
+          ) : isInventory ? (
             <InventoryTable
               ref={inventoryTableRef}
               items={filteredInventory}
@@ -201,6 +215,7 @@ function InventoryPage() {
             <ProvidersTable
               items={filteredProviders}
               loading={loadingProviders}
+              onDataChange={loadProviders}
             />
           )}
         </section>

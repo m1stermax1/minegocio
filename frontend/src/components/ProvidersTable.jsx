@@ -1,7 +1,12 @@
 import { Fragment, useMemo, useState } from "react";
+import ProvidersFormModal from "./ProvidersFormModal.jsx";
+import ItemsFormModal from "./ItemsFormModal.jsx";
 
-function ProvidersTable({ items, loading }) {
+function ProvidersTable({ items, loading, onDataChange }) {
   const [expandedProviders, setExpandedProviders] = useState(new Set());
+  const [showProvidersModal, setShowProvidersModal] = useState(false);
+  const [showItemsModal, setShowItemsModal] = useState(false);
+  const [selectedProviderIdx, setSelectedProviderIdx] = useState(null);
 
   const groupedProviders = useMemo(() => {
     const groups = new Map();
@@ -74,111 +79,183 @@ function ProvidersTable({ items, loading }) {
       : "-";
   };
 
+  const handleAddItemClick = (providerIdx) => {
+    setSelectedProviderIdx(providerIdx);
+    setShowItemsModal(true);
+  };
+
+  const handleProvidersModalClose = () => {
+    setShowProvidersModal(false);
+  };
+
+  const handleItemsModalClose = () => {
+    setShowItemsModal(false);
+    setSelectedProviderIdx(null);
+  };
+
+  const handleProviderAdded = () => {
+    if (onDataChange) {
+      onDataChange();
+    }
+  };
+
+  const handleItemsAdded = () => {
+    if (onDataChange) {
+      onDataChange();
+    }
+  };
+
   if (loading) {
     return <div className="table-state">Cargando proveedoras...</div>;
   }
 
   if (!groupedProviders.length) {
-    return <div className="table-state">No se encontraron proveedoras.</div>;
+    return (
+      <div>
+        <div className="table-state">No se encontraron proveedoras.</div>
+        <div style={{ marginTop: "20px" }}>
+          <button
+            className="primary-btn"
+            type="button"
+            onClick={() => setShowProvidersModal(true)}
+          >
+            + Agregar Primera Proveedora
+          </button>
+        </div>
+        <ProvidersFormModal
+          isOpen={showProvidersModal}
+          onClose={handleProvidersModalClose}
+          onProviderAdded={handleProviderAdded}
+        />
+        <ItemsFormModal
+          isOpen={showItemsModal}
+          onClose={handleItemsModalClose}
+          onItemsAdded={handleItemsAdded}
+          defaultProviderId={selectedProviderIdx}
+        />
+      </div>
+    );
   }
 
   return (
-    <div className="table-wrapper">
-      <table className="table providers-table">
-        <thead>
-          <tr>
-            <th>Nombre</th>
-            <th>Prendas</th>
-            <th>Vendidas</th>
-            <th>% Ganancia</th>
-            <th>Último pago</th>
-          </tr>
-        </thead>
-        <tbody>
-          {groupedProviders.map((group) => {
-            const isExpanded = expandedProviders.has(group.provider);
-            return (
-              <Fragment key={group.provider}>
-                <tr className="provider-group-row">
-                  <td>
-                    <button
-                      type="button"
-                      className="expand-btn"
-                      onClick={() => toggleProvider(group.provider)}
-                      aria-expanded={isExpanded}
-                      aria-label={`Ver items de ${group.provider}`}
-                    >
-                      {isExpanded ? "−" : "+"}
-                    </button>
-                    {group.provider}
-                  </td>
-                  <td>{group.items?.length}</td>
-                  <td>{group.soldCount}</td>
-                  <td>{formatPrice(group.totalPrice * 0.6)}</td>
+    <div>
+      <div style={{ marginBottom: "16px", display: "flex", gap: "10px" }}>
+        <button
+          className="primary-btn"
+          type="button"
+          onClick={() => setShowProvidersModal(true)}
+        >
+          + Nueva Proveedora
+        </button>
+      </div>
+      <div className="table-wrapper">
+        <table className="table providers-table">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Prendas</th>
+              <th>Vendidas</th>
+              <th>% Ganancia</th>
+              <th>Último pago</th>
+            </tr>
+          </thead>
+          <tbody>
+            {groupedProviders.map((group) => {
+              const isExpanded = expandedProviders.has(group.provider);
+              return (
+                <Fragment key={group.provider}>
+                  <tr className="provider-group-row">
+                    <td>
+                      <button
+                        type="button"
+                        className="expand-btn"
+                        onClick={() => toggleProvider(group.provider)}
+                        aria-expanded={isExpanded}
+                        aria-label={`Ver items de ${group.provider}`}
+                      >
+                        {isExpanded ? "−" : "+"}
+                      </button>
+                      {group.provider}
+                    </td>
+                    <td>{group.items?.length}</td>
+                    <td>{group.soldCount}</td>
+                    <td>{formatPrice(group.totalPrice * 0.6)}</td>
 
-                  <td>
-                    <span
-                      className={`payment-badge ${group.pago === "pagado" ? "paid" : "unpaid"}`}
-                    >
-                      Sáb, 16 de Mayo
-                    </span>
-                  </td>
-                </tr>
-                {isExpanded && (
-                  <tr className="provider-expansion-row">
-                    <td colSpan={5}>
-                      <div className="provider-items-table-wrapper">
-                        <table className="inventory-table provider-items-table">
-                          <thead>
-                            <tr>
-                              <th>Código</th>
-                              <th>Descripción</th>
-                              <th>Precio</th>
-                              <th>Proveedor</th>
-                              <th>Estado</th>
-                              <th>Pagado</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {group.items.map((item, index) => {
-                              const precioValue = Number(item.precio);
-                              return (
-                                <tr
-                                  key={`${group.provider}-${index}-${item.codigo || item.descripcion}`}
-                                  className="provider-item-row"
-                                >
-                                  <td>{item.codigo || "-"}</td>
-                                  <td>{item.descripcion || "-"}</td>
-                                  <td>{formatPrice(item.precio)}</td>
-                                  <td>{group.provider}</td>
-                                  <td>
-                                    <span
-                                      className={`status-badge ${item.estado === "vendido" ? "vendido" : "stock"}`}
-                                    >
-                                      {item.estado || "-"}
-                                    </span>
-                                  </td>
-                                  <td>
-                                    <span
-                                      className={`payment-badge ${item.pagado === "si" ? "paid" : "unpaid"}`}
-                                    >
-                                      {item.pagado || "no"}
-                                    </span>
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
+                    <td>
+                      <span
+                        className={`payment-badge ${group.pago === "pagado" ? "paid" : "unpaid"}`}
+                      >
+                        Sáb, 16 de Mayo
+                      </span>
                     </td>
                   </tr>
-                )}
-              </Fragment>
-            );
-          })}
-        </tbody>
-      </table>
+                  {isExpanded && (
+                    <tr className="provider-expansion-row">
+                      <td colSpan={5}>
+                        <div className="provider-items-table-wrapper">
+                          <table className="inventory-table provider-items-table">
+                            <thead>
+                              <tr>
+                                <th>Código</th>
+                                <th>Descripción</th>
+                                <th>Precio</th>
+                                <th>Proveedor</th>
+                                <th>Estado</th>
+                                <th>Pagado</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {group.items.map((item, index) => {
+                                const precioValue = Number(item.precio);
+                                return (
+                                  <tr
+                                    key={`${group.provider}-${index}-${item.codigo || item.descripcion}`}
+                                    className="provider-item-row"
+                                  >
+                                    <td>{item.codigo || "-"}</td>
+                                    <td>{item.descripcion || "-"}</td>
+                                    <td>{formatPrice(item.precio)}</td>
+                                    <td>{group.provider}</td>
+                                    <td>
+                                      <span
+                                        className={`status-badge ${item.estado === "vendido" ? "vendido" : "stock"}`}
+                                      >
+                                        {item.estado || "-"}
+                                      </span>
+                                    </td>
+                                    <td>
+                                      <span
+                                        className={`payment-badge ${item.pagado === "si" ? "paid" : "unpaid"}`}
+                                      >
+                                        {item.pagado || "no"}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
+              );
+            })}
+          </tbody>
+        </table>
+        <ProvidersFormModal
+          isOpen={showProvidersModal}
+          onClose={handleProvidersModalClose}
+          onProviderAdded={handleProviderAdded}
+        />
+        <ItemsFormModal
+          isOpen={showItemsModal}
+          onClose={handleItemsModalClose}
+          onItemsAdded={handleItemsAdded}
+          defaultProviderId={selectedProviderIdx}
+        />
+      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { FaCheck } from "react-icons/fa";
-import { updateInventoryRowStatus, addInventoryItem } from "../services/api.js";
+import { updateInventoryRowStatus, addInventoryItem, fetchProvidersComplete } from "../services/api.js";
 
 const InventoryTable = forwardRef(function InventoryTable({ items, loading, onItemAdded, providers = [], showSelection = true }, ref) {
   const [selectedItems, setSelectedItems] = useState([]);
@@ -16,6 +16,20 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [pendingItemId, setPendingItemId] = useState(null);
   const [saleNotification, setSaleNotification] = useState("");
+  const [providersComplete, setProvidersComplete] = useState([]);
+
+  // Cargar proveedoras de "proveedoras maxi"
+  useEffect(() => {
+    const loadProviders = async () => {
+      try {
+        const data = await fetchProvidersComplete();
+        setProvidersComplete(data || []);
+      } catch (err) {
+        console.error('Error cargando proveedoras:', err);
+      }
+    };
+    loadProviders();
+  }, []);
 
 
   useEffect(() => {
@@ -436,17 +450,21 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
 
                         {providerDropdown[index] && (
                           <ul className="providers-dropdown" role="listbox">
-                            {providers
-                              .filter((p) => p.nombre.toLowerCase().includes((item.proveedora || '').toLowerCase()))
-                              .map((provider) => (
+                            {providersComplete
+                              .filter((p) => {
+                                const fullName = `${p.nombre} ${p.apellido}`.toLowerCase();
+                                const searchTerm = (item.proveedora || '').toLowerCase();
+                                return fullName.includes(searchTerm);
+                              })
+                              .map((provider, idx) => (
                                 <li
-                                  key={provider.id}
+                                  key={idx}
                                   role="option"
                                   tabIndex={0}
                                   className="provider-option"
-                                  onMouseDown={() => selectProvider(index, provider.nombre)}
+                                  onMouseDown={() => selectProvider(index, `${provider.nombre} ${provider.apellido}`)}
                                 >
-                                  {provider.nombre}
+                                  {provider.nombre} {provider.apellido}
                                 </li>
                               ))}
                           </ul>
