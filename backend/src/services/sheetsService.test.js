@@ -184,7 +184,7 @@ describe('sheetsService', () => {
 
     const batchCall = mockBatchUpdate.mock.calls[0][0];
     expect(batchCall.spreadsheetId).toBe('spreadsheet-id');
-    expect(batchCall.requestBody.requests).toHaveLength(5);
+    expect(batchCall.requestBody.requests).toHaveLength(7);
 
     expect(batchCall.requestBody.requests[4]).toEqual({
       repeatCell: {
@@ -197,7 +197,7 @@ describe('sheetsService', () => {
         },
         cell: {
           userEnteredValue: {
-            numberValue: 500,
+            numberValue: 950,
           },
         },
         fields: 'userEnteredValue',

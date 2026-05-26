@@ -186,7 +186,7 @@ export async function getProvidersListComplete() {
   try {
     const response = await sheets.spreadsheets.get({
       spreadsheetId,
-      ranges: ["proveedoras maxi!A:D"],
+      ranges: ["proveedoras maxi!A:F"],
       includeGridData: true,
     });
 
@@ -211,7 +211,8 @@ export async function getProvidersListComplete() {
           nombre: getCellText(cells[0]),
           apellido: getCellText(cells[1]),
           telefono: getCellText(cells[2]),
-          notas: getCellText(cells[3]),
+          alias: getCellText(cells[3]),
+          cbu: getCellText(cells[4]),
         };
       });
   } catch (err) {

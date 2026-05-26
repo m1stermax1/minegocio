@@ -10,7 +10,7 @@ function StatCard({ title, value }) {
   );
 }
 
-export default function DashboardPage({ onAddProduct, onAddSale, onAddProvider }) {
+export default function DashboardPage({ onAddProduct, onAddSale, onAddProvider, refresh }) {
   const [counts, setCounts] = useState({ inStockCount: 0, soldCount: 0 });
   const [loading, setLoading] = useState(true);
 
@@ -29,8 +29,7 @@ export default function DashboardPage({ onAddProduct, onAddSale, onAddProvider }
     }
     load();
     return () => (mounted = false);
-  }, []);
-
+  }, [refresh]);
   return (
     <section className="dashboard-panel">
       <div className="controls-row">

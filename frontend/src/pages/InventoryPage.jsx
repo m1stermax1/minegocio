@@ -23,6 +23,7 @@ function InventoryPage() {
   const [notification, setNotification] = useState("");
   const [showSaleModal, setShowSaleModal] = useState(false);
   const [showProvidersModal, setShowProvidersModal] = useState(false);
+  const [dashboardRefresh, setDashboardRefresh] = useState(0);
   const [showItemsModal, setShowItemsModal] = useState(false);
   const inventoryTableRef = useRef(null);
 
@@ -115,6 +116,7 @@ function InventoryPage() {
     loadSales();
     setNotification("Venta cargada correctamente.");
     window.setTimeout(() => setNotification(""), 3200);
+    setDashboardRefresh(prev => prev + 1);
   };
 
   const filteredInventory = useMemo(() => {
@@ -249,30 +251,30 @@ function InventoryPage() {
             <div className="toast-notification">{notification}</div>
           )}
           {isDashboard ? (
-            <DashboardPage />
-          ) : isInventory ? (
-            <InventoryTable
-              ref={inventoryTableRef}
-              items={filteredInventory}
-              loading={loadingInventory}
-              onItemAdded={handleItemAdded}
-              providers={providers}
-            />
-          ) : isSales ? (
-            <SalesTable sales={sales} loading={loadingSales} />
-          ) : isPayments ? (
-            <PaymentsTable
-              inventory={filteredInventory}
-              providers={providers}
-              loading={loadingInventory || loadingProviders}
-            />
-          ) : (
-            <ProvidersTable
-              items={filteredProviders}
-              loading={loadingProviders}
-              onDataChange={loadProviders}
-            />
-          )}
+          <DashboardPage refresh={dashboardRefresh} />
+        ) : isInventory ? (
+          <InventoryTable
+            ref={inventoryTableRef}
+            items={filteredInventory}
+            loading={loadingInventory}
+            onItemAdded={handleItemAdded}
+            providers={providers}
+          />
+        ) : isSales ? (
+          <SalesTable sales={sales} loading={loadingSales} />
+        ) : isPayments ? (
+          <PaymentsTable
+            inventory={filteredInventory}
+            providers={providers}
+            loading={loadingInventory || loadingProviders}
+          />
+        ) : (
+          <ProvidersTable
+            items={filteredProviders}
+            loading={loadingProviders}
+            onDataChange={loadProviders}
+          />
+        )}
         </section>
       </main>
 

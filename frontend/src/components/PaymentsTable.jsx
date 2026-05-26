@@ -41,21 +41,19 @@ export default function PaymentsTable({
   }, [inventory]);
 
   // Obtener información de proveedoras (teléfono, alias, CBU, etc.)
-  const getProviderInfo = (provName) => {
-    const allProviders = fetchProvidersComplete()
-      .then((data) => {
-        console.log("Proveedores completos:", data);
-        return data.find(
-          (p) =>
-            p.nombre === provName ||
-            `${p.nombre} ${p.apellido}`.trim() === provName,
-        );
-      })
-      .catch((err) => {
-        console.error("Error fetching complete providers:", err);
-        return [];
-      });
-      return allProviders;
+  const getProviderInfo = async (provName) => {
+    try {
+      const data = await fetchProvidersComplete();
+      console.log("Proveedores completos:", data);
+      return data.find(
+        (p) =>
+          p.nombre === provName ||
+          `${p.nombre} ${p.apellido}`.trim() === provName,
+      );
+    } catch (err) {
+      console.error("Error fetching complete providers:", err);
+      return null;
+    }
   };
 
   const calculateProviderTotal = (items) => {
@@ -66,10 +64,10 @@ export default function PaymentsTable({
     }, 0);
   };
 
-  const handleOpenPaymentModal = (provName, items) => {
-    const providerInfo = getProviderInfo(provName);
+  const handleOpenPaymentModal = async (provName, items) => {
+    const providerInfo = await getProviderInfo(provName);
 
-    console.log(providerInfo);
+    console.log("Provider info resolved:", providerInfo);
     const totalProvider = calculateProviderTotal(items);
 
     const itemsWithProvider = items.map((item) => ({
@@ -137,15 +135,7 @@ export default function PaymentsTable({
                       })}
                     </td>
                     <td>
-                      <span
-                        style={{
-                          padding: "4px 8px",
-                          borderRadius: "4px",
-                          fontSize: "0.85rem",
-                          backgroundColor: isPaid ? "#e8f5e9" : "#fff3e0",
-                          color: isPaid ? "#2e7d32" : "#e65100",
-                        }}
-                      >
+                      <span className={`payment-badge ${isPaid ? "paid" : "unpaid"}`}>
                         {isPaid ? "✓ Pagado" : "○ Pendiente"}
                       </span>
                     </td>
@@ -164,11 +154,8 @@ export default function PaymentsTable({
                   {expandedProvider === provName && (
                     <tr>
                       <td colSpan={5}>
-                        <div
-                          className="provider-items-table-wrapper"
-                          style={{ padding: "12px 0" }}
-                        >
-                          <table className="inventory-table">
+                        <div className="provider-items-table-wrapper">
+                          <table className="inventory-table provider-items-table">
                             <thead>
                               <tr>
                                 <th>Código</th>
@@ -183,7 +170,7 @@ export default function PaymentsTable({
                                 const precioProveedora = precioSugerido * 0.6;
 
                                 return (
-                                  <tr key={`${provName}-${itemIndex}`}>
+                                  <tr key={`${provName}-${itemIndex}`} className="provider-item-row">
                                     <td>{item.codigo || "-"}</td>
                                     <td>{item.descripcion || "-"}</td>
                                     <td>

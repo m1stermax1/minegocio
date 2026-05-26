@@ -159,6 +159,6 @@ describe('inventoryRoutes', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ success: true });
-    expect(setInventoryRowStatus).toHaveBeenCalledWith(3, 'vendido');
+    expect(setInventoryRowStatus).toHaveBeenCalledWith(3, 'vendido', undefined, undefined);
   });
 });

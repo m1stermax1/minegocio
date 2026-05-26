@@ -7,6 +7,7 @@ import InventoryTable from './InventoryTable.jsx';
 vi.mock('../services/api.js', () => ({
   updateInventoryRowStatus: vi.fn(),
   addInventoryItem: vi.fn(),
+  fetchProvidersComplete: vi.fn().mockResolvedValue([]),
 }));
 
 import { updateInventoryRowStatus, addInventoryItem } from '../services/api.js';
@@ -36,16 +37,16 @@ describe('InventoryTable', () => {
         descripcion: 'Producto A',
         precio: 1500,
         proveedora: 'Proveedor X',
-        estado: 'en stock',
+        estado: 'vendido',
       },
     ];
 
     renderWithRef({ items, loading: false, onItemAdded: vi.fn(), providers: [] });
 
-    const statusButton = screen.getByRole('button', { name: /en stock/i });
+    const statusButton = screen.getByRole('button', { name: /vendido/i });
     await userEvent.click(statusButton);
 
-    expect(updateInventoryRowStatus).toHaveBeenCalledWith(0, 'vendido');
+    expect(updateInventoryRowStatus).toHaveBeenCalledWith(0, 'en stock');
   });
 
   it('abre modal y agrega un item llamando addInventoryItem', async () => {

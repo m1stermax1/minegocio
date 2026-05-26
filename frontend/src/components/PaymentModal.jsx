@@ -11,12 +11,22 @@ export default function PaymentModal({ isOpen, onClose, payment = null, onPaymen
   }
 
   const proveedora = payment.proveedora;
-  const itemsText = payment.items.map((item) => `${item.descripcion || item.nombre}`).join(", ");
+  const itemsText = payment.items.map((item) => `${item.descripcion || item.nombre}`).join("\n");
+  const bulletList = itemsText.split('\n').map(i => `- ${i}`).join('\n');
   const itemCount = payment.items.length;
-  
-  const messageText = itemCount === 1 
-    ? `Hola, se vendió este de la lista: ${itemsText}`
-    : `Hola, se vendieron estos de la lista: ${itemsText}`;
+
+  const messageText = itemCount === 1
+    ? `Hola! <3
+Se vendió esta prenda de la lista:
+${bulletList}
+
+De Viernes a Domingo hacemos transferencias!`
+    : `Hola! <3
+Se vendieron estas prendas de la lista:
+${bulletList}
+
+De Viernes a Domingo hacemos transferencias!`;
+
 
   const handleSendWhatsApp = async () => {
     setError("");
@@ -62,7 +72,7 @@ export default function PaymentModal({ isOpen, onClose, payment = null, onPaymen
       };
 
       const redirectUrl = await createMercadoPagoTransfer(transferData);
-      
+
       if (redirectUrl) {
         window.open(redirectUrl, "_blank");
       }
@@ -76,7 +86,7 @@ export default function PaymentModal({ isOpen, onClose, payment = null, onPaymen
 
   return (
     <div className="modal-backdrop">
-      <div className="modal" style={{ maxWidth: "600px", width: "100%" }}>
+      <div className="modal" style={{ maxWidth: "600px", width: "100%", maxHeight: "90vh", overflowY: "auto" }}>
         <div className="modal-header">
           <div>
             <h2>Pago a {proveedora?.nombre}</h2>
@@ -97,7 +107,21 @@ export default function PaymentModal({ isOpen, onClose, payment = null, onPaymen
 
         <div className="modal-form">
           {error && <div className="form-error">{error}</div>}
-          {success && <div className="form-success" style={{ padding: "12px", backgroundColor: "#e8f5e9", color: "#2e7d32", borderRadius: "4px", marginBottom: "16px" }}>{success}</div>}
+          {success && (
+            <div
+              className="form-success"
+              style={{
+                padding: "12px 14px",
+                backgroundColor: "rgba(34, 197, 94, 0.14)",
+                color: "var(--success)",
+                border: "1px solid var(--success)",
+                borderRadius: "12px",
+                marginBottom: "16px",
+              }}
+            >
+              {success}
+            </div>
+          )}
 
           <div style={{ marginBottom: "24px" }}>
             <h3 style={{ margin: "0 0 12px" }}>Productos vendidos</h3>
@@ -129,7 +153,7 @@ export default function PaymentModal({ isOpen, onClose, payment = null, onPaymen
           <div className="summary-card" style={{ marginBottom: "24px" }}>
             <div className="summary-row">
               <span>Total a transferir</span>
-              <strong style={{ fontSize: "1.2rem", color: "#1976d2" }}>
+              <strong style={{ fontSize: "1.2rem", color: "var(--accent)" }}>
                 ${Number(payment.totalProvider || 0).toLocaleString("es-AR", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
@@ -138,11 +162,19 @@ export default function PaymentModal({ isOpen, onClose, payment = null, onPaymen
             </div>
           </div>
 
-          <div style={{ marginBottom: "24px", padding: "12px", backgroundColor: "#f5f5f5", borderRadius: "4px" }}>
-            <p style={{ margin: "0 0 12px", fontSize: "0.9rem", fontWeight: 500 }}>
+          <div
+            style={{
+              marginBottom: "24px",
+              padding: "16px",
+              backgroundColor: "var(--surface-strong)",
+              border: "1px solid var(--border)",
+              borderRadius: "12px",
+            }}
+          >
+            <p style={{ margin: "0 0 12px", fontSize: "0.9rem", fontWeight: 600, color: "var(--accent)" }}>
               Mensaje que se enviará:
             </p>
-            <p style={{ margin: 0, fontSize: "0.9rem", lineHeight: "1.5", whiteSpace: "pre-wrap" }}>
+            <p style={{ margin: 0, fontSize: "0.9rem", lineHeight: "1.5", whiteSpace: "pre-wrap", color: "var(--text)" }}>
               {messageText}
             </p>
           </div>
@@ -153,17 +185,37 @@ export default function PaymentModal({ isOpen, onClose, payment = null, onPaymen
               className="primary-btn"
               onClick={handleSendWhatsApp}
               disabled={loading}
-              style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
+                backgroundColor: "#25D366",
+                color: "#ffffff",
+                transition: "background-color 0.2s ease",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#20ba5a")}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#25D366")}
             >
               {loading ? "Enviando..." : "📱 Enviar por WhatsApp"}
             </button>
-            
+
             <button
               type="button"
-              className="secondary-btn"
+              className="primary-btn"
               onClick={handleMercadoPagoTransfer}
               disabled={loading}
-              style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
+                backgroundColor: "#009EE3",
+                color: "#ffffff",
+                transition: "background-color 0.2s ease",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#008ac6")}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#009EE3")}
             >
               {loading ? "Procesando..." : "💳 Transferir en Mercado Pago"}
             </button>

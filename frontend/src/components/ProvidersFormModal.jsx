@@ -100,13 +100,13 @@ function ProvidersFormModal({ isOpen, onClose, onProviderAdded }) {
             </div>
 
             <div className="form-group">
-              <label>Notas (opcional)</label>
+              <label>Alias o CBU (opcional)</label>
               <input
                 type="text"
                 className="form-input"
                 value={notas}
                 onChange={(e) => setNotas(e.target.value)}
-                placeholder="Información adicional"
+                placeholder="Ej: mi.alias.mp o CBU de 22 dígitos"
                 disabled={loading}
               />
             </div>
