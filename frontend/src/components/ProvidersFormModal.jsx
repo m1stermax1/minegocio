@@ -26,7 +26,7 @@ function ProvidersFormModal({ isOpen, onClose, onProviderAdded }) {
       setTelefono('');
       setNotas('');
       if (onProviderAdded) {
-        onProviderAdded();
+        await onProviderAdded();
       }
       onClose();
     } catch (err) {

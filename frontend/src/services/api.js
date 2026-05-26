@@ -13,12 +13,16 @@ export async function fetchInventory() {
 }
 
 export async function fetchProviders() {
-  const response = await api.get('/inventory/providers');
+  const response = await api.get('/inventory/providers', {
+    params: { _t: Date.now() },
+  });
   return response.data;
 }
 
 export async function fetchProvidersComplete() {
-  const response = await api.get('/inventory/providers-list');
+  const response = await api.get('/inventory/providers-list', {
+    params: { _t: Date.now() },
+  });
   return response.data;
 }
 

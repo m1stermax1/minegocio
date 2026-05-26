@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fetchDashboardCounts } from '../services/api.js';
+import { fetchDashboardCounts, fetchProvidersComplete } from '../services/api.js';
 
 function StatCard({ title, value }) {
   return (
@@ -12,6 +12,7 @@ function StatCard({ title, value }) {
 
 export default function DashboardPage({ onAddProduct, onAddSale, onAddProvider, refresh }) {
   const [counts, setCounts] = useState({ inStockCount: 0, soldCount: 0 });
+  const [providersCount, setProvidersCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,8 +20,14 @@ export default function DashboardPage({ onAddProduct, onAddSale, onAddProvider, 
     async function load() {
       try {
         setLoading(true);
-        const data = await fetchDashboardCounts();
-        if (mounted) setCounts(data || { inStockCount: 0, soldCount: 0 });
+        const [dashboardData, providers] = await Promise.all([
+          fetchDashboardCounts(),
+          fetchProvidersComplete(),
+        ]);
+        if (mounted) {
+          setCounts(dashboardData || { inStockCount: 0, soldCount: 0 });
+          setProvidersCount(providers?.length || 0);
+        }
       } catch (err) {
         console.error('Error cargando dashboard:', err);
       } finally {
@@ -32,18 +39,6 @@ export default function DashboardPage({ onAddProduct, onAddSale, onAddProvider, 
   }, [refresh]);
   return (
     <section className="dashboard-panel">
-      <div className="controls-row">
-        <button className="secondary-btn" type="button" onClick={onAddProduct}>
-          Agregar producto
-        </button>
-        <button className="secondary-btn" type="button" onClick={onAddSale}>
-          Agregar venta
-        </button>
-        <button className="secondary-btn" type="button" onClick={onAddProvider}>
-          Agregar proveedora
-        </button>
-      </div>
-
       <div className="dashboard-cards">
         {loading ? (
           <p>Cargando...</p>
@@ -51,6 +46,7 @@ export default function DashboardPage({ onAddProduct, onAddSale, onAddProvider, 
           <>
             <StatCard title="Productos en stock" value={counts.inStockCount} />
             <StatCard title="Productos vendidos" value={counts.soldCount} />
+            <StatCard title="Proveedoras" value={providersCount} />
           </>
         )}
       </div>

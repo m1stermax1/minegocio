@@ -2,66 +2,80 @@ import { Fragment, useMemo, useState } from "react";
 import ProvidersFormModal from "./ProvidersFormModal.jsx";
 import ItemsFormModal from "./ItemsFormModal.jsx";
 
-function ProvidersTable({ items, loading, onDataChange }) {
+function ProvidersTable({ providers = [], inventoryItems = [], loading, onDataChange }) {
   const [expandedProviders, setExpandedProviders] = useState(new Set());
   const [showProvidersModal, setShowProvidersModal] = useState(false);
   const [showItemsModal, setShowItemsModal] = useState(false);
   const [selectedProviderIdx, setSelectedProviderIdx] = useState(null);
 
-  const groupedProviders = useMemo(() => {
-    const groups = new Map();
+  const normalize = (value) => (value || "").toString().trim().toLowerCase();
 
-    items.forEach((item) => {
-      const providerName = item.nombre?.trim() || "Sin nombre";
-      const group = groups.get(providerName) || {
-        provider: providerName,
-        items: [],
-        totalPrice: 0,
-        soldCount: 0,
-        paidCount: 0,
-      };
+  const getProviderFullName = (provider) =>
+    `${provider.nombre || ""} ${provider.apellido || ""}`.trim();
 
-      group.items.push(item);
-      const price = Number(item.precio) || 0;
-      group.totalPrice += price;
-      if (item.estado === "vendido") {
-        group.soldCount += 1;
+  const providerKeyByLowerName = useMemo(() => {
+    const mapping = new Map();
+    providers.forEach((provider) => {
+      const fullName = getProviderFullName(provider);
+      const lowerFullName = normalize(fullName);
+      const lowerName = normalize(provider.nombre);
+
+      if (lowerName) {
+        mapping.set(lowerName, fullName);
       }
-      if (item.pago === "pagado") {
-        group.paidCount += 1;
+      if (lowerFullName) {
+        mapping.set(lowerFullName, fullName);
       }
+    });
+    return mapping;
+  }, [providers]);
 
-      groups.set(providerName, group);
+  const relatedItemsByProvider = useMemo(() => {
+    const result = new Map();
+
+    inventoryItems.forEach((item) => {
+      const itemProvider = normalize(item.proveedora);
+      const mappedProvider = providerKeyByLowerName.get(itemProvider) || itemProvider;
+      const providerName = mappedProvider || "Sin nombre";
+
+      if (!result.has(providerName)) {
+        result.set(providerName, []);
+      }
+      result.get(providerName).push(item);
     });
 
-    return Array.from(groups.values()).map((group) => {
-      const count = group.items.length;
+    return result;
+  }, [inventoryItems, providerKeyByLowerName]);
+
+  const providerRows = useMemo(() => {
+    return providers.map((provider) => {
+      const fullName = getProviderFullName(provider);
+      const relatedItems = relatedItemsByProvider.get(fullName) || [];
+      const totalPrice = relatedItems.reduce(
+        (sum, item) => sum + (Number(item.precio) || 0),
+        0,
+      );
+      const soldCount = relatedItems.filter(
+        (item) => (item.estado || "").toLowerCase() === "vendido",
+      ).length;
+
       return {
-        ...group,
-        itemsCount: count,
-        estado:
-          group.soldCount === count
-            ? "vendido"
-            : group.soldCount > 0
-              ? "mixto"
-              : "en stock",
-        pago:
-          group.paidCount === count
-            ? "pagado"
-            : group.paidCount > 0
-              ? "parcial"
-              : "impago",
+        provider,
+        relatedItems,
+        productsCount: relatedItems.length,
+        soldCount,
+        totalGain: totalPrice * 0.6,
       };
     });
-  }, [items]);
+  }, [providers, relatedItemsByProvider]);
 
-  const toggleProvider = (provider) => {
+  const toggleProvider = (providerName) => {
     setExpandedProviders((prev) => {
       const next = new Set(prev);
-      if (next.has(provider)) {
-        next.delete(provider);
+      if (next.has(providerName)) {
+        next.delete(providerName);
       } else {
-        next.add(provider);
+        next.add(providerName);
       }
       return next;
     });
@@ -75,7 +89,7 @@ function ProvidersTable({ items, loading, onDataChange }) {
 
     const amount = Number(cleaned);
     return Number.isFinite(amount)
-      ? `$ ${Math.round(amount * 1000).toLocaleString("es-AR")}`
+      ? `$ ${amount.toLocaleString("es-AR")}`
       : "-";
   };
 
@@ -109,7 +123,7 @@ function ProvidersTable({ items, loading, onDataChange }) {
     return <div className="table-state">Cargando proveedoras...</div>;
   }
 
-  if (!groupedProviders.length) {
+  if (!providerRows.length) {
     return (
       <div>
         <div className="table-state">No se encontraron proveedoras.</div>
@@ -135,88 +149,97 @@ function ProvidersTable({ items, loading, onDataChange }) {
           <thead>
             <tr>
               <th>Nombre</th>
-              <th>Prendas</th>
+              <th>Teléfono</th>
+              <th>Productos</th>
               <th>Vendidas</th>
-              <th>% Ganancia</th>
-              <th>Último pago</th>
+              <th>Total para proveedora</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
-            {groupedProviders.map((group) => {
-              const isExpanded = expandedProviders.has(group.provider);
+            {providerRows.map((row, index) => {
+              const fullName = getProviderFullName(row.provider);
+              const displayName = fullName || row.provider.nombre || "Sin nombre";
+              const isExpanded = expandedProviders.has(displayName);
+
               return (
-                <Fragment key={group.provider}>
+                <Fragment key={`${displayName}-${index}`}>
                   <tr className="provider-group-row">
+                    <td>{displayName}</td>
+                    <td>{row.provider.telefono || "-"}</td>
+                    <td>{row.productsCount}</td>
+                    <td>{row.soldCount}</td>
+                    <td>{formatPrice(row.totalGain)}</td>
                     <td>
                       <button
                         type="button"
-                        className="expand-btn"
-                        onClick={() => toggleProvider(group.provider)}
-                        aria-expanded={isExpanded}
-                        aria-label={`Ver items de ${group.provider}`}
+                        className="secondary-btn"
+                        onClick={() => toggleProvider(displayName)}
                       >
-                        {isExpanded ? "−" : "+"}
+                        {isExpanded ? "Ocultar" : "Ver productos"}
                       </button>
-                      {group.provider}
-                    </td>
-                    <td>{group.items?.length}</td>
-                    <td>{group.soldCount}</td>
-                    <td>{formatPrice(group.totalPrice * 0.6)}</td>
-
-                    <td>
-                      <span
-                        className={`payment-badge ${group.pago === "pagado" ? "paid" : "unpaid"}`}
+                      <button
+                        type="button"
+                        className="secondary-btn"
+                        onClick={() => handleAddItemClick(index)}
+                        style={{ marginLeft: "8px" }}
                       >
-                        Sáb, 16 de Mayo
-                      </span>
+                        + Producto
+                      </button>
                     </td>
                   </tr>
+
                   {isExpanded && (
                     <tr className="provider-expansion-row">
-                      <td colSpan={5}>
+                      <td colSpan={6}>
                         <div className="provider-items-table-wrapper">
-                          <table className="inventory-table provider-items-table">
-                            <thead>
-                              <tr>
-                                <th>Código</th>
-                                <th>Descripción</th>
-                                <th>Precio</th>
-                                <th>Proveedor</th>
-                                <th>Estado</th>
-                                <th>Pagado</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {group.items.map((item, index) => {
-                                const precioValue = Number(item.precio);
-                                return (
+                          {row.relatedItems.length > 0 ? (
+                            <table className="inventory-table provider-items-table">
+                              <thead>
+                                <tr>
+                                  <th>Código</th>
+                                  <th>Descripción</th>
+                                  <th>Precio</th>
+                                  <th>Estado</th>
+                                  <th>Pagado</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {row.relatedItems.map((item, itemIndex) => (
                                   <tr
-                                    key={`${group.provider}-${index}-${item.codigo || item.descripcion}`}
+                                    key={`${displayName}-${itemIndex}-${item.codigo || item.descripcion}`}
                                     className="provider-item-row"
                                   >
                                     <td>{item.codigo || "-"}</td>
                                     <td>{item.descripcion || "-"}</td>
                                     <td>{formatPrice(item.precio)}</td>
-                                    <td>{group.provider}</td>
                                     <td>
                                       <span
-                                        className={`status-badge ${item.estado === "vendido" ? "vendido" : "stock"}`}
+                                        className={`status-badge ${
+                                          item.estado === "vendido" ? "vendido" : "stock"
+                                        }`}
                                       >
                                         {item.estado || "-"}
                                       </span>
                                     </td>
                                     <td>
                                       <span
-                                        className={`payment-badge ${item.pagado === "si" ? "paid" : "unpaid"}`}
+                                        className={`payment-badge ${
+                                          (item.pago || "").toLowerCase() === "pagado"
+                                            ? "paid"
+                                            : "unpaid"
+                                        }`}
                                       >
-                                        {item.pagado || "no"}
+                                        {item.pago || "no"}
                                       </span>
                                     </td>
                                   </tr>
-                                );
-                              })}
-                            </tbody>
-                          </table>
+                                ))}
+                              </tbody>
+                            </table>
+                          ) : (
+                            <div className="table-state">No hay productos relacionados a esta proveedora.</div>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -236,6 +259,7 @@ function ProvidersTable({ items, loading, onDataChange }) {
           onClose={handleItemsModalClose}
           onItemsAdded={handleItemsAdded}
           defaultProviderId={selectedProviderIdx}
+          providers={providers}
         />
       </div>
     </div>

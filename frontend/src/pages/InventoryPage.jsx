@@ -9,10 +9,10 @@ import SalesTable from "../components/SalesTable.jsx";
 import PaymentsTable from "../components/PaymentsTable.jsx";
 import ProvidersFormModal from "../components/ProvidersFormModal.jsx";
 import ItemsFormModal from "../components/ItemsFormModal.jsx";
-import { fetchInventory, fetchProviders, fetchSales, } from "../services/api.js";
+import { fetchInventory, fetchProvidersComplete, fetchSales, } from "../services/api.js";
 
 function InventoryPage() {
-  const [activeView, setActiveView] = useState("inventory");
+  const [activeView, setActiveView] = useState("dashboard");
   const [inventory, setInventory] = useState([]);
   const [providers, setProviders] = useState([]);
   const [sales, setSales] = useState([]);
@@ -24,6 +24,7 @@ function InventoryPage() {
   const [showSaleModal, setShowSaleModal] = useState(false);
   const [showProvidersModal, setShowProvidersModal] = useState(false);
   const [dashboardRefresh, setDashboardRefresh] = useState(0);
+  const [providersRefresh, setProvidersRefresh] = useState(0);
   const [showItemsModal, setShowItemsModal] = useState(false);
   const inventoryTableRef = useRef(null);
 
@@ -43,7 +44,7 @@ function InventoryPage() {
   async function loadProviders() {
     try {
       setLoadingProviders(true);
-      const data = await fetchProviders();
+      const data = await fetchProvidersComplete();
       setProviders(data);
     } catch (error) {
       console.error("Error cargando proveedoras:", error);
@@ -84,6 +85,12 @@ function InventoryPage() {
     }
   }, [activeView]);
 
+  useEffect(() => {
+    if (activeView === "providers") {
+      loadProviders();
+    }
+  }, [providersRefresh, activeView]);
+
   const handleItemAdded = () => {
     loadInventory();
     setNotification("Item agregado correctamente a la lista.");
@@ -93,9 +100,12 @@ function InventoryPage() {
   const handleAddItem = () => {
     if (inventoryTableRef.current && activeView === "inventory") {
       inventoryTableRef.current.openAddItemModal();
+
     } else {
       setShowItemsModal(true);
     }
+
+    console.log("Abriendo modal desde InventoryTable");
   };
 
   const handleAddSale = async () => {
@@ -105,8 +115,10 @@ function InventoryPage() {
     setShowSaleModal(true);
   };
 
-  const handleProviderAdded = () => {
-    loadProviders();
+  const handleProviderAdded = async () => {
+    await loadProviders();
+    setProvidersRefresh((prev) => prev + 1);
+    setDashboardRefresh((prev) => prev + 1);
     setNotification("Proveedora agregada correctamente.");
     window.setTimeout(() => setNotification(""), 3200);
   };
@@ -138,20 +150,16 @@ function InventoryPage() {
       return providers;
     }
 
-    return providers.filter((item) => {
-      // const codigo = item.codigo?.toLowerCase() || "";
-      const nombre = item.nombre?.toLowerCase() || "";
-      const descripcion = item.descripcion?.toLowerCase() || "";
-      const precio = item.precio?.toString().toLowerCase() || "";
-      const estado = item.estado?.toLowerCase() || "";
-      const pago = item.pago?.toLowerCase() || "";
+    return providers.filter((provider) => {
+      const nombre = `${provider.nombre || ""} ${provider.apellido || ""}`.toLowerCase();
+      const telefono = provider.telefono?.toLowerCase() || "";
+      const alias = provider.alias?.toLowerCase() || "";
+      const cbu = provider.cbu?.toLowerCase() || "";
       return (
-        codigo.includes(query) ||
-        nombre.includes(query) || 
-        descripcion.includes(query) ||
-        precio.includes(query) ||
-        estado.includes(query) ||
-        pago.includes(query)
+        nombre.includes(query) ||
+        telefono.includes(query) ||
+        alias.includes(query) ||
+        cbu.includes(query)
       );
     });
   }, [providers, searchQuery]);
@@ -251,30 +259,31 @@ function InventoryPage() {
             <div className="toast-notification">{notification}</div>
           )}
           {isDashboard ? (
-          <DashboardPage refresh={dashboardRefresh} />
-        ) : isInventory ? (
-          <InventoryTable
-            ref={inventoryTableRef}
-            items={filteredInventory}
-            loading={loadingInventory}
-            onItemAdded={handleItemAdded}
-            providers={providers}
-          />
-        ) : isSales ? (
-          <SalesTable sales={sales} loading={loadingSales} />
-        ) : isPayments ? (
-          <PaymentsTable
-            inventory={filteredInventory}
-            providers={providers}
-            loading={loadingInventory || loadingProviders}
-          />
-        ) : (
-          <ProvidersTable
-            items={filteredProviders}
-            loading={loadingProviders}
-            onDataChange={loadProviders}
-          />
-        )}
+            <DashboardPage refresh={dashboardRefresh} />
+          ) : isInventory ? (
+            <InventoryTable
+              ref={inventoryTableRef}
+              items={filteredInventory}
+              loading={loadingInventory}
+              onItemAdded={handleItemAdded}
+              providers={providers}
+            />
+          ) : isSales ? (
+            <SalesTable sales={sales} loading={loadingSales} />
+          ) : isPayments ? (
+            <PaymentsTable
+              inventory={filteredInventory}
+              providers={providers}
+              loading={loadingInventory || loadingProviders}
+            />
+          ) : (
+            <ProvidersTable
+              providers={filteredProviders}
+              inventoryItems={filteredInventory}
+              loading={loadingProviders}
+              onDataChange={loadProviders}
+            />
+          )}
         </section>
       </main>
 
@@ -288,6 +297,8 @@ function InventoryPage() {
         isOpen={showItemsModal}
         onClose={handleItemsModalClose}
         onItemsAdded={handleItemAdded}
+        providers={providers}
+        providersRefresh={providersRefresh}
       />
 
       <SalesModal

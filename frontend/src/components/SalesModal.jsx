@@ -58,6 +58,10 @@ export default function SalesModal({ isOpen, onClose, inventoryItems = [], onSal
     setSelectedItems((prev) => prev.filter((item) => item.id !== id));
   };
 
+  const normalizeBarcodeSearch = (value) => {
+    return value.replace(/[’'‘]/g, '-');
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");
@@ -131,7 +135,7 @@ export default function SalesModal({ isOpen, onClose, inventoryItems = [], onSal
                 id="buscar-producto"
                 className="form-input"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => setSearchTerm(normalizeBarcodeSearch(e.target.value))}
                 placeholder="Escribe el código o descripción del producto..."
                 disabled={loading || isLoadingInventory}
                 autoComplete="off"

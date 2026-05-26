@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { addInventoryItem, fetchProvidersComplete } from '../services/api.js';
 
-function ItemsFormModal({ isOpen, onClose, onItemsAdded, defaultProviderId }) {
+function ItemsFormModal({ isOpen, onClose, onItemsAdded, defaultProviderId, providersRefresh, providers: parentProviders = [] }) {
   const [providers, setProviders] = useState([]);
   const [selectedProvider, setSelectedProvider] = useState(null);
   const [items, setItems] = useState([]);
@@ -12,8 +12,43 @@ function ItemsFormModal({ isOpen, onClose, onItemsAdded, defaultProviderId }) {
 
   // Cargar proveedoras
   useEffect(() => {
-    if (isOpen) {
-      loadProviders();
+    if (!isOpen) {
+      return;
+    }
+
+    if (parentProviders?.length > 0) {
+      setProviders(parentProviders);
+      return;
+    }
+
+    loadProviders();
+  }, [isOpen, providersRefresh, parentProviders]);
+
+  useEffect(() => {
+    if (!isOpen || !providers.length) {
+      return;
+    }
+
+    if (selectedProvider) {
+      const sameProvider = providers.find((prov) => prov.id === selectedProvider.id);
+      if (sameProvider) {
+        setSelectedProvider(sameProvider);
+        return;
+      }
+    }
+
+    if (defaultProviderId !== undefined && providers[defaultProviderId]) {
+      setSelectedProvider(providers[defaultProviderId]);
+    }
+  }, [isOpen, providers, defaultProviderId, selectedProvider]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedProvider(null);
+      setItems([]);
+      setNewItemName('');
+      setNewItemPrice('');
+      setError('');
     }
   }, [isOpen]);
 
@@ -21,7 +56,7 @@ function ItemsFormModal({ isOpen, onClose, onItemsAdded, defaultProviderId }) {
     try {
       const data = await fetchProvidersComplete();
       setProviders(data || []);
-      if (defaultProviderId !== undefined && data[defaultProviderId]) {
+      if (defaultProviderId !== undefined && data?.[defaultProviderId]) {
         setSelectedProvider(data[defaultProviderId]);
       }
     } catch (err) {
@@ -168,16 +203,16 @@ function ItemsFormModal({ isOpen, onClose, onItemsAdded, defaultProviderId }) {
               <label>Proveedora *</label>
               <select
                 className="form-select"
-                value={selectedProvider?.id || ''}
+                value={selectedProvider?.id ?? ''}
                 onChange={(e) => {
                   const id = parseInt(e.target.value);
-                  setSelectedProvider(providers[id] || null);
+                  setSelectedProvider(providers.find((prov) => prov.id === id) || null);
                 }}
                 disabled={loading}
               >
                 <option value="">Selecciona una proveedora</option>
-                {providers.map((prov, idx) => (
-                  <option key={idx} value={idx}>
+                {providers.map((prov) => (
+                  <option key={prov.id} value={prov.id}>
                     {prov.nombre} {prov.apellido}
                   </option>
                 ))}

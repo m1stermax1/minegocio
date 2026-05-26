@@ -184,40 +184,38 @@ export async function getProvidersListComplete() {
   const { sheets, spreadsheetId } = await getSheetsClient();
 
   try {
-    const response = await sheets.spreadsheets.get({
+    const response = await sheets.spreadsheets.values.get({
       spreadsheetId,
-      ranges: ["proveedoras maxi!A:F"],
-      includeGridData: true,
+      range: 'proveedoras maxi!A:F',
     });
 
-    const rows = response.data.sheets[0]?.data[0]?.rowData || [];
+    const rows = response.data.values || [];
 
     return rows
-      .slice(1)
       .filter((row) => {
-        const cells = row.values || [];
-        return cells.some((cell) => {
-          const value =
-            cell?.formattedValue ||
-            cell?.effectiveValue?.stringValue ||
-            cell?.effectiveValue?.numberValue;
-          return value !== undefined && value !== "";
-        });
+        const hasValue = row.some((cell) => cell !== undefined && cell !== "");
+        if (!hasValue) {
+          return false;
+        }
+
+        const firstCell = row[0]?.toString().trim().toLowerCase() || "";
+        if (firstCell === "nombre") {
+          return false;
+        }
+
+        return true;
       })
-      .map((row, index) => {
-        const cells = row.values || [];
-        return {
-          id: index,
-          nombre: getCellText(cells[0]),
-          apellido: getCellText(cells[1]),
-          telefono: getCellText(cells[2]),
-          alias: getCellText(cells[3]),
-          cbu: getCellText(cells[4]),
-        };
-      });
+      .map((row, index) => ({
+        id: index,
+        nombre: row[0]?.toString().trim() || "",
+        apellido: row[1]?.toString().trim() || "",
+        telefono: row[2]?.toString().trim() || "",
+        alias: row[3]?.toString().trim() || "",
+        cbu: row[4]?.toString().trim() || "",
+      }));
   } catch (err) {
     console.warn(
-      'proveedoras maxi sheet not found, returning empty list:',
+      'proveedoras maxi sheet not found or error reading values, returning empty list:',
       err.message,
     );
     return [];
