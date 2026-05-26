@@ -18,25 +18,39 @@ const __dirname = path.dirname(__filename);
 const BARCODES_DIR = path.join(__dirname, "..", "..", "barcodes");
 fs.mkdirSync(BARCODES_DIR, { recursive: true });
 
-function generateBarcodeSvg(code) {
-  const svgString = bwipjs.toSVG({
+async function generateBarcodePng(code) {
+  // Sanitiza el código para usarlo como nombre de archivo
+  const safeCode = code.replace(/[^A-Za-z0-9_-]/g, "_");
+
+  const fileName = `${safeCode}.png`;
+  const filePath = path.join(BARCODES_DIR, fileName);
+
+  // Genera PNG directamente
+  const pngBuffer = await bwipjs.toBuffer({
     bcid: "code128",
     text: code,
+
+    // Ajustado para etiquetas pequeñas Niimbot
     scale: 3,
-    height: 40,
+    height: 12,
+
     includetext: true,
     textxalign: "center",
-    textsize: 13,
+    textsize: 10,
+
     backgroundcolor: "FFFFFF",
-    paddingwidth: 10,
-    paddingheight: 10,
+
+    paddingwidth: 2,
+    paddingheight: 2,
   });
 
-  const safeCode = code.replace(/[^A-Za-z0-9_-]/g, "_");
-  const fileName = `${safeCode}.svg`;
-  const filePath = path.join(BARCODES_DIR, fileName);
-  fs.writeFileSync(filePath, svgString, "utf8");
-  return { fileName, filePath };
+  // Guarda el PNG
+  fs.writeFileSync(filePath, pngBuffer);
+
+  return {
+    fileName,
+    filePath,
+  };
 }
 
 async function getSheetsClient() {
@@ -453,8 +467,8 @@ export async function appendInventoryItems(items) {
   const generatedBarcodes = [];
 
   const values = items.map((item) => {
-    const codigo = `INV-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
-    const { fileName } = generateBarcodeSvg(codigo);
+    const codigo = `${Date.now()} ${Math.floor(Math.random() * 100000)}`;
+    const { fileName } = generateBarcodePng(codigo);
     generatedBarcodes.push({ codigo, fileName });
 
     const precioNumber = Number(item.precio) || 0;

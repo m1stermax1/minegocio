@@ -7,7 +7,7 @@ function Sidebar({ activeView, onViewChange }) {
       <div className="brand">
         <AiOutlineAppstore className="brand-icon" />
         <div>
-          <span className="brand-label">Mi Negocio App</span>
+          <span className="brand-label">Lila Feria Americana</span>
         </div>
       </div>
 

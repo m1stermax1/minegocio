@@ -165,7 +165,7 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
   const formatInventoryPrice = (value) => {
     const amount = Number(value);
     return Number.isFinite(amount)
-      ? `$ ${Math.round(amount * 1000).toLocaleString('es-AR')}`
+      ? `$ ${amount.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
       : '-';
   };
 

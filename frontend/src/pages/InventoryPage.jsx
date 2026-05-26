@@ -218,7 +218,7 @@ function InventoryPage() {
 
         <section className="page-panel">
           <div className="controls-row">
-            <SearchBar query={searchQuery} onChange={setSearchQuery} />
+            {isInventory || isProviders || isSales || isPayments ? (<SearchBar query={searchQuery} onChange={setSearchQuery} />) : null}
             {isDashboard && (
               <div className="controls-buttons">
                 <button className="secondary-btn" type="button" onClick={handleAddItem}>
