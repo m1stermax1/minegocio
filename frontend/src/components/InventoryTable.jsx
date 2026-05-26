@@ -1,6 +1,6 @@
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { FaCheck } from "react-icons/fa";
-import { updateInventoryRowStatus, addInventoryItem, fetchProvidersComplete } from "../services/api.js";
+import { fetchProviders, updateInventoryRowStatus, addInventoryItem, fetchProvidersComplete } from "../services/api.js";
 
 const InventoryTable = forwardRef(function InventoryTable({ items, loading, onItemAdded, providers = [], showSelection = true }, ref) {
   const [selectedItems, setSelectedItems] = useState([]);

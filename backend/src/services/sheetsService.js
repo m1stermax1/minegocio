@@ -490,3 +490,71 @@ export async function appendInventoryItems(items) {
 
   return { generatedBarcodes };
 }
+
+export async function getSalesData() {
+  const { sheets, spreadsheetId } = await getSheetsClient();
+
+  try {
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: 'ventas maxi!A:D',
+    });
+
+    const rows = response.data.values || [];
+
+    return rows.map((row) => {
+      const fecha = row[0] || "";
+      const metodoPago = row[1] || "";
+      const montoTotal = Number(row[2]) || 0;
+      let items = [];
+
+      if (row[3]) {
+        try {
+          items = JSON.parse(row[3]);
+        } catch {
+          items = row[3]
+            .toString()
+            .split(";;")
+            .map((itemText) => {
+              const parts = itemText.split(" | ");
+              return {
+                codigo: parts[0] || "",
+                descripcion: parts[1] || "",
+                proveedora: parts[2] || "",
+                precio: Number(parts[3]) || 0,
+              };
+            });
+        }
+      }
+
+      return {
+        fecha,
+        metodoPago,
+        montoTotal,
+        items,
+      };
+    });
+  } catch (error) {
+    console.error('Error leyendo ventas:', error);
+    return [];
+  }
+}
+
+export async function appendSaleRecord({ fecha, metodoPago, montoTotal, items }) {
+  const { sheets, spreadsheetId } = await getSheetsClient();
+
+  const values = [[
+    fecha,
+    metodoPago,
+    montoTotal,
+    JSON.stringify(items),
+  ]];
+
+  await sheets.spreadsheets.values.append({
+    spreadsheetId,
+    range: 'ventas maxi!A:D',
+    valueInputOption: 'RAW',
+    insertDataOption: 'INSERT_ROWS',
+    requestBody: { values },
+  });
+}

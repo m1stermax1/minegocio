@@ -113,15 +113,6 @@ function ProvidersTable({ items, loading, onDataChange }) {
     return (
       <div>
         <div className="table-state">No se encontraron proveedoras.</div>
-        <div style={{ marginTop: "20px" }}>
-          <button
-            className="primary-btn"
-            type="button"
-            onClick={() => setShowProvidersModal(true)}
-          >
-            + Agregar Primera Proveedora
-          </button>
-        </div>
         <ProvidersFormModal
           isOpen={showProvidersModal}
           onClose={handleProvidersModalClose}
@@ -139,15 +130,6 @@ function ProvidersTable({ items, loading, onDataChange }) {
 
   return (
     <div>
-      <div style={{ marginBottom: "16px", display: "flex", gap: "10px" }}>
-        <button
-          className="primary-btn"
-          type="button"
-          onClick={() => setShowProvidersModal(true)}
-        >
-          + Nueva Proveedora
-        </button>
-      </div>
       <div className="table-wrapper">
         <table className="table providers-table">
           <thead>

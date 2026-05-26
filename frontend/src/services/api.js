@@ -51,4 +51,24 @@ export async function fetchDashboardCounts() {
   return response.data;
 }
 
+export async function fetchSales() {
+  const response = await api.get('/inventory/sales');
+  return response.data;
+}
+
+export async function createSale(payload) {
+  const response = await api.post('/inventory/sales', payload);
+  return response.data;
+}
+
+export async function sendWhatsAppMessage(payload) {
+  const response = await api.post('/inventory/whatsapp/send', payload);
+  return response.data;
+}
+
+export async function createMercadoPagoTransfer(payload) {
+  const response = await api.post('/inventory/mercadopago/transfer', payload);
+  return response.data.redirectUrl || response.data.url;
+}
+
 export default api;

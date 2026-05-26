@@ -10,7 +10,7 @@ function StatCard({ title, value }) {
   );
 }
 
-export default function DashboardPage() {
+export default function DashboardPage({ onAddProduct, onAddSale, onAddProvider }) {
   const [counts, setCounts] = useState({ inStockCount: 0, soldCount: 0 });
   const [loading, setLoading] = useState(true);
 
@@ -34,7 +34,15 @@ export default function DashboardPage() {
   return (
     <section className="dashboard-panel">
       <div className="controls-row">
-        <div style={{ flex: 1 }} />
+        <button className="secondary-btn" type="button" onClick={onAddProduct}>
+          Agregar producto
+        </button>
+        <button className="secondary-btn" type="button" onClick={onAddSale}>
+          Agregar venta
+        </button>
+        <button className="secondary-btn" type="button" onClick={onAddProvider}>
+          Agregar proveedora
+        </button>
       </div>
 
       <div className="dashboard-cards">

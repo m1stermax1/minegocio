@@ -4,16 +4,26 @@ import SearchBar from "../components/SearchBar.jsx";
 import InventoryTable from "../components/InventoryTable.jsx";
 import ProvidersTable from "../components/ProvidersTable.jsx";
 import DashboardPage from "./DashboardPage.jsx";
-import { fetchInventory, fetchProviders } from "../services/api.js";
+import SalesModal from "../components/SalesModal.jsx";
+import SalesTable from "../components/SalesTable.jsx";
+import PaymentsTable from "../components/PaymentsTable.jsx";
+import ProvidersFormModal from "../components/ProvidersFormModal.jsx";
+import ItemsFormModal from "../components/ItemsFormModal.jsx";
+import { fetchInventory, fetchProviders, fetchSales, } from "../services/api.js";
 
 function InventoryPage() {
   const [activeView, setActiveView] = useState("inventory");
   const [inventory, setInventory] = useState([]);
   const [providers, setProviders] = useState([]);
+  const [sales, setSales] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loadingInventory, setLoadingInventory] = useState(true);
   const [loadingProviders, setLoadingProviders] = useState(false);
+  const [loadingSales, setLoadingSales] = useState(false);
   const [notification, setNotification] = useState("");
+  const [showSaleModal, setShowSaleModal] = useState(false);
+  const [showProvidersModal, setShowProvidersModal] = useState(false);
+  const [showItemsModal, setShowItemsModal] = useState(false);
   const inventoryTableRef = useRef(null);
 
   async function loadInventory() {
@@ -42,6 +52,19 @@ function InventoryPage() {
     }
   }
 
+  async function loadSales() {
+    try {
+      setLoadingSales(true);
+      const data = await fetchSales();
+      setSales(data);
+    } catch (error) {
+      console.error("Error cargando ventas:", error);
+      setSales([]);
+    } finally {
+      setLoadingSales(false);
+    }
+  }
+
   useEffect(() => {
     loadProviders();
   }, []);
@@ -54,6 +77,10 @@ function InventoryPage() {
     if (activeView === "inventory" || activeView === "ventas") {
       loadInventory();
     }
+
+    if (activeView === "ventas") {
+      loadSales();
+    }
   }, [activeView]);
 
   const handleItemAdded = () => {
@@ -63,9 +90,31 @@ function InventoryPage() {
   };
 
   const handleAddItem = () => {
-    if (inventoryTableRef.current) {
+    if (inventoryTableRef.current && activeView === "inventory") {
       inventoryTableRef.current.openAddItemModal();
+    } else {
+      setShowItemsModal(true);
     }
+  };
+
+  const handleAddSale = async () => {
+    if (!inventory.length) {
+      await loadInventory();
+    }
+    setShowSaleModal(true);
+  };
+
+  const handleProviderAdded = () => {
+    loadProviders();
+    setNotification("Proveedora agregada correctamente.");
+    window.setTimeout(() => setNotification(""), 3200);
+  };
+
+  const handleSaleCreated = () => {
+    loadInventory();
+    loadSales();
+    setNotification("Venta cargada correctamente.");
+    window.setTimeout(() => setNotification(""), 3200);
   };
 
   const filteredInventory = useMemo(() => {
@@ -88,7 +137,7 @@ function InventoryPage() {
     }
 
     return providers.filter((item) => {
-      const codigo = item.codigo?.toLowerCase() || "";
+      // const codigo = item.codigo?.toLowerCase() || "";
       const nombre = item.nombre?.toLowerCase() || "";
       const descripcion = item.descripcion?.toLowerCase() || "";
       const precio = item.precio?.toString().toLowerCase() || "";
@@ -96,7 +145,7 @@ function InventoryPage() {
       const pago = item.pago?.toLowerCase() || "";
       return (
         codigo.includes(query) ||
-        nombre.includes(query) ||
+        nombre.includes(query) || 
         descripcion.includes(query) ||
         precio.includes(query) ||
         estado.includes(query) ||
@@ -128,9 +177,16 @@ function InventoryPage() {
             ? "Ventas"
             : "Pagos";
 
-  const [showProvidersModal, setShowProvidersModal] = useState(false);
-    const handleProvidersModalClose = () => {
+  const handleProvidersModalClose = () => {
     setShowProvidersModal(false);
+  };
+
+  const handleItemsModalClose = () => {
+    setShowItemsModal(false);
+  };
+
+  const handleSaleModalClose = () => {
+    setShowSaleModal(false);
   };
 
   const isInventory = activeView === "inventory";
@@ -153,6 +209,19 @@ function InventoryPage() {
         <section className="page-panel">
           <div className="controls-row">
             <SearchBar query={searchQuery} onChange={setSearchQuery} />
+            {isDashboard && (
+              <div className="controls-buttons">
+                <button className="secondary-btn" type="button" onClick={handleAddItem}>
+                  Agregar producto
+                </button>
+                <button className="secondary-btn" type="button" onClick={handleAddSale}>
+                  Agregar venta
+                </button>
+                <button className="secondary-btn" type="button" onClick={() => setShowProvidersModal(true)}>
+                  Agregar proveedora
+                </button>
+              </div>
+            )}
             {isInventory && (
               <div className="controls-buttons">
                 <button
@@ -162,12 +231,6 @@ function InventoryPage() {
                 >
                   Agregar producto
                 </button>
-                {/* <button
-                  className="bulk-action-btn"
-                  disabled={!inventoryTableRef.current?.getSelectedCount?.()}
-                >
-                  Acción masiva
-                </button> */}
               </div>
             )}
             {isProviders && (
@@ -196,20 +259,12 @@ function InventoryPage() {
               providers={providers}
             />
           ) : isSales ? (
-            <InventoryTable
-              items={filteredSales}
-              loading={loadingInventory}
-              providers={providers}
-              showSelection={false}
-            />
+            <SalesTable sales={sales} loading={loadingSales} />
           ) : isPayments ? (
-            <InventoryTable
-              items={filteredPayments.map((item) => ({
-                ...item,
-                proveedora: item.nombre,
-              }))}
-              loading={loadingProviders}
-              showSelection={false}
+            <PaymentsTable
+              inventory={filteredInventory}
+              providers={providers}
+              loading={loadingInventory || loadingProviders}
             />
           ) : (
             <ProvidersTable
@@ -220,6 +275,26 @@ function InventoryPage() {
           )}
         </section>
       </main>
+
+      <ProvidersFormModal
+        isOpen={showProvidersModal}
+        onClose={handleProvidersModalClose}
+        onProviderAdded={handleProviderAdded}
+      />
+
+      <ItemsFormModal
+        isOpen={showItemsModal}
+        onClose={handleItemsModalClose}
+        onItemsAdded={handleItemAdded}
+      />
+
+      <SalesModal
+        isOpen={showSaleModal}
+        onClose={handleSaleModalClose}
+        inventoryItems={inventory}
+        isLoadingInventory={loadingInventory}
+        onSaleCreated={handleSaleCreated}
+      />
     </div>
   );
 }
