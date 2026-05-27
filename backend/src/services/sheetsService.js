@@ -571,3 +571,41 @@ export async function appendSaleRecord({ fecha, metodoPago, montoTotal, items })
     requestBody: { values },
   });
 }
+
+export async function getOwnerTotalForMonth(month, year) {
+  const { sheets, spreadsheetId } = await getSheetsClient();
+
+  try {
+    const response = await sheets.spreadsheets.get({
+      spreadsheetId,
+      ranges: ["LOCAL MAXI!A:L"],
+      includeGridData: true,
+    });
+
+    const rows = response.data.sheets[0].data[0].rowData || [];
+
+    let total = 0;
+
+    rows.forEach((row) => {
+      const cells = row.values || [];
+
+      const fechaVentaRaw = getCellText(cells[4]); // columna E (fecha de venta)
+      if (!fechaVentaRaw) return;
+
+      const fechaVenta = new Date(fechaVentaRaw);
+      if (Number.isNaN(fechaVenta.getTime())) return;
+
+      if (fechaVenta.getMonth() === month && fechaVenta.getFullYear() === year) {
+        const precioVenta = Number(getCellText(cells[3])) || 0; // columna D
+        const precioSugerido = Number(getCellText(cells[2])) || 0; // columna C
+        const ownerShare = precioVenta - precioSugerido * 0.6;
+        total += ownerShare;
+      }
+    });
+
+    return total;
+  } catch (err) {
+    console.error('Error calculando total de la dueña:', err.message);
+    return 0;
+  }
+}

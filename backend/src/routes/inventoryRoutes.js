@@ -8,6 +8,7 @@ import {
   addNewProvider,
   getSalesData,
   appendSaleRecord,
+  getOwnerTotalForMonth,
 } from "../services/sheetsService.js";
 import {
   sendWhatsAppMessage,
@@ -73,6 +74,19 @@ router.get("/sales", async (req, res) => {
   } catch (error) {
     console.error("Error cargando ventas:", error);
     res.status(500).json({ error: "No se pudieron cargar las ventas" });
+  }
+});
+
+router.get('/owner-total', async (req, res) => {
+  try {
+    const now = new Date();
+    const month = now.getMonth();
+    const year = now.getFullYear();
+    const total = await getOwnerTotalForMonth(month, year);
+    res.json({ totalOwner: total });
+  } catch (error) {
+    console.error('Error calculando total para la dueña:', error);
+    res.status(500).json({ error: 'No se pudo calcular el total para la dueña' });
   }
 });
 
