@@ -40,8 +40,8 @@ function ProvidersFormModal({ isOpen, onClose, onProviderAdded }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-slate-900/80 backdrop-blur flex items-center justify-center p-5 z-50">
-      <div className="w-full max-w-md bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden">
+    <div className="fixed inset-0 shadow-2xs backdrop-blur flex items-center justify-center p-5 z-50">
+      <div className="providersModal w-full max-w-md bg-slate-800  border-2 border-[#bf99cc] border border-slate-700 rounded-2xl overflow-hidden">
         <div className="flex items-start justify-between gap-4 p-6 border-b border-slate-700">
           <div>
             <h2 className="text-xl font-semibold">Nueva Proveedora</h2>

@@ -217,7 +217,7 @@ function InventoryPage() {
         </div>
 
         <section className="bg-slate-800/70 border border-slate-700 rounded-2xl p-7 min-h-[72vh] shadow-soft">
-          <div className="flex gap-4 items-end mb-6">
+          <div className="flex gap-4 items-center mb-6">
             {isInventory || isProviders || isSales || isPayments ? (<SearchBar query={searchQuery} onChange={setSearchQuery} />) : null}
             {isDashboard && (
               <div className="flex gap-3 items-center">

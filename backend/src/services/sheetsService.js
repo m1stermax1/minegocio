@@ -4,6 +4,8 @@ import { fileURLToPath } from "url";
 import bwipjs from "bwip-js";
 import { google } from "googleapis";
 import dotenv from "dotenv";
+import { exec } from "child_process";
+import sharp from "sharp";
 
 dotenv.config();
 
@@ -15,41 +17,86 @@ function getCellText(cell) {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const BARCODES_DIR = path.join(__dirname, "..", "..", "barcodes");
-fs.mkdirSync(BARCODES_DIR, { recursive: true });
+const TEMP_DIR = path.join(__dirname, "..", "..", "temp");
+fs.mkdirSync(TEMP_DIR, { recursive: true });
 
-async function generateBarcodePng(code) {
-  // Sanitiza el código para usarlo como nombre de archivo
+async function generateBarcodeAndPrint(code) {
   const safeCode = code.replace(/[^A-Za-z0-9_-]/g, "_");
 
-  const fileName = `${safeCode}.png`;
-  const filePath = path.join(BARCODES_DIR, fileName);
+  const filePath = path.join(
+    TEMP_DIR,
+    `${safeCode}-${Date.now()}.png`
+  );
 
-  // Genera PNG directamente
-  const pngBuffer = await bwipjs.toBuffer({
-    bcid: "code128",
-    text: code,
+  // Generar barcode chico y nítido
+const barcodeBuffer = await bwipjs.toBuffer({
+  bcid: "code128",
+  text: code,
 
-    // Ajustado para etiquetas pequeñas Niimbot
-    scale: 3,
-    height: 12,
+  scale: 3,
+  height: 8,
 
-    includetext: true,
-    textxalign: "center",
-    textsize: 10,
+  includetext: true,
+  textxalign: "center",
+  textsize: 7,
 
-    backgroundcolor: "FFFFFF",
+  paddingwidth: 0,
+  paddingheight: 0,
 
-    paddingwidth: 2,
-    paddingheight: 2,
+  backgroundcolor: "FFFFFF",
+});
+
+// Rotar barcode
+const rotatedBarcode = await sharp(barcodeBuffer)
+  .rotate(90)
+  .resize({
+    width: 80,
+    height: 200,
+    fit: "inside",
+    withoutEnlargement: true,
+  })
+  .png()
+  .toBuffer();
+
+// Canvas exacto para 1.5cm x 3cm
+const finalImage = await sharp({
+  create: {
+    width: 96,
+    height: 300,
+    channels: 3,
+    background: "#FFFFFF",
+  },
+})
+  .composite([
+    {
+      input: rotatedBarcode,
+      gravity: "center",
+    },
+  ])
+  .png()
+  .toBuffer();
+
+fs.writeFileSync(filePath, finalImage);
+
+  await new Promise((resolve, reject) => {
+    exec(
+       `python -m niimprint -m d110 -c usb -a COM3 --density 3 -i "${filePath}"`,
+      (error, stdout, stderr) => {
+        if (error) {
+          reject(stderr || error.message);
+          return;
+        }
+
+        resolve();
+      }
+    );
   });
 
-  // Guarda el PNG
-  fs.writeFileSync(filePath, pngBuffer);
+  fs.unlinkSync(filePath);
 
   return {
-    fileName,
-    filePath,
+    success: true,
+    code,
   };
 }
 
@@ -287,23 +334,23 @@ export async function setInventoryRowStatus(rowIndex, estado, metodoPago, precio
 
   const sheetId = sheetData.properties.sheetId;
   const isVendido = estado?.toLowerCase() === "vendido";
-  
+
   let precioVentaValue = { userEnteredValue: { numberValue: 0 } };
   let metodoPagoValue = { userEnteredValue: { stringValue: '' } };
   let gananciaValue = { userEnteredValue: { numberValue: 0 } };
-  
+
   if (isVendido) {
     const rowData = sheet.data?.[0]?.rowData?.[rowIndex];
     const precioSuggeridoCell = rowData?.values?.[2];
     const precioSuggeridoRaw = getCellText(precioSuggeridoCell);
     const precioSuggeridoNum = Number(precioSuggeridoRaw) || 0;
-    
+
     const porcentajeDueñaCell = rowData?.values?.[6];
     const porcentajeDueñaRaw = getCellText(porcentajeDueñaCell);
     const porcentajeDueñaNum = Number(porcentajeDueñaRaw) || 0;
-    
+
     let precioVenta = precioVentaManual ? Number(precioVentaManual) : 0;
-    
+
     if (!precioVentaManual && metodoPago) {
       if (metodoPago === 'efectivo') {
         precioVenta = precioSuggeridoNum * 0.90; // 10% discount
@@ -313,14 +360,14 @@ export async function setInventoryRowStatus(rowIndex, estado, metodoPago, precio
         precioVenta = precioSuggeridoNum * 0.9441; // 5.59% discount
       }
     }
-    
+
     const ganancia = precioVenta - porcentajeDueñaNum;
-    
+
     precioVentaValue = { userEnteredValue: { numberValue: precioVenta } };
     metodoPagoValue = { userEnteredValue: { stringValue: metodoPago || 'sin especificar' } };
     gananciaValue = { userEnteredValue: { numberValue: ganancia } };
   }
-  
+
   const greenBackground = isVendido
     ? { red: 0.46666667, green: 0.76862745, blue: 0.16470588 }
     : { red: 1, green: 1, blue: 1 };
@@ -452,31 +499,49 @@ export async function appendInventoryItems(items) {
     majorDimension: "COLUMNS",
   });
 
-  const columnAValues = (response.data.values && response.data.values[0]) || [];
-  const columnBValues = (response.data.values && response.data.values[1]) || [];
+  const columnAValues =
+    (response.data.values && response.data.values[0]) || [];
+
+  const columnBValues =
+    (response.data.values && response.data.values[1]) || [];
+
   let lastNonEmptyRowB = 0;
 
   for (let i = columnBValues.length - 1; i >= 0; i--) {
     if (columnBValues[i]?.toString().trim()) {
-      lastNonEmptyRowB = i + 1; // rows are 1-based
+      lastNonEmptyRowB = i + 1;
       break;
     }
   }
 
   const startRow = lastNonEmptyRowB + 1;
-  const generatedBarcodes = [];
 
-  const values = items.map((item) => {
-    const codigo = `${Date.now()} ${Math.floor(Math.random() * 100000)}`;
-    const { fileName } = generateBarcodePng(codigo);
-    generatedBarcodes.push({ codigo, fileName });
+  const generatedBarcodes = [];
+  const values = [];
+
+  for (const item of items) {
+    // Código único más seguro
+    const codigo =
+      Date.now().toString().slice(-8) +
+      Math.floor(Math.random() * 100);
+
+    // imprimir etiqueta
+    await generateBarcodeAndPrint(codigo);
+
+    generatedBarcodes.push({
+      codigo,
+      printed: true,
+    });
 
     const precioNumber = Number(item.precio) || 0;
+
     const porcentajeDueña = precioNumber * 0.6;
 
-    const fechaCarga = new Date().toISOString().split('T')[0];
+    const fechaCarga = new Date()
+      .toISOString()
+      .split("T")[0];
 
-    return [
+    values.push([
       codigo,
       item.nombre || "",
       item.precio?.toString() || "0",
@@ -489,12 +554,13 @@ export async function appendInventoryItems(items) {
       "",
       item.proveedora || "",
       fechaCarga,
-    ];
-  });
+    ]);
+  }
 
   await sheets.spreadsheets.values.update({
     spreadsheetId,
-    range: `LOCAL MAXI!A${startRow}:L${startRow + values.length - 1}`,
+    range: `LOCAL MAXI!A${startRow}:L${startRow + values.length - 1
+      }`,
     valueInputOption: "RAW",
     requestBody: {
       values,

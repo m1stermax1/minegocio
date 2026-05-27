@@ -66,14 +66,14 @@ function ItemsFormModal({ isOpen, onClose, onItemsAdded, defaultProviderId, prov
   const generateWhatsAppMessage = () => {
     if (!items.length || !selectedProvider) return '';
 
-    let message = `Hola ${selectedProvider.nombre}, aquí te envío los detalles de los productos:\n\n`;
+    let message = `Hola ${selectedProvider.nombre}, aquí te envío los detalles de las prendas:\n\n`;
     const total = items.reduce((s, it) => s + it.precio, 0);
 
     items.forEach((item) => {
-      message += `*${item.nombre}* - $${item.precio.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}\n`;
+      message += `${item.nombre} - $${item.precio.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}\n`;
     });
 
-    message += `\n*Total: $${total.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}*`;
+    message += `\n*Del valor de cada prenda el 60% serìa para vos!* \n\n*Si se vende algo durante la semana te estaremos contactando el dìa Sàbado para realizar la transferencia o nos avisas si lo retiras durante la semana!*`;
     return message;
   };
 
@@ -115,9 +115,9 @@ function ItemsFormModal({ isOpen, onClose, onItemsAdded, defaultProviderId, prov
   const total = items.reduce((s, it) => s + it.precio, 0);
 
   return (
-    <div className="fixed inset-0 bg-slate-900/80 backdrop-blur flex items-center justify-center p-5 z-50">
-      <div className="w-full max-w-lg bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden">
-        <div className="flex items-start justify-between gap-4 p-6 border-b border-slate-700">
+    <div className="fixed inset-0 backdrop-blur flex items-center justify-center p-5 z-50">
+      <div className="itemsModal w-full max-w-lg bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden">
+        <div className="flex items-start justify-between gap-4 p-4 border-b border-slate-700">
           <div>
             <h2 className="text-xl font-semibold">Agregar Productos</h2>
             <p className="text-slate-400 text-sm m-0">Agrega productos y envíalos por WhatsApp</p>

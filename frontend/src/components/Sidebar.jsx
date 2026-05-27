@@ -11,7 +11,7 @@ function Sidebar({ activeView, onViewChange }) {
         </div>
       </div>
 
-      <nav className="flex flex-col gap-2">
+      <nav className="sidebar flex flex-col gap-2">
         <button
           className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === 'dashboard' ? 'bg-slate-700' : 'hover:bg-slate-700'}`}
           type="button"

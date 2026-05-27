@@ -111,8 +111,8 @@ export default function SalesModal({ isOpen, onClose, inventoryItems = [], onSal
   }
 
   return (
-    <div className="fixed inset-0 bg-slate-900/80 backdrop-blur flex items-center justify-center p-5 z-50">
-      <div className="w-full max-w-4xl bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden max-h-[90vh]">
+    <div className="fixed inset-0 backdrop-blur flex items-center justify-center p-5 z-50">
+      <div className="salesModal w-full max-w-4xl bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden max-h-[90vh]">
         <div className="flex items-start justify-between gap-4 p-6 border-b border-slate-700">
           <div>
             <h2 className="text-xl font-semibold">Agregar Venta</h2>
@@ -172,9 +172,7 @@ export default function SalesModal({ isOpen, onClose, inventoryItems = [], onSal
                     {selectedItems.map((item) => (
                       <div key={item.id} className="flex justify-between items-center p-3 bg-slate-900/30 border border-slate-700 rounded-md">
                         <div>
-                          <span className="font-bold text-accent">{item.codigo || '-'}</span>
                           <span className="ml-2 font-medium">{item.descripcion || '-'}</span>
-                          <div className="text-sm text-slate-400 mt-1">Proveedor: {item.proveedora || 'mío'}</div>
                         </div>
                         <div className="flex items-center gap-3">
                           <strong className="text-lg">{formatPrice(item.precio)}</strong>

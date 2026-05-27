@@ -3,7 +3,7 @@ import { fetchDashboardCounts, fetchProvidersComplete, fetchSales, fetchOwnerTot
 
 function StatCard({ title, value, subtitle }) {
   return (
-    <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow">
+    <div className="dashboard-card bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow">
       <p className="text-sm text-slate-400 tracking-wide">{title}</p>
       <p className="text-2xl font-bold mt-1">{value}</p>
       {subtitle && <p className="text-sm text-slate-400 mt-1">{subtitle}</p>}
@@ -65,7 +65,7 @@ export default function DashboardPage({ onAddProduct, onAddSale, onAddProvider, 
   };
 
   return (
-    <section className="bg-slate-800/70 border border-slate-700 rounded-2xl p-7 min-h-[72vh] shadow-soft">
+    <section className="p-3 min-h-[72vh]">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {loading ? (
           <p>Cargando...</p>
