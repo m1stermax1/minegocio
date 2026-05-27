@@ -144,8 +144,8 @@ function ProvidersTable({ providers = [], inventoryItems = [], loading, onDataCh
 
   return (
     <div>
-      <div className="table-wrapper">
-        <table className="table providers-table">
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[760px] border-separate border-spacing-0">
           <thead>
             <tr>
               <th>Nombre</th>
@@ -171,19 +171,10 @@ function ProvidersTable({ providers = [], inventoryItems = [], loading, onDataCh
                     <td>{row.soldCount}</td>
                     <td>{formatPrice(row.totalGain)}</td>
                     <td>
-                      <button
-                        type="button"
-                        className="secondary-btn"
-                        onClick={() => toggleProvider(displayName)}
-                      >
+                      <button type="button" className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2" onClick={() => toggleProvider(displayName)}>
                         {isExpanded ? "Ocultar" : "Ver productos"}
                       </button>
-                      <button
-                        type="button"
-                        className="secondary-btn"
-                        onClick={() => handleAddItemClick(index)}
-                        style={{ marginLeft: "8px" }}
-                      >
+                      <button type="button" className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 ml-2" onClick={() => handleAddItemClick(index)}>
                         + Producto
                       </button>
                     </td>
@@ -192,9 +183,9 @@ function ProvidersTable({ providers = [], inventoryItems = [], loading, onDataCh
                   {isExpanded && (
                     <tr className="provider-expansion-row">
                       <td colSpan={6}>
-                        <div className="provider-items-table-wrapper">
+                        <div className="mt-3">
                           {row.relatedItems.length > 0 ? (
-                            <table className="inventory-table provider-items-table">
+                            <table className="w-full min-w-[720px] border-separate border-spacing-0">
                               <thead>
                                 <tr>
                                   <th>Código</th>
@@ -206,32 +197,15 @@ function ProvidersTable({ providers = [], inventoryItems = [], loading, onDataCh
                               </thead>
                               <tbody>
                                 {row.relatedItems.map((item, itemIndex) => (
-                                  <tr
-                                    key={`${displayName}-${itemIndex}-${item.codigo || item.descripcion}`}
-                                    className="provider-item-row"
-                                  >
+                                  <tr key={`${displayName}-${itemIndex}-${item.codigo || item.descripcion}`} className="odd:bg-slate-900/20">
                                     <td>{item.codigo || "-"}</td>
                                     <td>{item.descripcion || "-"}</td>
                                     <td>{formatPrice(item.precio)}</td>
                                     <td>
-                                      <span
-                                        className={`status-badge ${
-                                          item.estado === "vendido" ? "vendido" : "stock"
-                                        }`}
-                                      >
-                                        {item.estado || "-"}
-                                      </span>
+                                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${item.estado === 'vendido' ? 'bg-rose-800/40 text-rose-300 border border-rose-700' : 'bg-emerald-800/40 text-emerald-300 border border-emerald-700'}`}>{item.estado || '-'}</span>
                                     </td>
                                     <td>
-                                      <span
-                                        className={`payment-badge ${
-                                          (item.pago || "").toLowerCase() === "pagado"
-                                            ? "paid"
-                                            : "unpaid"
-                                        }`}
-                                      >
-                                        {item.pago || "no"}
-                                      </span>
+                                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${(item.pago || '').toLowerCase() === 'pagado' ? 'bg-emerald-800/40 text-emerald-300 border border-emerald-700' : 'bg-amber-900/40 text-amber-200 border border-amber-700'}`}>{item.pago || 'no'}</span>
                                     </td>
                                   </tr>
                                 ))}

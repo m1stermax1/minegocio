@@ -85,18 +85,16 @@ De Viernes a Domingo hacemos transferencias!`;
   };
 
   return (
-    <div className="modal-backdrop">
-      <div className="modal" style={{ maxWidth: "600px", width: "100%", maxHeight: "90vh", overflowY: "auto" }}>
-        <div className="modal-header">
+    <div className="fixed inset-0 bg-slate-900/80 backdrop-blur flex items-center justify-center p-5 z-50">
+      <div className="w-full max-w-lg bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden max-h-[90vh]">
+        <div className="flex items-start justify-between gap-4 p-6 border-b border-slate-700">
           <div>
-            <h2>Pago a {proveedora?.nombre}</h2>
-            <p style={{ color: "var(--muted)", fontSize: "0.9rem", margin: 0 }}>
-              {itemCount} producto{itemCount !== 1 ? "s" : ""} vendido{itemCount !== 1 ? "s" : ""}
-            </p>
+            <h2 className="text-xl font-semibold">Pago a {proveedora?.nombre}</h2>
+            <p className="text-slate-400 text-sm m-0">{itemCount} producto{itemCount !== 1 ? "s" : ""} vendido{itemCount !== 1 ? "s" : ""}</p>
           </div>
           <button
             type="button"
-            className="modal-close"
+            className="text-slate-400 text-xl p-1 rounded-full hover:text-slate-100"
             onClick={onClose}
             aria-label="Cerrar modal"
             disabled={loading}
@@ -105,28 +103,18 @@ De Viernes a Domingo hacemos transferencias!`;
           </button>
         </div>
 
-        <div className="modal-form">
-          {error && <div className="form-error">{error}</div>}
+        <div className="p-6 overflow-y-auto">
+          {error && <div className="text-rose-300 bg-rose-900/20 border border-rose-800 rounded-md p-3">{error}</div>}
           {success && (
-            <div
-              className="form-success"
-              style={{
-                padding: "12px 14px",
-                backgroundColor: "rgba(34, 197, 94, 0.14)",
-                color: "var(--success)",
-                border: "1px solid var(--success)",
-                borderRadius: "12px",
-                marginBottom: "16px",
-              }}
-            >
+            <div className="p-3 bg-emerald-900/20 text-emerald-300 border border-emerald-800 rounded-md mb-4">
               {success}
             </div>
           )}
 
-          <div style={{ marginBottom: "24px" }}>
-            <h3 style={{ margin: "0 0 12px" }}>Productos vendidos</h3>
-            <div className="table-wrapper" style={{ maxHeight: "300px", overflowY: "auto" }}>
-              <table className="inventory-table">
+          <div className="mb-6">
+            <h3 className="mb-3 text-base font-semibold">Productos vendidos</h3>
+            <div className="max-h-[300px] overflow-y-auto">
+              <table className="w-full min-w-[520px] border-separate border-spacing-0">
                 <thead>
                   <tr>
                     <th>Descripción</th>
@@ -149,82 +137,42 @@ De Viernes a Domingo hacemos transferencias!`;
               </table>
             </div>
           </div>
-
-          <div className="summary-card" style={{ marginBottom: "24px" }}>
-            <div className="summary-row">
-              <span>Total a transferir</span>
-              <strong style={{ fontSize: "1.2rem", color: "var(--accent)" }}>
-                ${Number(payment.totalProvider || 0).toLocaleString("es-AR", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </strong>
+          <div className="mb-6 p-4 bg-slate-900/20 border border-slate-700 rounded-lg">
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Total a transferir</span>
+              <strong className="text-lg text-accent">${Number(payment.totalProvider || 0).toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
             </div>
           </div>
 
-          <div
-            style={{
-              marginBottom: "24px",
-              padding: "16px",
-              backgroundColor: "var(--surface-strong)",
-              border: "1px solid var(--border)",
-              borderRadius: "12px",
-            }}
-          >
-            <p style={{ margin: "0 0 12px", fontSize: "0.9rem", fontWeight: 600, color: "var(--accent)" }}>
-              Mensaje que se enviará:
-            </p>
-            <p style={{ margin: 0, fontSize: "0.9rem", lineHeight: "1.5", whiteSpace: "pre-wrap", color: "var(--text)" }}>
-              {messageText}
-            </p>
+          <div className="mb-6 p-4 bg-slate-900/20 border border-slate-700 rounded-lg">
+            <p className="mb-3 text-sm font-semibold text-accent">Mensaje que se enviará:</p>
+            <p className="text-sm whitespace-pre-wrap text-slate-200">{messageText}</p>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "24px" }}>
+          <div className="flex flex-col gap-3 mb-6">
             <button
               type="button"
-              className="primary-btn"
+              className="flex items-center justify-center gap-2 bg-emerald-500 text-white rounded-lg px-4 py-2"
               onClick={handleSendWhatsApp}
               disabled={loading}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "8px",
-                backgroundColor: "#25D366",
-                color: "#ffffff",
-                transition: "background-color 0.2s ease",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#20ba5a")}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#25D366")}
             >
               {loading ? "Enviando..." : "📱 Enviar por WhatsApp"}
             </button>
 
             <button
               type="button"
-              className="primary-btn"
+              className="flex items-center justify-center gap-2 bg-sky-600 text-white rounded-lg px-4 py-2"
               onClick={handleMercadoPagoTransfer}
               disabled={loading}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "8px",
-                backgroundColor: "#009EE3",
-                color: "#ffffff",
-                transition: "background-color 0.2s ease",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#008ac6")}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#009EE3")}
             >
               {loading ? "Procesando..." : "💳 Transferir en Mercado Pago"}
             </button>
           </div>
 
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px" }}>
+          <div className="flex justify-end gap-3">
             <button
               type="button"
-              className="secondary-btn"
+              className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2"
               onClick={onClose}
               disabled={loading}
             >

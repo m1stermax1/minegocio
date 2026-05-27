@@ -206,36 +206,36 @@ function InventoryPage() {
   const isDashboard = activeView === "dashboard";
 
   return (
-    <div className="layout">
+    <div className="min-h-screen md:grid md:grid-cols-[280px_1fr]">
       <Sidebar activeView={activeView} onViewChange={setActiveView} />
-      <main className="content">
-        <div className="content-header">
+      <main className="p-8">
+        <div className="flex items-end justify-between gap-6 mb-7">
           <div>
-            <p className="eyebrow">Panel</p>
-            <h1>{pageTitle}</h1>
+            <p className="text-accent uppercase tracking-widest text-xs mb-1">Panel</p>
+            <h1 className="text-3xl md:text-4xl m-0">{pageTitle}</h1>
           </div>
         </div>
 
-        <section className="page-panel">
-          <div className="controls-row">
+        <section className="bg-slate-800/70 border border-slate-700 rounded-2xl p-7 min-h-[72vh] shadow-soft">
+          <div className="flex gap-4 items-end mb-6">
             {isInventory || isProviders || isSales || isPayments ? (<SearchBar query={searchQuery} onChange={setSearchQuery} />) : null}
             {isDashboard && (
-              <div className="controls-buttons">
-                <button className="secondary-btn" type="button" onClick={handleAddItem}>
+              <div className="flex gap-3 items-center">
+                <button className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2" type="button" onClick={handleAddItem}>
                   Agregar producto
                 </button>
-                <button className="secondary-btn" type="button" onClick={handleAddSale}>
+                <button className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2" type="button" onClick={handleAddSale}>
                   Agregar venta
                 </button>
-                <button className="secondary-btn" type="button" onClick={() => setShowProvidersModal(true)}>
+                <button className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2" type="button" onClick={() => setShowProvidersModal(true)}>
                   Agregar proveedora
                 </button>
               </div>
             )}
             {isInventory && (
-              <div className="controls-buttons">
+              <div className="flex gap-3 items-center">
                 <button
-                  className="primary-btn"
+                  className="bg-accent text-slate-900 font-semibold rounded-lg px-4 py-2"
                   type="button"
                   onClick={handleAddItem}
                 >
@@ -244,9 +244,9 @@ function InventoryPage() {
               </div>
             )}
             {isProviders && (
-              <div className="controls-buttons">
+              <div className="flex gap-3 items-center">
                 <button
-                  className="primary-btn"
+                  className="bg-accent text-slate-900 font-semibold rounded-lg px-4 py-2"
                   type="button"
                   onClick={() => setShowProvidersModal(true)}
                 >

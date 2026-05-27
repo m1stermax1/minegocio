@@ -1,7 +1,7 @@
 function SearchBar({ query, onChange }) {
   return (
-    <div className="search-bar">
-      <label htmlFor="search-input" className="search-label">
+    <div className="grid gap-2 mb-6">
+      <label htmlFor="search-input" className="text-slate-400 text-sm">
         Buscar producto
       </label>
       <input
@@ -9,7 +9,7 @@ function SearchBar({ query, onChange }) {
         value={query}
         onChange={(event) => onChange(event.target.value)}
         placeholder="Buscar por código o descripción..."
-        className="search-input"
+        className="w-full rounded-xl bg-slate-900/60 border border-slate-700 px-4 py-3 text-slate-100 outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
       />
     </div>
   );

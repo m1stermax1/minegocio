@@ -60,6 +60,11 @@ export async function fetchSales() {
   return response.data;
 }
 
+export async function fetchOwnerTotal() {
+  const response = await api.get('/inventory/owner-total');
+  return response.data?.totalOwner || 0;
+}
+
 export async function createSale(payload) {
   const response = await api.post('/inventory/sales', payload);
   return response.data;

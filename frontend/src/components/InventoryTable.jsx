@@ -273,14 +273,14 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
   };
 
   return (
-    <div className="table-wrapper">
+    <div className="overflow-x-auto">
 
       {saleNotification && (
         <div className="toast-notification">{saleNotification}</div>
       )}
 
       {!hasItems ? (
-        <div className="table-state">
+        <div className="text-slate-400 p-10 text-center bg-slate-900/40 rounded-lg">
           No se encontraron productos.
         </div>
       ) : (
@@ -301,7 +301,7 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
             </div>
           )}
 
-          <table className="inventory-table">
+          <table className="w-full min-w-[760px] border-separate border-spacing-0">
           <thead>
           <tr>
             {showSelection && <th>Acción</th>}
@@ -316,24 +316,14 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
           {tableItems.map((item, index) => (
             <tr
               key={`${item.codigo}-${index}`}
-              className={
-                isSelected(item.id)
-                  ? "selected-row"
-                  : ""
-              }
+              className={isSelected(item.id) ? 'bg-emerald-900/10' : ''}
             >
 
               {showSelection && (
                 <td>
                   <button
-                    className={`check-btn ${
-                      isSelected(item.id)
-                        ? "active"
-                        : ""
-                    }`}
-                    onClick={() =>
-                      toggleSelect(item.id)
-                    }
+                    className={`w-8 h-8 rounded-md flex items-center justify-center transition ${isSelected(item.id) ? 'bg-emerald-500 text-white' : 'bg-transparent border border-slate-700 text-slate-100'}`}
+                    onClick={() => toggleSelect(item.id)}
                   >
                     <FaCheck />
                   </button>
@@ -349,12 +339,8 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
               {/* STATUS */}
               <td>
                 <button
-                  onClick={() =>
-                    toggleStatus(item.id)
-                  }
-                  className={`status-badge ${
-                    item.estado?.toLowerCase()
-                  }`}
+                  onClick={() => toggleStatus(item.id)}
+                  className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${item.estado?.toLowerCase() === 'vendido' ? 'bg-rose-800/40 text-rose-300 border border-rose-700' : 'bg-emerald-800/40 text-emerald-300 border border-emerald-700'}`}
                 >
                   {item.estado}
                 </button>
@@ -367,16 +353,16 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
       )}
 
       {showModal && (
-        <div className="modal-backdrop" role="dialog" aria-modal="true">
-          <div className="modal">
-            <div className="modal-header">
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur flex items-center justify-center p-5 z-50" role="dialog" aria-modal="true">
+          <div className="w-full max-w-2xl bg-slate-800 border border-slate-700 rounded-2xl flex flex-col max-h-[calc(100vh-40px)] overflow-hidden shadow-2xl">
+            <div className="flex items-start justify-between gap-4 p-6 border-b border-slate-700">
               <div>
-                <p className="eyebrow">Nuevo item</p>
-                <h2>Agregar inventario</h2>
+                <p className="text-accent uppercase tracking-widest text-xs mb-1">Nuevo item</p>
+                <h2 className="text-xl font-semibold">Agregar inventario</h2>
               </div>
               <button
                 type="button"
-                className="modal-close"
+                className="text-slate-400 text-xl p-1 rounded-full hover:text-slate-100"
                 onClick={closeModal}
                 aria-label="Cerrar modal"
               >
@@ -384,14 +370,14 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="modal-form">
+            <form onSubmit={handleSubmit} className="grid gap-4 p-5 overflow-y-auto">
               {pendingItems.map((item, index) => (
-                <div key={index} className="form-row">
-                  <div className="form-row-header">
+                <div key={index} className="bg-slate-900/40 border border-slate-700 rounded-lg p-4 mb-4 grid gap-4">
+                  <div className="flex justify-between items-center gap-4 pb-2 border-b border-slate-700 mb-1">
                     <strong>Item {index + 1}</strong>
                     <button
                       type="button"
-                      className="remove-row-btn"
+                      className="bg-rose-900/30 text-rose-300 border border-rose-700 rounded-md px-3 py-1"
                       onClick={() => removePendingItemRow(index)}
                       disabled={pendingItems.length === 1}
                     >
@@ -399,12 +385,12 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
                     </button>
                   </div>
 
-                  <div className="form-row-fields">
-                      <div className="form-group">
-                      <label htmlFor={`nombre-${index}`}>Nombre del producto</label>
+                  <div className="grid grid-cols-3 gap-4">
+                      <div>
+                      <label htmlFor={`nombre-${index}`} className="text-sm font-medium text-slate-200">Nombre del producto</label>
                       <input
                         id={`nombre-${index}`}
-                        className="form-input"
+                        className="w-full rounded-lg bg-slate-900/60 border border-slate-700 px-3 py-2 text-slate-100 focus:ring-2 focus:ring-accent/30 focus:border-accent"
                         type="text"
                         value={item.nombre}
                         onChange={(event) => handleItemChange(index, 'nombre', event.target.value)}
@@ -413,11 +399,11 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
                       />
                     </div>
 
-                    <div className="form-group">
-                      <label htmlFor={`precio-${index}`}>Precio</label>
+                    <div>
+                      <label htmlFor={`precio-${index}`} className="text-sm font-medium text-slate-200">Precio</label>
                       <input
                         id={`precio-${index}`}
-                        className="form-input"
+                        className="w-full rounded-lg bg-slate-900/60 border border-slate-700 px-3 py-2 text-slate-100 focus:ring-2 focus:ring-accent/30 focus:border-accent"
                         type="text"
                         value={item.precio}
                         onChange={(event) => handleItemChange(index, 'precio', event.target.value)}
@@ -426,12 +412,12 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
                       />
                     </div>
 
-                    <div className="form-group">
-                      <label htmlFor={`proveedora-${index}`}>Proveedora</label>
-                      <div className="provider-combobox">
+                    <div>
+                      <label htmlFor={`proveedora-${index}`} className="text-sm font-medium text-slate-200">Proveedora</label>
+                      <div className="relative">
                         <input
                           id={`proveedora-${index}`}
-                          className="form-input provider-input"
+                          className="w-full rounded-lg bg-slate-900/60 border border-slate-700 px-3 py-2 text-slate-100 focus:ring-2 focus:ring-accent/30 focus:border-accent"
                           type="text"
                           value={item.proveedora}
                           onChange={(event) => handleItemChange(index, 'proveedora', event.target.value)}
@@ -441,7 +427,7 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
                         />
                         <button
                           type="button"
-                          className="clear-provider-btn"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400"
                           onClick={() => handleItemChange(index, 'proveedora', '')}
                           aria-label="Limpiar proveedora"
                         >
@@ -449,7 +435,7 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
                         </button>
 
                         {providerDropdown[index] && (
-                          <ul className="providers-dropdown" role="listbox">
+                          <ul className="absolute z-60 left-0 right-0 mt-2 bg-slate-800 border border-slate-700 rounded-lg max-h-56 overflow-auto shadow-lg" role="listbox">
                             {providersComplete
                               .filter((p) => {
                                 const fullName = `${p.nombre} ${p.apellido}`.toLowerCase();
@@ -461,7 +447,7 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
                                   key={idx}
                                   role="option"
                                   tabIndex={0}
-                                  className="provider-option"
+                                  className="px-3 py-2 cursor-pointer text-slate-100 hover:bg-slate-700 hover:text-accent"
                                   onMouseDown={() => selectProvider(index, `${provider.nombre} ${provider.apellido}`)}
                                 >
                                   {provider.nombre} {provider.apellido}
@@ -475,21 +461,21 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
                 </div>
               ))}
 
-              {formError && <p className="form-error">{formError}</p>}
+              {formError && <p className="text-rose-300 bg-rose-900/20 border border-rose-800 rounded-md p-3">{formError}</p>}
 
               <button
                 type="button"
-                className="add-row-btn"
+                className="bg-accent/20 text-accent border border-accent rounded-md px-3 py-1"
                 onClick={addPendingItemRow}
               >
                 + Agregar otro item
               </button>
 
               <div className="modal-footer">
-                <button type="button" className="secondary-btn" onClick={closeModal}>
+                <button type="button" className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2" onClick={closeModal}>
                   Cancelar
                 </button>
-                <button type="submit" className="primary-btn" disabled={isSaving}>
+                <button type="submit" className="bg-accent text-slate-900 font-semibold rounded-lg px-4 py-2" disabled={isSaving}>
                   {isSaving
                     ? 'Agregando...'
                     : `Agregar ${pendingItems.length} item${pendingItems.length > 1 ? 's' : ''}`}
@@ -501,16 +487,16 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
       )}
 
       {showPaymentModal && (
-        <div className="modal-backdrop" role="dialog" aria-modal="true">
-          <div className="modal payment-modal">
-            <div className="modal-header">
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur flex items-center justify-center p-5 z-50" role="dialog" aria-modal="true">
+          <div className="w-full max-w-md bg-slate-800 border border-slate-700 rounded-2xl flex flex-col max-h-[calc(100vh-40px)] overflow-hidden shadow-2xl">
+            <div className="flex items-start justify-between gap-4 p-6 border-b border-slate-700">
               <div>
-                <p className="eyebrow">Vender producto</p>
-                <h2>Selecciona método de pago</h2>
+                <p className="text-accent uppercase tracking-widest text-xs mb-1">Vender producto</p>
+                <h2 className="text-xl font-semibold">Selecciona método de pago</h2>
               </div>
               <button
                 type="button"
-                className="modal-close"
+                className="text-slate-400 text-xl p-1 rounded-full hover:text-slate-100"
                 onClick={() => setShowPaymentModal(false)}
                 aria-label="Cerrar modal"
               >
@@ -518,25 +504,25 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
               </button>
             </div>
 
-            <div className="modal-content payment-content">
-              <div className="payment-methods">
+            <div className="p-6 overflow-y-auto grid gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <button
                   type="button"
-                  className="payment-method-btn"
+                  className="px-4 py-3 border-2 border-slate-700 rounded-lg bg-slate-800 text-slate-100 font-semibold hover:border-accent hover:bg-slate-700 hover:text-accent transition"
                   onClick={() => handlePaymentConfirm('efectivo')}
                 >
                   Efectivo
                 </button>
                 <button
                   type="button"
-                  className="payment-method-btn"
+                  className="px-4 py-3 border-2 border-slate-700 rounded-lg bg-slate-800 text-slate-100 font-semibold hover:border-accent hover:bg-slate-700 hover:text-accent transition"
                   onClick={() => handlePaymentConfirm('transferencia')}
                 >
                   Transferencia
                 </button>
                 <button
                   type="button"
-                  className="payment-method-btn"
+                  className="px-4 py-3 border-2 border-slate-700 rounded-lg bg-slate-800 text-slate-100 font-semibold hover:border-accent hover:bg-slate-700 hover:text-accent transition"
                   onClick={() => handlePaymentConfirm('debito/credito')}
                 >
                   Débito/Crédito

@@ -103,8 +103,8 @@ export default function PaymentsTable({
 
   return (
     <>
-      <div className="table-wrapper">
-        <table className="inventory-table">
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[760px] border-separate border-spacing-0">
           <thead>
             <tr>
               <th>Proveedora</th>
@@ -135,27 +135,25 @@ export default function PaymentsTable({
                       })}
                     </td>
                     <td>
-                      <span className={`payment-badge ${isPaid ? "paid" : "unpaid"}`}>
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${isPaid ? 'bg-emerald-800/40 text-emerald-300 border border-emerald-700' : 'bg-amber-900/40 text-amber-200 border border-amber-700'}`}>
                         {isPaid ? "✓ Pagado" : "○ Pendiente"}
                       </span>
                     </td>
                     <td>
                       <button
                         type="button"
-                        className="secondary-btn"
+                        className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2"
                         onClick={() => toggleExpanded(provName)}
                       >
-                        {expandedProvider === provName
-                          ? "Ocultar"
-                          : "Ver detalles"}
+                        {expandedProvider === provName ? "Ocultar" : "Ver detalles"}
                       </button>
                     </td>
                   </tr>
                   {expandedProvider === provName && (
                     <tr>
                       <td colSpan={5}>
-                        <div className="provider-items-table-wrapper">
-                          <table className="inventory-table provider-items-table">
+                        <div className="mt-3">
+                          <table className="w-full min-w-[720px] border-separate border-spacing-0">
                             <thead>
                               <tr>
                                 <th>Código</th>
@@ -169,8 +167,8 @@ export default function PaymentsTable({
                                 const precioSugerido = Number(item.precio) || 0;
                                 const precioProveedora = precioSugerido * 0.6;
 
-                                return (
-                                  <tr key={`${provName}-${itemIndex}`} className="provider-item-row">
+                                  return (
+                                  <tr key={`${provName}-${itemIndex}`} className="odd:bg-slate-900/20">
                                     <td>{item.codigo || "-"}</td>
                                     <td>{item.descripcion || "-"}</td>
                                     <td>
@@ -196,19 +194,11 @@ export default function PaymentsTable({
                             </tbody>
                           </table>
 
-                          <div
-                            style={{
-                              marginTop: "16px",
-                              display: "flex",
-                              gap: "12px",
-                            }}
-                          >
+                          <div className="mt-4 flex gap-3">
                             <button
                               type="button"
-                              className="primary-btn"
-                              onClick={() =>
-                                handleOpenPaymentModal(provName, items)
-                              }
+                              className="bg-accent text-slate-900 font-semibold rounded-lg px-4 py-2"
+                              onClick={() => handleOpenPaymentModal(provName, items)}
                             >
                               Registrar pago
                             </button>

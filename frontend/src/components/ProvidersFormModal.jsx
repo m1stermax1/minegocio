@@ -40,18 +40,16 @@ function ProvidersFormModal({ isOpen, onClose, onProviderAdded }) {
   if (!isOpen) return null;
 
   return (
-    <div className="modal-backdrop">
-      <div className="modal">
-        <div className="modal-header">
+    <div className="fixed inset-0 bg-slate-900/80 backdrop-blur flex items-center justify-center p-5 z-50">
+      <div className="w-full max-w-md bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden">
+        <div className="flex items-start justify-between gap-4 p-6 border-b border-slate-700">
           <div>
-            <h2>Nueva Proveedora</h2>
-            <p style={{ color: 'var(--muted)', fontSize: '0.9rem', margin: 0 }}>
-              Completa los datos de la proveedora
-            </p>
+            <h2 className="text-xl font-semibold">Nueva Proveedora</h2>
+            <p className="text-slate-400 text-sm m-0">Completa los datos de la proveedora</p>
           </div>
           <button
             type="button"
-            className="modal-close"
+            className="text-slate-400 text-xl p-1 rounded-full hover:text-slate-100"
             onClick={onClose}
             aria-label="Cerrar modal"
           >
@@ -60,14 +58,14 @@ function ProvidersFormModal({ isOpen, onClose, onProviderAdded }) {
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div className="modal-form">
-            {error && <div className="form-error">{error}</div>}
+          <div className="p-6 grid gap-4">
+            {error && <div className="text-rose-300 bg-rose-900/20 border border-rose-800 rounded-md p-3">{error}</div>}
 
-            <div className="form-group">
-              <label>Nombre *</label>
+            <div>
+              <label className="text-sm font-medium text-slate-200">Nombre *</label>
               <input
                 type="text"
-                className="form-input"
+                className="w-full mt-2 rounded-lg bg-slate-900/60 border border-slate-700 px-3 py-2 text-slate-100"
                 value={nombre}
                 onChange={(e) => setNombre(e.target.value)}
                 placeholder="Ej: María"
@@ -75,11 +73,11 @@ function ProvidersFormModal({ isOpen, onClose, onProviderAdded }) {
               />
             </div>
 
-            <div className="form-group">
-              <label>Apellido *</label>
+            <div>
+              <label className="text-sm font-medium text-slate-200">Apellido *</label>
               <input
                 type="text"
-                className="form-input"
+                className="w-full mt-2 rounded-lg bg-slate-900/60 border border-slate-700 px-3 py-2 text-slate-100"
                 value={apellido}
                 onChange={(e) => setApellido(e.target.value)}
                 placeholder="Ej: García"
@@ -87,11 +85,11 @@ function ProvidersFormModal({ isOpen, onClose, onProviderAdded }) {
               />
             </div>
 
-            <div className="form-group">
-              <label>Teléfono *</label>
+            <div>
+              <label className="text-sm font-medium text-slate-200">Teléfono *</label>
               <input
                 type="text"
-                className="form-input"
+                className="w-full mt-2 rounded-lg bg-slate-900/60 border border-slate-700 px-3 py-2 text-slate-100"
                 value={telefono}
                 onChange={(e) => setTelefono(e.target.value)}
                 placeholder="Ej: +54 9 11 1234-5678"
@@ -99,11 +97,11 @@ function ProvidersFormModal({ isOpen, onClose, onProviderAdded }) {
               />
             </div>
 
-            <div className="form-group">
-              <label>Alias o CBU (opcional)</label>
+            <div>
+              <label className="text-sm font-medium text-slate-200">Alias o CBU (opcional)</label>
               <input
                 type="text"
-                className="form-input"
+                className="w-full mt-2 rounded-lg bg-slate-900/60 border border-slate-700 px-3 py-2 text-slate-100"
                 value={notas}
                 onChange={(e) => setNotas(e.target.value)}
                 placeholder="Ej: mi.alias.mp o CBU de 22 dígitos"
@@ -112,10 +110,10 @@ function ProvidersFormModal({ isOpen, onClose, onProviderAdded }) {
             </div>
           </div>
 
-          <div className="modal-footer">
+          <div className="flex gap-3 justify-end p-4 border-t border-slate-700">
             <button
               type="button"
-              className="secondary-btn"
+              className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2"
               onClick={onClose}
               disabled={loading}
             >
@@ -123,7 +121,7 @@ function ProvidersFormModal({ isOpen, onClose, onProviderAdded }) {
             </button>
             <button
               type="submit"
-              className="primary-btn"
+              className="bg-accent text-slate-900 font-semibold rounded-lg px-4 py-2"
               disabled={loading}
             >
               {loading ? 'Guardando...' : 'Guardar'}

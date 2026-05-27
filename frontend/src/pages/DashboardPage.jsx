@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import { fetchDashboardCounts, fetchProvidersComplete, fetchSales } from '../services/api.js';
+import { fetchDashboardCounts, fetchProvidersComplete, fetchSales, fetchOwnerTotal } from '../services/api.js';
 
 function StatCard({ title, value, subtitle }) {
   return (
-    <div className="stat-card">
-      <p className="stat-title">{title}</p>
-      <p className="stat-value">{value}</p>
-      {subtitle && <p style={{ fontSize: "0.85rem", color: "var(--muted)", margin: "4px 0 0" }}>{subtitle}</p>}
+    <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow">
+      <p className="text-sm text-slate-400 tracking-wide">{title}</p>
+      <p className="text-2xl font-bold mt-1">{value}</p>
+      {subtitle && <p className="text-sm text-slate-400 mt-1">{subtitle}</p>}
     </div>
   );
 }
@@ -23,10 +23,11 @@ export default function DashboardPage({ onAddProduct, onAddSale, onAddProvider, 
     async function load() {
       try {
         setLoading(true);
-        const [dashboardData, providers, salesData] = await Promise.all([
+          const [dashboardData, providers, salesData, ownerTotal] = await Promise.all([
           fetchDashboardCounts(),
           fetchProvidersComplete(),
           fetchSales(),
+          fetchOwnerTotal(),
         ]);
         if (mounted) {
           setCounts(dashboardData || { inStockCount: 0, soldCount: 0 });
@@ -36,20 +37,19 @@ export default function DashboardPage({ onAddProduct, onAddSale, onAddProvider, 
           const now = new Date();
           const currentMonth = now.getMonth();
           const currentYear = now.getFullYear();
-          
+
+          // total vendido (suma de salesData por el mes)
           let monthlyTotal = 0;
-          let monthlyOwner = 0;
-          
           (salesData || []).forEach((sale) => {
             const saleDate = sale.fecha ? new Date(sale.fecha) : null;
             if (saleDate && saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear) {
               monthlyTotal += Number(sale.montoTotal) || 0;
-              monthlyOwner += (Number(sale.montoTotal) || 0) * 0.1;
             }
           });
-          
+
           setTotalSold(monthlyTotal);
-          setTotalOwner(monthlyOwner);
+          // ownerTotal viene calculado en backend: suma por item de (precio venta (col D) - precio sugerido(col C)*0.6)
+          setTotalOwner(ownerTotal || 0);
         }
       } catch (err) {
         console.error('Error cargando dashboard:', err);
@@ -65,8 +65,8 @@ export default function DashboardPage({ onAddProduct, onAddSale, onAddProvider, 
   };
 
   return (
-    <section className="dashboard-panel">
-      <div className="dashboard-cards">
+    <section className="bg-slate-800/70 border border-slate-700 rounded-2xl p-7 min-h-[72vh] shadow-soft">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {loading ? (
           <p>Cargando...</p>
         ) : (
@@ -82,7 +82,6 @@ export default function DashboardPage({ onAddProduct, onAddSale, onAddProvider, 
             <StatCard 
               title="Total para la dueña" 
               value={formatCurrency(totalOwner)} 
-              subtitle="10% del total vendido"
             />
           </>
         )}

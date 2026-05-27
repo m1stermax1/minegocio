@@ -3,53 +3,53 @@ import { FiBox, FiTrendingUp, FiCreditCard } from 'react-icons/fi';
 
 function Sidebar({ activeView, onViewChange }) {
   return (
-    <aside className="sidebar">
-      <div className="brand">
-        <AiOutlineAppstore className="brand-icon" />
+    <aside className="bg-slate-800 p-8 flex flex-col gap-8">
+      <div className="flex items-center gap-4">
+        <AiOutlineAppstore className="w-10 h-10 text-accent" />
         <div>
-          <span className="brand-label">Lila Feria Americana</span>
+          <span className="text-lg font-semibold">Lila Feria Americana</span>
         </div>
       </div>
 
-      <nav className="menu">
+      <nav className="flex flex-col gap-2">
         <button
-          className={`menu-item ${activeView === 'dashboard' ? 'active' : ''}`}
+          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === 'dashboard' ? 'bg-slate-700' : 'hover:bg-slate-700'}`}
           type="button"
           onClick={() => onViewChange('dashboard')}
         >
-          <AiOutlineDashboard className="menu-icon" />
+          <AiOutlineDashboard className="w-5 h-5" />
           <span>Dashboard</span>
         </button>
         <button
-          className={`menu-item ${activeView === 'inventory' ? 'active' : ''}`}
+          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === 'inventory' ? 'bg-slate-700' : 'hover:bg-slate-700'}`}
           type="button"
           onClick={() => onViewChange('inventory')}
         >
-          <FiBox className="menu-icon" />
+          <FiBox className="w-5 h-5" />
           <span>Inventario</span>
         </button>
         <button
-          className={`menu-item ${activeView === 'providers' ? 'active' : ''}`}
+          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === 'providers' ? 'bg-slate-700' : 'hover:bg-slate-700'}`}
           type="button"
           onClick={() => onViewChange('providers')}
         >
-          <FiBox className="menu-icon" />
+          <FiBox className="w-5 h-5" />
           <span>Proveedoras</span>
         </button>
         <button
-          className={`menu-item ${activeView === 'ventas' ? 'active' : ''}`}
+          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === 'ventas' ? 'bg-slate-700' : 'hover:bg-slate-700'}`}
           type="button"
           onClick={() => onViewChange('ventas')}
         >
-          <FiTrendingUp className="menu-icon" />
+          <FiTrendingUp className="w-5 h-5" />
           <span>Ventas</span>
         </button>
         <button
-          className={`menu-item ${activeView === 'pagos' ? 'active' : ''}`}
+          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === 'pagos' ? 'bg-slate-700' : 'hover:bg-slate-700'}`}
           type="button"
           onClick={() => onViewChange('pagos')}
         >
-          <FiCreditCard className="menu-icon" />
+          <FiCreditCard className="w-5 h-5" />
           <span>Pagos</span>
         </button>
       </nav>

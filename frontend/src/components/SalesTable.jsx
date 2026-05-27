@@ -54,11 +54,11 @@ export default function SalesTable({ sales = [], loading }) {
   }
 
   return (
-    <div className="table-wrapper">
-      <div style={{ marginBottom: "20px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "12px" }}>
+    <div className="overflow-x-auto">
+      <div className="mb-5 grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <label style={{ display: "block", fontSize: "0.85rem", marginBottom: "6px", fontWeight: 600, color: "var(--accent)" }}>Filtrar por fecha</label>
-          <input
+            <input
             type="date"
             value={dateFilter}
             onChange={(e) => {
@@ -66,78 +66,41 @@ export default function SalesTable({ sales = [], loading }) {
               setDateFrom("");
               setDateTo("");
             }}
-            style={{
-              width: "100%",
-              padding: "8px 12px",
-              border: "1px solid var(--border)",
-              borderRadius: "8px",
-              backgroundColor: "var(--surface)",
-              color: "var(--text)",
-              fontSize: "0.9rem"
-            }}
+            className="w-full px-3 py-2 rounded-lg bg-slate-900/60 border border-slate-700 text-slate-100 text-sm"
           />
         </div>
         <div>
           <label style={{ display: "block", fontSize: "0.85rem", marginBottom: "6px", fontWeight: 600, color: "var(--accent)" }}>Desde</label>
-          <input
+            <input
             type="date"
             value={dateFrom}
             onChange={(e) => {
               setDateFrom(e.target.value);
               setDateFilter("");
             }}
-            style={{
-              width: "100%",
-              padding: "8px 12px",
-              border: "1px solid var(--border)",
-              borderRadius: "8px",
-              backgroundColor: "var(--surface)",
-              color: "var(--text)",
-              fontSize: "0.9rem"
-            }}
+            className="w-full px-3 py-2 rounded-lg bg-slate-900/60 border border-slate-700 text-slate-100 text-sm"
           />
         </div>
         <div>
           <label style={{ display: "block", fontSize: "0.85rem", marginBottom: "6px", fontWeight: 600, color: "var(--accent)" }}>Hasta</label>
-          <input
+            <input
             type="date"
             value={dateTo}
             onChange={(e) => {
               setDateTo(e.target.value);
               setDateFilter("");
             }}
-            style={{
-              width: "100%",
-              padding: "8px 12px",
-              border: "1px solid var(--border)",
-              borderRadius: "8px",
-              backgroundColor: "var(--surface)",
-              color: "var(--text)",
-              fontSize: "0.9rem"
-            }}
+            className="w-full px-3 py-2 rounded-lg bg-slate-900/60 border border-slate-700 text-slate-100 text-sm"
           />
         </div>
         {(dateFilter || dateFrom || dateTo) && (
-          <div style={{ display: "flex", alignItems: "flex-end" }}>
-            <button
-              type="button"
-              className="secondary-btn"
-              onClick={() => {
-                setDateFilter("");
-                setDateFrom("");
-                setDateTo("");
-              }}
-              style={{ width: "100%" }}
-            >
-              Limpiar filtros
-            </button>
-          </div>
+            <div className="flex items-end">
+              <button type="button" className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 w-full" onClick={() => { setDateFilter(''); setDateFrom(''); setDateTo(''); }}>Limpiar filtros</button>
+            </div>
         )}
       </div>
-      <div style={{ marginBottom: "12px", fontSize: "0.9rem", color: "var(--muted)" }}>
-        Mostrando {filteredSales.length} de {sales.length} ventas
-      </div>
-      <table className="inventory-table">
+      <div className="mb-3 text-sm text-slate-400">Mostrando {filteredSales.length} de {sales.length} ventas</div>
+      <table className="w-full min-w-[760px] border-separate border-spacing-0">
         <thead>
           <tr>
             <th>Fecha</th>
@@ -151,25 +114,19 @@ export default function SalesTable({ sales = [], loading }) {
           {filteredSales.map((sale, index) => (
             <Fragment key={`sale-${index}`}>
               <tr>
-                <td style={{ fontSize: "0.9rem", fontWeight: 500 }}>{formatDateArg(sale.fecha)}</td>
+                <td className="text-sm font-medium">{formatDateArg(sale.fecha)}</td>
                 <td>{sale.metodoPago || "-"}</td>
                 <td>${Number(sale.montoTotal || 0).toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
                 <td>{sale.items?.length || 0}</td>
                 <td>
-                  <button
-                    type="button"
-                    className="secondary-btn"
-                    onClick={() => toggleExpanded(index)}
-                  >
-                    {expandedSale === index ? "Ocultar" : "Ver productos"}
-                  </button>
+                  <button type="button" className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2" onClick={() => toggleExpanded(index)}>{expandedSale === index ? 'Ocultar' : 'Ver productos'}</button>
                 </td>
               </tr>
               {expandedSale === index && (
                 <tr>
-                  <td colSpan={5}>
-                    <div className="provider-items-table-wrapper" style={{ padding: "12px 0" }}>
-                      <table className="inventory-table">
+                    <td colSpan={5}>
+                    <div className="py-3">
+                      <table className="w-full min-w-[720px] border-separate border-spacing-0">
                         <thead>
                           <tr>
                             <th>Código</th>

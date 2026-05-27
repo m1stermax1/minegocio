@@ -10,37 +10,24 @@ function ItemsFormModal({ isOpen, onClose, onItemsAdded, defaultProviderId, prov
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Cargar proveedoras
   useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
-
+    if (!isOpen) return;
     if (parentProviders?.length > 0) {
       setProviders(parentProviders);
       return;
     }
-
-    loadProviders();
-  }, [isOpen, providersRefresh, parentProviders]);
-
-  useEffect(() => {
-    if (!isOpen || !providers.length) {
-      return;
-    }
-
-    if (selectedProvider) {
-      const sameProvider = providers.find((prov) => prov.id === selectedProvider.id);
-      if (sameProvider) {
-        setSelectedProvider(sameProvider);
-        return;
+    (async () => {
+      try {
+        const data = await fetchProvidersComplete();
+        setProviders(data || []);
+        if (defaultProviderId !== undefined && data?.[defaultProviderId]) {
+          setSelectedProvider(data[defaultProviderId]);
+        }
+      } catch (err) {
+        console.error('Error cargando proveedoras:', err);
       }
-    }
-
-    if (defaultProviderId !== undefined && providers[defaultProviderId]) {
-      setSelectedProvider(providers[defaultProviderId]);
-    }
-  }, [isOpen, providers, defaultProviderId, selectedProvider]);
+    })();
+  }, [isOpen, providersRefresh, parentProviders, defaultProviderId]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -52,37 +39,21 @@ function ItemsFormModal({ isOpen, onClose, onItemsAdded, defaultProviderId, prov
     }
   }, [isOpen]);
 
-  const loadProviders = async () => {
-    try {
-      const data = await fetchProvidersComplete();
-      setProviders(data || []);
-      if (defaultProviderId !== undefined && data?.[defaultProviderId]) {
-        setSelectedProvider(data[defaultProviderId]);
-      }
-    } catch (err) {
-      console.error('Error cargando proveedoras:', err);
-    }
-  };
-
   const handleAddItem = () => {
-    if (!newItemName.trim() || !newItemPrice.trim()) {
+    if (!newItemName.trim() || !newItemPrice.toString().trim()) {
       setError('Nombre y precio son obligatorios');
       return;
     }
 
-    const priceNum = parseFloat(newItemPrice.replace(/,/g, '.'));
-    if (isNaN(priceNum)) {
+    const priceNum = parseFloat(newItemPrice.toString().replace(/,/g, '.'));
+    if (Number.isNaN(priceNum)) {
       setError('Precio inválido');
       return;
     }
 
-    setItems([
-      ...items,
-      {
-        id: Date.now(),
-        nombre: newItemName,
-        precio: priceNum,
-      },
+    setItems((prev) => [
+      ...prev,
+      { id: Date.now(), nombre: newItemName.trim(), precio: priceNum },
     ]);
 
     setNewItemName('');
@@ -90,78 +61,46 @@ function ItemsFormModal({ isOpen, onClose, onItemsAdded, defaultProviderId, prov
     setError('');
   };
 
-  const handleRemoveItem = (id) => {
-    setItems(items.filter((item) => item.id !== id));
-  };
+  const handleRemoveItem = (id) => setItems((prev) => prev.filter((it) => it.id !== id));
 
   const generateWhatsAppMessage = () => {
     if (!items.length || !selectedProvider) return '';
 
     let message = `Hola ${selectedProvider.nombre}, aquí te envío los detalles de los productos:\n\n`;
-
-    const total = items.reduce((sum, item) => sum + item.precio, 0);
+    const total = items.reduce((s, it) => s + it.precio, 0);
 
     items.forEach((item) => {
-      message += `*${item.nombre}* - $${item.precio.toLocaleString('es-AR', {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 2,
-      })}\n`;
+      message += `*${item.nombre}* - $${item.precio.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}\n`;
     });
 
-    message += `\n*Total: $${total.toLocaleString('es-AR', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    })}*`;
-
+    message += `\n*Total: $${total.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}*`;
     return message;
   };
 
   const generateWhatsAppLink = () => {
     const message = generateWhatsAppMessage();
     const encodedMessage = encodeURIComponent(message);
-    const phone = selectedProvider.telefono.replace(/\D/g, '');
+    const phone = (selectedProvider?.telefono || '').replace(/\D/g, '');
     return `https://wa.me/${phone}?text=${encodedMessage}`;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-
-    if (!selectedProvider) {
-      setError('Selecciona una proveedora');
-      return;
-    }
-
-    if (!items.length) {
-      setError('Agrega al menos un item');
-      return;
-    }
+    if (!selectedProvider) return setError('Selecciona una proveedora');
+    if (!items.length) return setError('Agrega al menos un item');
 
     setLoading(true);
     try {
-      // Agregar los items
-      const itemsToAdd = items.map((item) => ({
-        nombre: item.nombre,
-        precio: item.precio.toString(),
-        proveedora: selectedProvider.nombre,
-      }));
-
+      const itemsToAdd = items.map((item) => ({ nombre: item.nombre, precio: item.precio.toString(), proveedora: selectedProvider.nombre }));
       await addInventoryItem(itemsToAdd);
-
-      // Limpiar formulario
       setItems([]);
       setNewItemName('');
       setNewItemPrice('');
       setSelectedProvider(null);
-
-      if (onItemsAdded) {
-        onItemsAdded();
-      }
-
-      // Redirigir a WhatsApp
+      onItemsAdded?.();
       const whatsappLink = generateWhatsAppLink();
       window.open(whatsappLink, '_blank');
-
       onClose();
     } catch (err) {
       console.error('Error agregando items:', err);
@@ -173,161 +112,77 @@ function ItemsFormModal({ isOpen, onClose, onItemsAdded, defaultProviderId, prov
 
   if (!isOpen) return null;
 
-  const total = items.reduce((sum, item) => sum + item.precio, 0);
+  const total = items.reduce((s, it) => s + it.precio, 0);
 
   return (
-    <div className="modal-backdrop">
-      <div className="modal" style={{ maxWidth: '600px' }}>
-        <div className="modal-header">
+    <div className="fixed inset-0 bg-slate-900/80 backdrop-blur flex items-center justify-center p-5 z-50">
+      <div className="w-full max-w-lg bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden">
+        <div className="flex items-start justify-between gap-4 p-6 border-b border-slate-700">
           <div>
-            <h2>Agregar Productos</h2>
-            <p style={{ color: 'var(--muted)', fontSize: '0.9rem', margin: 0 }}>
-              Agrega productos y envíalos por WhatsApp
-            </p>
+            <h2 className="text-xl font-semibold">Agregar Productos</h2>
+            <p className="text-slate-400 text-sm m-0">Agrega productos y envíalos por WhatsApp</p>
           </div>
-          <button
-            type="button"
-            className="modal-close"
-            onClick={onClose}
-            aria-label="Cerrar modal"
-          >
-            ✕
-          </button>
+          <button type="button" className="text-slate-400 text-xl p-1 rounded-full hover:text-slate-100" onClick={onClose} aria-label="Cerrar modal">✕</button>
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div className="modal-form">
-            {error && <div className="form-error">{error}</div>}
+          <div className="p-6 grid gap-4">
+            {error && <div className="text-rose-300 bg-rose-900/20 border border-rose-800 rounded-md p-3">{error}</div>}
 
-            <div className="form-group">
-              <label>Proveedora *</label>
-              <select
-                className="form-select"
-                value={selectedProvider?.id ?? ''}
-                onChange={(e) => {
-                  const id = parseInt(e.target.value);
-                  setSelectedProvider(providers.find((prov) => prov.id === id) || null);
-                }}
-                disabled={loading}
-              >
+            <div>
+              <label className="text-sm font-medium text-slate-200">Proveedora *</label>
+              <select className="w-full mt-2 rounded-lg bg-slate-900/60 border border-slate-700 px-3 py-2 text-slate-100" value={selectedProvider?.id ?? ''} onChange={(e) => { const id = parseInt(e.target.value); setSelectedProvider(providers.find((prov) => prov.id === id) || null); }} disabled={loading}>
                 <option value="">Selecciona una proveedora</option>
                 {providers.map((prov) => (
-                  <option key={prov.id} value={prov.id}>
-                    {prov.nombre} {prov.apellido}
-                  </option>
+                  <option key={prov.id} value={prov.id}>{prov.nombre} {prov.apellido}</option>
                 ))}
               </select>
             </div>
 
-            <div style={{ borderTop: '1px solid var(--border)', margin: '16px 0', paddingTop: '16px' }}>
-              <h3 style={{ fontSize: '0.95rem', marginBottom: '12px' }}>Agregar Producto</h3>
+            <div className="border-t border-slate-700 mt-4 pt-4">
+              <h3 className="text-sm font-semibold mb-3">Agregar Producto</h3>
 
-              <div style={{ display: 'grid', gap: '12px', marginBottom: '12px' }}>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label>Nombre del Producto</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={newItemName}
-                    onChange={(e) => setNewItemName(e.target.value)}
-                    placeholder="Ej: Remera azul"
-                    disabled={loading}
-                  />
+              <div className="grid gap-3 mb-3">
+                <div>
+                  <label className="text-sm text-slate-200">Nombre del Producto</label>
+                  <input type="text" className="w-full rounded-lg bg-slate-900/60 border border-slate-700 px-3 py-2 text-slate-100" value={newItemName} onChange={(e) => setNewItemName(e.target.value)} placeholder="Ej: Remera azul" disabled={loading} />
                 </div>
 
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label>Precio</label>
-                  <input
-                    type="number"
-                    className="form-input"
-                    value={newItemPrice}
-                    onChange={(e) => setNewItemPrice(e.target.value)}
-                    placeholder="Ej: 1500"
-                    step="0.01"
-                    disabled={loading}
-                  />
+                <div>
+                  <label className="text-sm text-slate-200">Precio</label>
+                  <input type="number" className="w-full rounded-lg bg-slate-900/60 border border-slate-700 px-3 py-2 text-slate-100" value={newItemPrice} onChange={(e) => setNewItemPrice(e.target.value)} placeholder="Ej: 1500" step="0.01" disabled={loading} />
                 </div>
 
-                <button
-                  type="button"
-                  className="primary-btn"
-                  onClick={handleAddItem}
-                  disabled={loading}
-                  style={{ width: '100%' }}
-                >
-                  Agregar Producto
-                </button>
+                <button type="button" className="bg-accent text-slate-900 font-semibold rounded-lg px-4 py-2 w-full" onClick={handleAddItem} disabled={loading}>Agregar Producto</button>
               </div>
             </div>
 
             {items.length > 0 && (
-              <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
-                <h3 style={{ fontSize: '0.95rem', marginBottom: '12px' }}>Productos ({items.length})</h3>
-                <div style={{ display: 'grid', gap: '8px', maxHeight: '200px', overflowY: 'auto' }}>
+              <div className="border-t border-slate-700 pt-4">
+                <h3 className="text-sm font-semibold mb-3">Productos ({items.length})</h3>
+                <div className="grid gap-2 max-h-[200px] overflow-y-auto">
                   {items.map((item) => (
-                    <div
-                      key={item.id}
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        padding: '10px',
-                        background: 'rgba(56, 189, 248, 0.08)',
-                        borderRadius: '8px',
-                      }}
-                    >
+                    <div key={item.id} className="flex justify-between items-center p-3 rounded-md bg-slate-900/30">
                       <div>
-                        <p style={{ margin: 0, fontWeight: 600 }}>{item.nombre}</p>
-                        <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--muted)' }}>
-                          ${item.precio.toLocaleString('es-AR')}
-                        </p>
+                        <p className="m-0 font-semibold">{item.nombre}</p>
+                        <p className="m-0 text-sm text-slate-400">${item.precio.toLocaleString('es-AR')}</p>
                       </div>
-                      <button
-                        type="button"
-                        className="remove-row-btn"
-                        onClick={() => handleRemoveItem(item.id)}
-                        disabled={loading}
-                      >
-                        Eliminar
-                      </button>
+                      <button type="button" className="bg-rose-900/30 text-rose-300 border border-rose-700 rounded-md px-3 py-1" onClick={() => handleRemoveItem(item.id)} disabled={loading}>Eliminar</button>
                     </div>
                   ))}
-                </div>
 
-                <div
-                  style={{
-                    marginTop: '12px',
-                    padding: '10px',
-                    background: 'rgba(34, 197, 94, 0.1)',
-                    borderRadius: '8px',
-                    borderLeft: '3px solid var(--success)',
-                  }}
-                >
-                  <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--muted)' }}>Total</p>
-                  <p style={{ margin: 0, fontSize: '1.3rem', fontWeight: 700 }}>
-                    ${total.toLocaleString('es-AR')}
-                  </p>
+                  <div className="mt-3 p-3 bg-emerald-900/20 rounded-md border-l-4 border-emerald-700">
+                    <p className="m-0 text-sm text-slate-400">Total</p>
+                    <p className="m-0 text-lg font-bold">${total.toLocaleString('es-AR')}</p>
+                  </div>
                 </div>
               </div>
             )}
-          </div>
 
-          <div className="modal-footer">
-            <button
-              type="button"
-              className="secondary-btn"
-              onClick={onClose}
-              disabled={loading}
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="primary-btn"
-              disabled={loading || !items.length || !selectedProvider}
-            >
-              {loading ? 'Enviando...' : '✓ Guardar y Enviar por WhatsApp'}
-            </button>
+            <div className="flex gap-3 justify-end p-4 border-t border-slate-700">
+              <button type="button" className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2" onClick={onClose} disabled={loading}>Cancelar</button>
+              <button type="submit" className="bg-accent text-slate-900 font-semibold rounded-lg px-4 py-2" disabled={loading || !items.length || !selectedProvider}>{loading ? 'Enviando...' : '✓ Guardar y Enviar por WhatsApp'}</button>
+            </div>
           </div>
         </form>
       </div>
