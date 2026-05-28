@@ -167,7 +167,7 @@ export default function PaymentsTable({
                                 const precioSugerido = Number(item.precio) || 0;
                                 const precioProveedora = precioSugerido * 0.6;
 
-                                  return (
+                                return (
                                   <tr key={`${provName}-${itemIndex}`} className="odd:bg-slate-900/20">
                                     <td>{item.codigo || "-"}</td>
                                     <td>{item.descripcion || "-"}</td>

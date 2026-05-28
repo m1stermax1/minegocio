@@ -26,6 +26,13 @@ export async function fetchProvidersComplete() {
   return response.data;
 }
 
+export async function fetchProviderPayments() {
+  const response = await api.get('/inventory/providers/payments', {
+    params: { _t: Date.now() },
+  });
+  return response.data;
+}
+
 export async function addProvider(nombre, apellido, telefono, notas = '') {
   const response = await api.post('/inventory/providers', {
     nombre,

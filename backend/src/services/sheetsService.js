@@ -29,58 +29,58 @@ async function generateBarcodeAndPrint(code) {
   );
 
   // Generar barcode chico y nítido
-const barcodeBuffer = await bwipjs.toBuffer({
-  bcid: "code128",
-  text: code,
+  const barcodeBuffer = await bwipjs.toBuffer({
+    bcid: "code128",
+    text: code,
 
-  scale: 3,
-  height: 8,
+    scale: 3,
+    height: 8,
 
-  includetext: true,
-  textxalign: "center",
-  textsize: 7,
+    includetext: true,
+    textxalign: "center",
+    textsize: 7,
 
-  paddingwidth: 0,
-  paddingheight: 0,
+    paddingwidth: 0,
+    paddingheight: 0,
 
-  backgroundcolor: "FFFFFF",
-});
+    backgroundcolor: "FFFFFF",
+  });
 
-// Rotar barcode
-const rotatedBarcode = await sharp(barcodeBuffer)
-  .rotate(90)
-  .resize({
-    width: 80,
-    height: 200,
-    fit: "inside",
-    withoutEnlargement: true,
-  })
-  .png()
-  .toBuffer();
+  // Rotar barcode
+  const rotatedBarcode = await sharp(barcodeBuffer)
+    .rotate(90)
+    .resize({
+      width: 80,
+      height: 200,
+      fit: "inside",
+      withoutEnlargement: true,
+    })
+    .png()
+    .toBuffer();
 
-// Canvas exacto para 1.5cm x 3cm
-const finalImage = await sharp({
-  create: {
-    width: 96,
-    height: 300,
-    channels: 3,
-    background: "#FFFFFF",
-  },
-})
-  .composite([
-    {
-      input: rotatedBarcode,
-      gravity: "center",
+  // Canvas exacto para 1.5cm x 3cm
+  const finalImage = await sharp({
+    create: {
+      width: 96,
+      height: 300,
+      channels: 3,
+      background: "#FFFFFF",
     },
-  ])
-  .png()
-  .toBuffer();
+  })
+    .composite([
+      {
+        input: rotatedBarcode,
+        gravity: "center",
+      },
+    ])
+    .png()
+    .toBuffer();
 
-fs.writeFileSync(filePath, finalImage);
+  fs.writeFileSync(filePath, finalImage);
 
   await new Promise((resolve, reject) => {
     exec(
-       `python -m niimprint -m d110 -c usb -a COM3 --density 3 -i "${filePath}"`,
+      `python -m niimprint -m d110 -c usb -a COM3 --density 3 -i "${filePath}"`,
       (error, stdout, stderr) => {
         if (error) {
           reject(stderr || error.message);
@@ -239,6 +239,17 @@ export async function getProvidersList() {
     id: index,
     nombre,
   }));
+}
+
+export async function getPendingPayments() {
+  const data = await getProvidersData();
+
+  const pendientes = data.filter(
+    item =>
+      item.estado === "vendido" &&
+      item.pago === "impago"
+  );
+  return pendientes;
 }
 
 export async function getProvidersListComplete() {

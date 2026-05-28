@@ -9,6 +9,7 @@ import {
   getSalesData,
   appendSaleRecord,
   getOwnerTotalForMonth,
+  getPendingPayments,
 } from "../services/sheetsService.js";
 import {
   sendWhatsAppMessage,
@@ -218,6 +219,18 @@ router.put("/:id/status", async (req, res) => {
 router.get("/providers-list", async (req, res) => {
   try {
     const providers = await getProvidersListComplete();
+    res.json(providers);
+  } catch (error) {
+    console.error("Error al cargar lista completa de proveedoras:", error);
+    res
+      .status(500)
+      .json({ error: "No se pudo cargar la lista de proveedoras" });
+  }
+});
+
+router.get("/providers/payments", async (req, res) => {
+  try {
+    const providers = await getPendingPayments();
     res.json(providers);
   } catch (error) {
     console.error("Error al cargar lista completa de proveedoras:", error);

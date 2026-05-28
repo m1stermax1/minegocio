@@ -200,13 +200,13 @@ a:hover {
 
 .providersModal,
 .salesModal,
-.itemsModal {
+.itemsModal, .pendingPaymentsProvidersModal {
   border: 2px solid #bf99cc !important;
 }
 
 .providersModal>div,
 .salesModal>div,
-.itemsModal>div {
+.itemsModal>div, .pendingPaymentsProvidersModal>div {
   border-bottom: 1px solid #bf99cc !important;
 }
 
@@ -218,7 +218,7 @@ a:hover {
 
 .providersModal>div>button,
 .salesModal>div>button,
-.itemsModal>div>button {
+.itemsModal>div>button, .pendingPaymentsProvidersModal>div>button {
   color: #ffffff !important;
 }
 
