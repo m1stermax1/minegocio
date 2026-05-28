@@ -4,41 +4,61 @@
   --radius-xl: 1rem;
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 /* Small set of custom utilities that are non-trivial to express inline */
-.shadow-soft { box-shadow: 0 12px 30px rgba(2,6,23,0.6); }
+.shadow-soft {
+  box-shadow: 0 12px 30px rgba(2, 6, 23, 0.6);
+}
 
 .toast-notification {
   padding: 14px 18px;
   background: rgba(34, 197, 94, 0.16);
   border: 1px solid rgba(34, 197, 94, 0.35);
   border-radius: 16px;
-  color: rgb(34,197,94);
+  color: rgb(34, 197, 94);
   margin-bottom: 20px;
 }
 
-.modal-footer { display:flex; gap:12px; justify-content:flex-end; padding:20px 32px 28px; border-top:1px solid rgba(148,163,184,0.08); background: rgba(15,23,42,0.03); }
+.modal-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding: 20px 32px 28px;
+  border-top: 1px solid rgba(148, 163, 184, 0.08);
+  background: rgba(15, 23, 42, 0.03);
+}
 
 /* keep some legacy selectors that are pure CSS */
-.search-result-item:hover { background-color: rgba(255,255,255,0.02); }
+.search-result-item:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
 
 /* Global theme overrides: backgrounds -> white tones, text -> #bf99cc */
 :root {
   --accent-text: #bf99cc;
-  --bg-100: #ffffff; /* principal blanco */
-  --bg-50: #fbfbfd;  /* ligero tono */
-  --bg-200: #f6f5f8; /* secundario */
+  --bg-100: #ffffff;
+  /* principal blanco */
+  --bg-50: #fbfbfd;
+  /* ligero tono */
+  --bg-200: #f6f5f8;
+  /* secundario */
 }
 
 /* Additional theme variables for stronger hover colors and dashboard cards */
 :root {
   --dashboard-card-bg: #bf99cc;
-  --btn-hover-primary: #6b21a8; /* deep purple for strong contrast */
-  --btn-hover-strong: #ff5c7c;  /* accent coral for attention */
+  --btn-hover-primary: #6b21a8;
+  /* deep purple for strong contrast */
+  --btn-hover-strong: #ff5c7c;
+  /* accent coral for attention */
 }
 
-html, body, #root {
+html,
+body,
+#root {
   background-color: var(--bg-50) !important;
   color: var(--accent-text) !important;
 }
@@ -56,92 +76,114 @@ html, body, #root {
 
 /* Softer borders to match light background */
 [class*="border-"] {
-  border-color: rgba(0,0,0,0.06) !important;
+  border-color: rgba(0, 0, 0, 0.06) !important;
 }
 
 /* Keep interactive focus rings subtle but using the accent hue */
 *:focus {
-  outline-color: rgba(191,153,204,0.22) !important;
+  outline-color: rgba(191, 153, 204, 0.22) !important;
 }
 
 /* Buttons styled like dashboard cards */
-button, .btn {
+button,
+.btn {
   background-color: var(--dashboard-card-bg) !important;
   color: #ffffff !important;
-  border: 1px solid rgba(0,0,0,0.06) !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
   padding: 0.5rem 0.75rem;
   border-radius: 0.5rem;
   transition: background-color 120ms ease, box-shadow 120ms ease, transform 80ms ease;
 }
 
 /* Stronger hover colors for buttons to make them stand out */
-button:hover, .btn:hover, input[type="submit"]:hover, input[type="button"]:hover, .hover\:text-slate-100:hover, .hover\:bg-accent:hover {
+button:hover,
+.btn:hover,
+input[type="submit"]:hover,
+input[type="button"]:hover,
+.hover\:text-slate-100:hover,
+.hover\:bg-accent:hover {
   color: #ffffff !important;
   background-color: var(--btn-hover-primary) !important;
-  box-shadow: 0 14px 38px rgba(107,33,168,0.14) !important;
+  box-shadow: 0 14px 38px rgba(107, 33, 168, 0.14) !important;
   transform: translateY(-2px) !important;
   cursor: pointer !important;
 }
 
 /* provide an alternative stronger hover for danger/attention buttons */
-.btn-danger:hover, .bg-rose-900:hover, .hover\:bg-rose-900:hover {
+.btn-danger:hover,
+.bg-rose-900:hover,
+.hover\:bg-rose-900:hover {
   background-color: var(--btn-hover-strong) !important;
   color: #ffffff !important;
 }
 
-button:active, .btn:active {
+button:active,
+.btn:active {
   transform: translateY(1px) !important;
 }
 
-button:focus, .btn:focus {
-  outline: 3px solid rgba(191,153,204,0.14) !important;
+button:focus,
+.btn:focus {
+  outline: 3px solid rgba(191, 153, 204, 0.14) !important;
   outline-offset: 2px !important;
 }
 
 /* Badges commonly use inline-flex + rounded-full */
 .inline-flex.rounded-full {
-  background-color: rgba(191,153,204,0.06) !important;
+  background-color: rgba(191, 153, 204, 0.06) !important;
   color: var(--accent-text) !important;
-  border: 1px solid rgba(191,153,204,0.12) !important;
+  border: 1px solid rgba(191, 153, 204, 0.12) !important;
 }
+
 .inline-flex.rounded-full:hover {
-  background-color: rgba(191,153,204,0.12) !important;
+  background-color: rgba(191, 153, 204, 0.12) !important;
 }
 
 /* Form controls */
-input, textarea, select {
+input,
+textarea,
+select {
   background-color: var(--bg-100) !important;
   color: var(--accent-text) !important;
-  border: 1px solid rgba(0,0,0,0.06) !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
   padding: 0.5rem 0.6rem !important;
   border-radius: 0.5rem !important;
 }
-input:focus, textarea:focus, select:focus {
-  box-shadow: 0 6px 20px rgba(191,153,204,0.06) !important;
+
+input:focus,
+textarea:focus,
+select:focus {
+  box-shadow: 0 6px 20px rgba(191, 153, 204, 0.06) !important;
   outline: none !important;
-  border-color: rgba(191,153,204,0.22) !important;
+  border-color: rgba(191, 153, 204, 0.22) !important;
 }
 
 /* Modals and panels should remain light with subtle shadow */
-.bg-slate-800, .bg-slate-900, .shadow-2xl {
+.bg-slate-800,
+.bg-slate-900,
+.shadow-2xl {
   background-color: var(--bg-100) !important;
-  box-shadow: 0 10px 30px rgba(2,6,23,0.04) !important;
+  box-shadow: 0 10px 30px rgba(2, 6, 23, 0.04) !important;
 }
 
 /* Dashboard cards: purple background and white text */
 .dashboard-card {
   background-color: var(--dashboard-card-bg) !important;
   color: #ffffff !important;
-  border-color: rgba(0,0,0,0.06) !important;
+  border-color: rgba(0, 0, 0, 0.06) !important;
 }
+
 .dashboard-card * {
   color: #ffffff !important;
 }
 
 /* Links keep accent color and clear hover */
-a, a:link, a:visited {
+a,
+a:link,
+a:visited {
   color: var(--accent-text) !important;
 }
+
 a:hover {
   text-decoration: underline !important;
 }
@@ -156,27 +198,47 @@ a:hover {
   color: #ffffff !important;
 }
 
-.providersModal, .salesModal, .itemsModal {
+.providersModal,
+.salesModal,
+.itemsModal {
   border: 2px solid #bf99cc !important;
 }
 
-.providersModal > div, .salesModal > div, .itemsModal > div {
+.providersModal>div,
+.salesModal>div,
+.itemsModal>div {
   border-bottom: 1px solid #bf99cc !important;
 }
 
-.providersModal > form > div:last-child, .salesModal > form > div:last-child, .itemsModal > form > div:last-child {
+.providersModal>form>div:last-child,
+.salesModal>form>div:last-child,
+.itemsModal>form>div:last-child {
   border-top: 1px solid #bf99cc !important;
 }
 
-.providersModal > div > button, .salesModal > div > button, .itemsModal > div > button {
+.providersModal>div>button,
+.salesModal>div>button,
+.itemsModal>div>button {
   color: #ffffff !important;
 }
 
-input.w-full, select.w-full {
+input.w-full,
+select.w-full {
   border: 2px solid #bf99cc !important;
 }
 
-.providersModal, .itemsModal, .salesModal {
-    overflow: hidden scroll;
-    height: 96vh;
+.providersModal {
+  overflow: hidden auto;
+}
+
+.itemsModal,
+.salesModal {
+  overflow: hidden auto;
+  height: 96vh;
+}
+
+.providersModal::-webkit-scrollbar,
+.itemsModal::-webkit-scrollbar,
+.salesModal::-webkit-scrollbar {
+  width: 0;
 }

@@ -1,0 +1,13 @@
+/* Modern table styles using Tailwind @apply */
+.modern-table {
+  @apply w-full min-w-[760px] border-separate border-spacing-0 text-center bg-slate-800/30;
+}
+.modern-table th {
+  @apply px-4 py-2 bg-slate-700 text-slate-100 font-semibold;
+}
+.modern-table td {
+  @apply px-4 py-2 border-b border-slate-700;
+}
+.modern-table tbody tr:hover {
+  @apply bg-slate-700/50;
+}

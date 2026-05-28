@@ -148,7 +148,7 @@ function ProvidersTable({ providers = [], inventoryItems = [], loading, onDataCh
         <table className="w-full min-w-[760px] border-separate border-spacing-0">
           <thead>
             <tr>
-              <th>Nombre</th>
+              <th className="text-start">Nombre</th>
               <th>Teléfono</th>
               <th>Productos</th>
               <th>Vendidas</th>
@@ -166,10 +166,10 @@ function ProvidersTable({ providers = [], inventoryItems = [], loading, onDataCh
                 <Fragment key={`${displayName}-${index}`}>
                   <tr className="provider-group-row">
                     <td>{displayName}</td>
-                    <td>{row.provider.telefono || "-"}</td>
-                    <td>{row.productsCount}</td>
-                    <td>{row.soldCount}</td>
-                    <td>{formatPrice(row.totalGain)}</td>
+                    <td className="text-center">{row.provider.telefono || "-"}</td>
+                    <td className="text-center">{row.productsCount}</td>
+                    <td className="text-center">{row.soldCount}</td>
+                    <td className="text-center">{formatPrice(row.totalGain)}</td>
                     <td>
                       <button type="button" className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2" onClick={() => toggleProvider(displayName)}>
                         {isExpanded ? "Ocultar" : "Ver productos"}

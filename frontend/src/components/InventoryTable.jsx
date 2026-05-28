@@ -1,6 +1,6 @@
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { FaCheck } from "react-icons/fa";
-import { fetchProviders, updateInventoryRowStatus, addInventoryItem, fetchProvidersComplete } from "../services/api.js";
+import { fetchProviders, updateInventoryRowStatus, addInventoryItem, fetchProvidersComplete, sendWhatsAppMessage } from "../services/api.js";
 
 const InventoryTable = forwardRef(function InventoryTable({ items, loading, onItemAdded, providers = [], showSelection = true }, ref) {
   const [selectedItems, setSelectedItems] = useState([]);
@@ -148,7 +148,7 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
         metodoPago,
         discountedPrice
       );
-      
+
       setShowPaymentModal(false);
       setSaleNotification("Venta cargada correctamente");
       setTimeout(() => setSaleNotification(""), 3200);
@@ -183,14 +183,14 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
   };
 
   const handleItemChange = (index, field, value) => {
- 
+
     setPendingItems((prev) =>
       prev.map((item, itemIndex) =>
         itemIndex === index
           ? {
-              ...item,
-              [field]: value,
-            }
+            ...item,
+            [field]: value,
+          }
           : item,
       ),
     );
@@ -241,7 +241,14 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
 
     try {
       const result = await addInventoryItem(itemsToSend);
-      setGeneratedBarcodes(result.barcodes || []);
+      const barcodes = result.barcodes || [];
+      setGeneratedBarcodes(barcodes);
+      // Send WhatsApp message with generated barcodes
+      try {
+        await sendWhatsAppMessage({ barcodes });
+      } catch (whError) {
+        console.error('Error sending WhatsApp message:', whError);
+      }
       closeModal();
       onItemAdded?.();
     } catch (error) {
@@ -267,7 +274,7 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
   };
 
   const selectProvider = (index, nombre) => {
-    
+
     handleItemChange(index, 'proveedora', nombre);
     setProviderDropdown((prev) => prev.map((v, i) => (i === index ? false : v)));
   };
@@ -301,54 +308,39 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
             </div>
           )}
 
-          <table className="w-full min-w-[760px] border-separate border-spacing-0">
-          <thead>
-          <tr>
-            {showSelection && <th>Acción</th>}
-            <th>Descripción</th>
-            <th>Precio</th>
-            <th>Proveedor</th>
-            <th>Estado</th>
-          </tr>
-        </thead>
+          <table className="modern-table w-full border-separate border-spacing-3">
+            <thead>
+              <tr>
+                <th className="text-start">Nombre</th>
+                <th>Precio</th>
+                <th>Proveedor</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
 
-        <tbody>
-          {tableItems.map((item, index) => (
-            <tr
-              key={`${item.codigo}-${index}`}
-              className={isSelected(item.id) ? 'bg-emerald-900/10' : ''}
-            >
-
-              {showSelection && (
-                <td>
-                  <button
-                    className={`w-8 h-8 rounded-md flex items-center justify-center transition ${isSelected(item.id) ? 'bg-emerald-500 text-white' : 'bg-transparent border border-slate-700 text-slate-100'}`}
-                    onClick={() => toggleSelect(item.id)}
-                  >
-                    <FaCheck />
-                  </button>
-                </td>
-              )}
-
-              <td>{formatText(item.descripcion)}</td>
-
-              <td>{formatInventoryPrice(item.precio)}</td>
-
-              <td>{formatText(item.proveedora)}</td>
-
-              {/* STATUS */}
-              <td>
-                <button
-                  onClick={() => toggleStatus(item.id)}
-                  className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${item.estado?.toLowerCase() === 'vendido' ? 'bg-rose-800/40 text-rose-300 border border-rose-700' : 'bg-emerald-800/40 text-emerald-300 border border-emerald-700'}`}
+            <tbody>
+              {tableItems.map((item, index) => (
+                <tr
+                  key={`${item.codigo}-${index}`}
+                  className={isSelected(item.id) ? 'bg-emerald-900/10' : ''}
                 >
-                  {item.estado}
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                  <td>{formatText(item.descripcion)}</td>
+
+                  <td className="text-center">{formatInventoryPrice(item.precio)}</td>
+
+                  <td className="text-center">{formatText(item.proveedora)}</td>
+
+                  <td className="text-center">
+                    <span
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${item.estado?.toLowerCase() === 'vendido' ? 'bg-rose-800/40 text-rose-300 border border-rose-700' : 'bg-emerald-800/40 text-emerald-300 border border-emerald-700'}`}
+                    >
+                      {item.estado}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </>
       )}
 
@@ -386,7 +378,7 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
                   </div>
 
                   <div className="grid grid-cols-3 gap-4">
-                      <div>
+                    <div>
                       <label htmlFor={`nombre-${index}`} className="text-sm font-medium text-slate-200">Nombre del producto</label>
                       <input
                         id={`nombre-${index}`}
