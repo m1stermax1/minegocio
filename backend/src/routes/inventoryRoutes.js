@@ -121,7 +121,7 @@ router.post("/sales", async (req, res) => {
     }
 
     await appendSaleRecord({
-      fecha: new Date().toISOString(),
+      fecha: new Date().toLocaleDateString("sv-SE"),
       metodoPago: paymentMethod,
       montoTotal: totalVenta,
       items,

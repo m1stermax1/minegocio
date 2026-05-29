@@ -93,6 +93,7 @@ function ItemsFormModal({ isOpen, onClose, onItemsAdded, defaultProviderId, prov
     setLoading(true);
     try {
       const itemsToAdd = items.map((item) => ({ nombre: item.nombre, precio: item.precio.toString(), proveedora: selectedProvider.nombre }));
+
       await addInventoryItem(itemsToAdd);
       setItems([]);
       setNewItemName('');

@@ -18,12 +18,29 @@ export default function DashboardPage({ onAddProduct, onAddSale, onAddProvider, 
   const [totalOwner, setTotalOwner] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  const parseSaleDate = (dateString) => {
+    if (!dateString) return null;
+
+    // formato YYYY-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      const [year, month, day] = dateString.split("-").map(Number);
+
+      return new Date(year, month - 1, day);
+    }
+
+    // fallback para fechas viejas ISO
+    const parsed = new Date(dateString);
+
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  };
+
+
   useEffect(() => {
     let mounted = true;
     async function load() {
       try {
         setLoading(true);
-          const [dashboardData, providers, salesData, ownerTotal] = await Promise.all([
+        const [dashboardData, providers, salesData, ownerTotal] = await Promise.all([
           fetchDashboardCounts(),
           fetchProvidersComplete(),
           fetchSales(),
@@ -41,7 +58,7 @@ export default function DashboardPage({ onAddProduct, onAddSale, onAddProvider, 
           // total vendido (suma de salesData por el mes)
           let monthlyTotal = 0;
           (salesData || []).forEach((sale) => {
-            const saleDate = sale.fecha ? new Date(sale.fecha) : null;
+            const saleDate = parseSaleDate(sale.fecha);
             if (saleDate && saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear) {
               monthlyTotal += Number(sale.montoTotal) || 0;
             }
@@ -74,14 +91,14 @@ export default function DashboardPage({ onAddProduct, onAddSale, onAddProvider, 
             <StatCard title="Productos en stock" value={counts.inStockCount} />
             <StatCard title="Productos vendidos" value={counts.soldCount} />
             <StatCard title="Proveedoras" value={providersCount} />
-            <StatCard 
-              title="Total vendido este mes" 
-              value={formatCurrency(totalSold)} 
+            <StatCard
+              title="Total vendido este mes"
+              value={formatCurrency(totalSold)}
               subtitle="Monto total de ventas"
             />
-            <StatCard 
-              title="Total para la dueña" 
-              value={formatCurrency(totalOwner)} 
+            <StatCard
+              title="Total para la dueña"
+              value={formatCurrency(totalOwner)}
             />
           </>
         )}

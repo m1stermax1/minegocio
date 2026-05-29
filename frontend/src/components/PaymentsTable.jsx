@@ -165,48 +165,65 @@ export default function PaymentsTable({
                           {expandedProvider === provName ? "Ocultar" : "Ver detalles"}
                         </button>
                         <button
-  type="button"
-  className="bg-accent text-slate-900 font-semibold rounded-lg px-4 py-2"
-  onClick={() => {
-    const providerData = providers.find(
-      (p) => p.nombre?.toLowerCase() === provName?.toLowerCase()
-    );
-    const phone = providerData?.telefono;
-    if (!phone) {
-      alert("La proveedora no tiene teléfono cargado.");
-      return;
-    }
-    const total = items.reduce(
-      (acc, item) => acc + Number(item.precio || 0),
-      0
-    );
-    const productsText = items
-      .map(
-        (item) =>
-          `• ${item.descripcion} - $${Number(item.precio).toLocaleString(
-            "es-AR"
-          )}`
-      )
-      .join("\n");
-    const message = `
+                          type="button"
+                          className="bg-accent text-slate-900 font-semibold rounded-lg px-4 py-2"
+                          onClick={() => {
+                            const providerData = providers.find(
+                              (p) => p.nombre?.toLowerCase() === provName?.toLowerCase()
+                            );
+
+                            const phone = providerData?.telefono;
+
+                            if (!phone) {
+                              alert("La proveedora no tiene teléfono cargado.");
+                              return;
+                            }
+
+                            // Productos con cálculo del 60%
+                            const productsText = items
+                              .map((item) => {
+                                const precioOriginal = Number(item.precio || 0);
+                                const precioProveedora = precioOriginal * 0.6;
+
+                                return `• ${item.descripcion} - $${precioProveedora.toLocaleString(
+                                  "es-AR",
+                                  {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  }
+                                )}`;
+                              })
+                              .join("\n");
+
+                            // Total correcto (60%)
+                            const totalProvider = items.reduce((acc, item) => {
+                              return acc + (Number(item.precio || 0) * 0.6);
+                            }, 0);
+
+                            const message = `
 Hola ${provName}, ¿cómo estás?
 
 Te comparto el detalle de productos vendidos:
 
 ${productsText}
 
-Total a pagar: $${total.toLocaleString("es-AR")}
+Total a pagar: $${totalProvider.toLocaleString("es-AR", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
 
 Muchas gracias.
 `.trim();
-    const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(
-      message
-    )}`;
-    window.open(whatsappUrl, "_blank");
-  }}
->
-  Contactar
-</button>
+
+                            const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(
+                              message
+                            )}`;
+
+                            window.open(whatsappUrl, "_blank");
+                          }}
+                        >
+                          Contactar
+                        </button>
                       </div>
                     </td>
                   </tr>

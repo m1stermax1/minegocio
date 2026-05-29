@@ -6,6 +6,7 @@ import { google } from "googleapis";
 import dotenv from "dotenv";
 import { exec } from "child_process";
 import sharp from "sharp";
+import crypto from "crypto";
 
 dotenv.config();
 
@@ -131,7 +132,7 @@ export async function getInventoryData() {
 
   const response = await sheets.spreadsheets.get({
     spreadsheetId,
-    ranges: ["LOCAL MAXI!A:K"],
+    ranges: ["LOCAL MAXI!A:M"],
     includeGridData: true,
   });
 
@@ -158,9 +159,7 @@ export async function getInventoryData() {
       const precio = getCellText(cells[2]);
       const proveedora = getCellText(cells[10]) || "mío";
 
-      const bg = cells[0]?.effectiveFormat?.backgroundColor;
-
-      const isGreen = bg && bg.green > 0.5 && bg.red < 0.5;
+      const estado = getCellText(cells[12]) || "en stock";
 
       return {
         id: index,
@@ -168,7 +167,7 @@ export async function getInventoryData() {
         descripcion,
         precio,
         proveedora,
-        estado: isGreen ? "vendido" : "en stock",
+        estado,
       };
     });
 }
@@ -178,7 +177,7 @@ export async function getProvidersData() {
 
   const response = await sheets.spreadsheets.get({
     spreadsheetId,
-    ranges: ["LOCAL MAXI!A:K"],
+    ranges: ["LOCAL MAXI!A:M"],
     includeGridData: true,
   });
 
@@ -194,8 +193,7 @@ export async function getProvidersData() {
       const pagoRaw = getCellText(cells[8]).toLowerCase();
       const isPaid = ["si", "pagado", "yes", "true"].includes(pagoRaw);
 
-      const bg = cells[0]?.effectiveFormat?.backgroundColor;
-      const isGreen = bg && bg.green > 0.5 && bg.red < 0.5;
+      const estado = getCellText(cells[12]) || "en stock";
 
       return {
         id: index,
@@ -204,7 +202,7 @@ export async function getProvidersData() {
         descripcion,
         precio: precioRaw,
         ganancia: "25%",
-        estado: isGreen ? "vendido" : "en stock",
+        estado,
         pago: isPaid ? "pagado" : "impago",
       };
     })
@@ -382,9 +380,14 @@ export async function setInventoryRowStatus(rowIndex, estado, metodoPago, precio
   const greenBackground = isVendido
     ? { red: 0.46666667, green: 0.76862745, blue: 0.16470588 }
     : { red: 1, green: 1, blue: 1 };
-  const redBackground = isVendido
+  const redBackground = isVendido 
     ? { red: 1, green: 0, blue: 0 }
     : { red: 1, green: 1, blue: 1 };
+  const estadoValue = {
+    userEnteredValue: {
+      stringValue: isVendido ? "vendido" : "en stock",
+    },
+  };
   const fechaVentaValue = isVendido
     ? { userEnteredValue: { stringValue: new Date().toISOString().replace('T', ' ').split('.')[0] } }
     : { userEnteredValue: { stringValue: '' } };
@@ -496,6 +499,23 @@ export async function setInventoryRowStatus(rowIndex, estado, metodoPago, precio
             fields: "userEnteredValue",
           },
         },
+        {
+          repeatCell: {
+            range: {
+              sheetId,
+              startRowIndex: rowIndex,
+              endRowIndex: rowIndex + 1,
+              startColumnIndex: 12,
+              endColumnIndex: 13,
+            },
+            cell: {
+              userEnteredValue: {
+                stringValue: isVendido ? "vendido" : "en stock",
+              },
+            },
+            fields: "userEnteredValue",
+          },
+        },
       ],
     },
   });
@@ -532,12 +552,10 @@ export async function appendInventoryItems(items) {
 
   for (const item of items) {
     // Código único más seguro
-    const codigo =
-      Date.now().toString().slice(-8) +
-      Math.floor(Math.random() * 100);
+    const codigo = crypto.randomUUID().split("-")[0].toUpperCase();
 
     // imprimir etiqueta
-    await generateBarcodeAndPrint(codigo);
+    // await generateBarcodeAndPrint(codigo);
 
     generatedBarcodes.push({
       codigo,
@@ -565,12 +583,13 @@ export async function appendInventoryItems(items) {
       "",
       item.proveedora || "",
       fechaCarga,
+      "en stock"
     ]);
   }
 
   await sheets.spreadsheets.values.update({
     spreadsheetId,
-    range: `LOCAL MAXI!A${startRow}:L${startRow + values.length - 1
+    range: `LOCAL MAXI!A${startRow}:M${startRow + values.length - 1
       }`,
     valueInputOption: "RAW",
     requestBody: {
