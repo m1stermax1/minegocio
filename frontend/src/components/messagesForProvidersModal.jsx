@@ -127,11 +127,7 @@ Muchas gracias.
                     </tbody>
                 </table>
             </div>
-
-
         </div>
-
-
     );
 }
 

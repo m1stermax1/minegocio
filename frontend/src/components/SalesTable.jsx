@@ -58,7 +58,7 @@ export default function SalesTable({ sales = [], loading }) {
       <div className="mb-5 grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <label style={{ display: "block", fontSize: "0.85rem", marginBottom: "6px", fontWeight: 600, color: "var(--accent)" }}>Filtrar por fecha</label>
-            <input
+          <input
             type="date"
             value={dateFilter}
             onChange={(e) => {
@@ -71,7 +71,7 @@ export default function SalesTable({ sales = [], loading }) {
         </div>
         <div>
           <label style={{ display: "block", fontSize: "0.85rem", marginBottom: "6px", fontWeight: 600, color: "var(--accent)" }}>Desde</label>
-            <input
+          <input
             type="date"
             value={dateFrom}
             onChange={(e) => {
@@ -83,7 +83,7 @@ export default function SalesTable({ sales = [], loading }) {
         </div>
         <div>
           <label style={{ display: "block", fontSize: "0.85rem", marginBottom: "6px", fontWeight: 600, color: "var(--accent)" }}>Hasta</label>
-            <input
+          <input
             type="date"
             value={dateTo}
             onChange={(e) => {
@@ -94,37 +94,37 @@ export default function SalesTable({ sales = [], loading }) {
           />
         </div>
         {(dateFilter || dateFrom || dateTo) && (
-            <div className="flex items-end">
-              <button type="button" className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 w-full" onClick={() => { setDateFilter(''); setDateFrom(''); setDateTo(''); }}>Limpiar filtros</button>
-            </div>
+          <div className="flex items-end">
+            <button type="button" className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 w-full" onClick={() => { setDateFilter(''); setDateFrom(''); setDateTo(''); }}>Limpiar filtros</button>
+          </div>
         )}
       </div>
       <div className="mb-3 text-sm text-slate-400">Mostrando {filteredSales.length} de {sales.length} ventas</div>
-      <table className="w-full min-w-[760px] border-separate border-spacing-0">
+      <table className="w-full min-w-[760px] border-separate border-spacing-3">
         <thead>
           <tr>
-            <th>Fecha</th>
-            <th>Método</th>
-            <th>Total</th>
-            <th>Productos</th>
-            <th></th>
+            <th className="text-center">Fecha</th>
+            <th className="text-center">Método</th>
+            <th className="text-center">Total</th>
+            <th className="text-center">Productos</th>
+            <th className="text-center">Acciones</th>
           </tr>
         </thead>
         <tbody>
           {filteredSales.map((sale, index) => (
             <Fragment key={`sale-${index}`}>
               <tr>
-                <td className="text-sm font-medium">{formatDateArg(sale.fecha)}</td>
-                <td>{sale.metodoPago || "-"}</td>
-                <td>${Number(sale.montoTotal || 0).toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
-                <td>{sale.items?.length || 0}</td>
-                <td>
+                <td className="text-center text-sm font-medium">{formatDateArg(sale.fecha)}</td>
+                <td className="text-center">{sale.metodoPago || "-"}</td>
+                <td className="text-center">${Number(sale.montoTotal || 0).toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
+                <td className="text-center">{sale.items?.length || 0}</td>
+                <td className="flex justify-center">
                   <button type="button" className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2" onClick={() => toggleExpanded(index)}>{expandedSale === index ? 'Ocultar' : 'Ver productos'}</button>
                 </td>
               </tr>
               {expandedSale === index && (
                 <tr>
-                    <td colSpan={5}>
+                  <td colSpan={5}>
                     <div className="py-3">
                       <table className="w-full min-w-[720px] border-separate border-spacing-0">
                         <thead>
@@ -138,10 +138,10 @@ export default function SalesTable({ sales = [], loading }) {
                         <tbody>
                           {sale.items?.map((item, itemIndex) => (
                             <tr key={`${index}-${itemIndex}`}>
-                              <td>{item.codigo || "-"}</td>
-                              <td>{item.descripcion || "-"}</td>
-                              <td>{item.proveedora || "-"}</td>
-                              <td>${Number(item.precio || 0).toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
+                              <td className="text-center">{item.codigo || "-"}</td>
+                              <td className="text-center">{item.descripcion || "-"}</td>
+                              <td className="text-center">{item.proveedora || "-"}</td>
+                              <td className="text-center">${Number(item.precio || 0).toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
                             </tr>
                           ))}
                         </tbody>

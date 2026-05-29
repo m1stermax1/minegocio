@@ -311,10 +311,10 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
           <table className="modern-table w-full border-separate border-spacing-3">
             <thead>
               <tr>
-                <th className="text-start">Nombre</th>
-                <th>Precio</th>
-                <th>Proveedor</th>
-                <th>Estado</th>
+                <th className="text-center">Nombre</th>
+                <th className="text-center">Precio</th>
+                <th className="text-center">Proveedor</th>
+                <th className="text-center">Estado</th>
               </tr>
             </thead>
 
@@ -324,7 +324,7 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
                   key={`${item.codigo}-${index}`}
                   className={isSelected(item.id) ? 'bg-emerald-900/10' : ''}
                 >
-                  <td>{formatText(item.descripcion)}</td>
+                  <td className="text-center">{formatText(item.descripcion)}</td>
 
                   <td className="text-center">{formatInventoryPrice(item.precio)}</td>
 

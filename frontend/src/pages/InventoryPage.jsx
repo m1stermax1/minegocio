@@ -305,7 +305,7 @@ function InventoryPage() {
 
         <section className="bg-slate-800/70 border border-slate-700 rounded-2xl p-7 min-h-[72vh] shadow-soft">
           <div className="grid grid-cols-[1fr_max-content] gap-4 items-center mb-6">
-            {(isInventory || isProviders || isSales || isPayments) && (
+            {(isInventory || isProviders) && (
               <SearchBar
                 query={searchQuery}
                 onChange={setSearchQuery}
@@ -355,7 +355,7 @@ function InventoryPage() {
               </button>
             )}
 
-            {isPayments && (
+            {/* {isPayments && (
               <button
                 className="bg-accent text-slate-900 font-semibold rounded-lg px-4 py-2"
                 onClick={() => {
@@ -365,7 +365,7 @@ function InventoryPage() {
               >
                 Contactar proveedoras
               </button>
-            )}
+            )} */}
           </div>
 
           {notification && (

@@ -145,15 +145,15 @@ function ProvidersTable({ providers = [], inventoryItems = [], loading, onDataCh
   return (
     <div>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[760px] border-separate border-spacing-0">
+        <table className="w-full min-w-[760px] border-separate border-spacing-3">
           <thead>
             <tr>
-              <th className="text-start">Nombre</th>
-              <th>Teléfono</th>
-              <th>Productos</th>
-              <th>Vendidas</th>
-              <th>Total para proveedora</th>
-              <th></th>
+              <th className="text-center">Nombre</th>
+              <th className="text-center">Teléfono</th>
+              <th className="text-center">Productos</th>
+              <th className="text-center">Vendidas</th>
+              <th className="text-center">Total para proveedora</th>
+              <th className="text-center">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -165,12 +165,12 @@ function ProvidersTable({ providers = [], inventoryItems = [], loading, onDataCh
               return (
                 <Fragment key={`${displayName}-${index}`}>
                   <tr className="provider-group-row">
-                    <td>{displayName}</td>
+                    <td className="text-center">{displayName}</td>
                     <td className="text-center">{row.provider.telefono || "-"}</td>
                     <td className="text-center">{row.productsCount}</td>
                     <td className="text-center">{row.soldCount}</td>
                     <td className="text-center">{formatPrice(row.totalGain)}</td>
-                    <td>
+                    <td className="flex justify-center gap-2">
                       <button type="button" className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2" onClick={() => toggleProvider(displayName)}>
                         {isExpanded ? "Ocultar" : "Ver productos"}
                       </button>

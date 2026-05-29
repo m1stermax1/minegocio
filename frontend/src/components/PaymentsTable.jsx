@@ -11,6 +11,8 @@ export default function PaymentsTable({
   const [expandedProvider, setExpandedProvider] = useState(null);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showMessagesForProvidersModal, setShowMessagesForProvidersModal] =
+    useState(false);
 
   const toggleExpanded = (proveedoraName) => {
     setExpandedProvider((prev) =>
@@ -89,6 +91,20 @@ export default function PaymentsTable({
     setShowPaymentModal(true);
   };
 
+  const loadPendingProviderPayments = async () => {
+    try {
+      const data = await fetchProviderPayments();
+      setPendingProviderPayments(data);
+    } catch (error) {
+      console.error(
+        "Error cargando pagos pendientes de proveedoras:",
+        error,
+      );
+
+      setPendingProviderPayments([]);
+    }
+  };
+
   if (loading) {
     return <div className="table-state">Cargando pagos...</div>;
   }
@@ -104,14 +120,14 @@ export default function PaymentsTable({
   return (
     <>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[760px] border-separate border-spacing-0">
+        <table className="w-full min-w-[760px] border-separate border-spacing-3">
           <thead>
             <tr>
-              <th>Proveedora</th>
+              <th className="text-center">Proveedora</th>
               <th>Productos vendidos</th>
               <th>Total a pagar</th>
               <th>Estado</th>
-              <th></th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -125,28 +141,73 @@ export default function PaymentsTable({
               return (
                 <Fragment key={`provider-${provName}`}>
                   <tr>
-                    <td>{provName}</td>
-                    <td>{items.length}</td>
-                    <td>
+                    <td className="text-center">{provName}</td>
+                    <td className="text-center">{items.length}</td>
+                    <td className="text-center">
                       $
                       {Number(totalProvider).toLocaleString("es-AR", {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}
                     </td>
-                    <td>
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${isPaid ? 'bg-emerald-800/40 text-emerald-300 border border-emerald-700' : 'bg-amber-900/40 text-amber-200 border border-amber-700'}`}>
+                    <td className="text-center">
+                      <span className={`inline-flex justify-center items-center px-3 py-1 rounded-full text-sm font-semibold ${isPaid ? 'bg-emerald-800/40 text-emerald-300 border border-emerald-700' : 'bg-amber-900/40 text-amber-200 border border-amber-700'}`}>
                         {isPaid ? "✓ Pagado" : "○ Pendiente"}
                       </span>
                     </td>
                     <td>
-                      <button
-                        type="button"
-                        className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2"
-                        onClick={() => toggleExpanded(provName)}
-                      >
-                        {expandedProvider === provName ? "Ocultar" : "Ver detalles"}
-                      </button>
+                      <div className="flex justify-center gap-2">
+                        <button
+                          type="button"
+                          className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2"
+                          onClick={() => toggleExpanded(provName)}
+                        >
+                          {expandedProvider === provName ? "Ocultar" : "Ver detalles"}
+                        </button>
+                        <button
+  type="button"
+  className="bg-accent text-slate-900 font-semibold rounded-lg px-4 py-2"
+  onClick={() => {
+    const providerData = providers.find(
+      (p) => p.nombre?.toLowerCase() === provName?.toLowerCase()
+    );
+    const phone = providerData?.telefono;
+    if (!phone) {
+      alert("La proveedora no tiene teléfono cargado.");
+      return;
+    }
+    const total = items.reduce(
+      (acc, item) => acc + Number(item.precio || 0),
+      0
+    );
+    const productsText = items
+      .map(
+        (item) =>
+          `• ${item.descripcion} - $${Number(item.precio).toLocaleString(
+            "es-AR"
+          )}`
+      )
+      .join("\n");
+    const message = `
+Hola ${provName}, ¿cómo estás?
+
+Te comparto el detalle de productos vendidos:
+
+${productsText}
+
+Total a pagar: $${total.toLocaleString("es-AR")}
+
+Muchas gracias.
+`.trim();
+    const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(
+      message
+    )}`;
+    window.open(whatsappUrl, "_blank");
+  }}
+>
+  Contactar
+</button>
+                      </div>
                     </td>
                   </tr>
                   {expandedProvider === provName && (
@@ -158,7 +219,6 @@ export default function PaymentsTable({
                               <tr>
                                 <th>Código</th>
                                 <th>Descripción</th>
-                                <th>Precio sugerido</th>
                                 <th>Valor para proveedora (60%)</th>
                               </tr>
                             </thead>
@@ -169,16 +229,10 @@ export default function PaymentsTable({
 
                                 return (
                                   <tr key={`${provName}-${itemIndex}`} className="odd:bg-slate-900/20">
-                                    <td>{item.codigo || "-"}</td>
-                                    <td>{item.descripcion || "-"}</td>
-                                    <td>
-                                      $
-                                      {precioSugerido.toLocaleString("es-AR", {
-                                        minimumFractionDigits: 2,
-                                        maximumFractionDigits: 2,
-                                      })}
-                                    </td>
-                                    <td>
+                                    <td className="text-center">{item.codigo || "-"}</td>
+                                    <td className="text-center"> {item.descripcion || "-"}</td>
+
+                                    <td className="text-center">
                                       $
                                       {precioProveedora.toLocaleString(
                                         "es-AR",
@@ -193,16 +247,6 @@ export default function PaymentsTable({
                               })}
                             </tbody>
                           </table>
-
-                          <div className="mt-4 flex gap-3">
-                            <button
-                              type="button"
-                              className="bg-accent text-slate-900 font-semibold rounded-lg px-4 py-2"
-                              onClick={() => handleOpenPaymentModal(provName, items)}
-                            >
-                              Registrar pago
-                            </button>
-                          </div>
                         </div>
                       </td>
                     </tr>
