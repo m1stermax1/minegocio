@@ -51,8 +51,8 @@ async function generateBarcodeAndPrint(code) {
   const rotatedBarcode = await sharp(barcodeBuffer)
     .rotate(90)
     .resize({
-      width: 80,
-      height: 200,
+      width: 90,
+      height: 260,
       fit: "inside",
       withoutEnlargement: true,
     })
@@ -78,11 +78,16 @@ async function generateBarcodeAndPrint(code) {
     .toBuffer();
 
   fs.writeFileSync(filePath, finalImage);
+  console.log("INICIO IMPRESION:", code);
 
   await new Promise((resolve, reject) => {
     exec(
       `python -m niimprint -m d110 -c usb -a COM3 --density 3 -i "${filePath}"`,
       (error, stdout, stderr) => {
+        console.log("FIN IMPRESION:", code);
+        console.log("STDOUT:", stdout);
+        console.log("STDERR:", stderr);
+
         if (error) {
           reject(stderr || error.message);
           return;
@@ -94,6 +99,7 @@ async function generateBarcodeAndPrint(code) {
   });
 
   fs.unlinkSync(filePath);
+
 
   return {
     success: true,
@@ -380,7 +386,7 @@ export async function setInventoryRowStatus(rowIndex, estado, metodoPago, precio
   const greenBackground = isVendido
     ? { red: 0.46666667, green: 0.76862745, blue: 0.16470588 }
     : { red: 1, green: 1, blue: 1 };
-  const redBackground = isVendido 
+  const redBackground = isVendido
     ? { red: 1, green: 0, blue: 0 }
     : { red: 1, green: 1, blue: 1 };
   const estadoValue = {
@@ -522,6 +528,8 @@ export async function setInventoryRowStatus(rowIndex, estado, metodoPago, precio
 }
 
 export async function appendInventoryItems(items) {
+  console.log("Items recibidos:", items.length);
+  console.log(items);
   const { sheets, spreadsheetId } = await getSheetsClient();
 
   const response = await sheets.spreadsheets.values.get({
@@ -555,7 +563,13 @@ export async function appendInventoryItems(items) {
     const codigo = crypto.randomUUID().split("-")[0].toUpperCase();
 
     // imprimir etiqueta
-    // await generateBarcodeAndPrint(codigo);
+    await generateBarcodeAndPrint(codigo);
+
+
+    console.log("ESPERANDO 5 SEGUNDOS");
+
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
 
     generatedBarcodes.push({
       codigo,
@@ -596,6 +610,8 @@ export async function appendInventoryItems(items) {
       values,
     },
   });
+
+
 
   return { generatedBarcodes };
 }
