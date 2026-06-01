@@ -1,4 +1,3 @@
-
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import Sidebar from "../components/Sidebar.jsx";
@@ -47,6 +46,7 @@ function InventoryPage() {
   const [loadingInventory, setLoadingInventory] = useState(true);
   const [loadingProviders, setLoadingProviders] = useState(false);
   const [loadingSales, setLoadingSales] = useState(false);
+  const [loadingPayments, setLoadingPayments] = useState(false);
 
   const [showItemsModal, setShowItemsModal] = useState(false);
   const [showSaleModal, setShowSaleModal] = useState(false);
@@ -109,15 +109,14 @@ function InventoryPage() {
 
   const loadPendingProviderPayments = async () => {
     try {
+      setLoadingPayments(true);
       const data = await fetchProviderPayments();
       setPendingProviderPayments(data);
     } catch (error) {
-      console.error(
-        "Error cargando pagos pendientes de proveedoras:",
-        error,
-      );
-
+      console.error("Error cargando pagos pendientes de proveedoras:", error);
       setPendingProviderPayments([]);
+    } finally {
+      setLoadingPayments(false);
     }
   };
 
@@ -137,6 +136,10 @@ function InventoryPage() {
     if (isSales || isPayments) {
       loadSales();
     }
+
+    if (isPayments) {
+      loadPendingProviderPayments();
+    }
   }, [activeView]);
 
   useEffect(() => {
@@ -146,11 +149,6 @@ function InventoryPage() {
   }, [providersRefresh]);
 
   const handleAddItem = () => {
-    if (inventoryTableRef.current && isInventory) {
-      inventoryTableRef.current.openAddItemModal();
-      return;
-    }
-
     setShowItemsModal(true);
   };
 
@@ -164,6 +162,7 @@ function InventoryPage() {
 
   const handleItemAdded = () => {
     loadInventory();
+    setDashboardRefresh((prev) => prev + 1);
     showNotification("Item agregado correctamente a la lista.");
   };
 
@@ -188,7 +187,7 @@ function InventoryPage() {
   const handlePendingProvidersPayments = async () => {
     await loadPendingProviderPayments();
     setShowMessagesForProvidersModal(true);
-  }
+  };
 
   const filteredInventory = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -255,20 +254,16 @@ function InventoryPage() {
     }
 
     if (isSales) {
-      return (
-        <SalesTable
-          sales={sales}
-          loading={loadingSales}
-        />
-      );
+      return <SalesTable sales={sales} loading={loadingSales} />;
     }
 
     if (isPayments) {
       return (
         <PaymentsTable
-          inventory={filteredInventory}
+          payments={pendingProviderPayments}
           providers={providers}
-          loading={loadingInventory || loadingProviders}
+          loading={loadingPayments || loadingProviders}
+          onPaymentsUpdated={loadPendingProviderPayments}
         />
       );
     }
@@ -285,10 +280,7 @@ function InventoryPage() {
 
   return (
     <div className="min-h-screen md:grid md:grid-cols-[280px_1fr]">
-      <Sidebar
-        activeView={activeView}
-        onViewChange={setActiveView}
-      />
+      <Sidebar activeView={activeView} onViewChange={setActiveView} />
 
       <main className="p-8">
         <div className="flex items-end justify-between gap-6 mb-7">
@@ -306,20 +298,17 @@ function InventoryPage() {
         <section className="bg-slate-800/70 border border-slate-700 rounded-2xl p-7 min-h-[72vh] shadow-soft">
           <div className="grid grid-cols-[1fr_max-content] gap-4 items-center mb-6">
             {(isInventory || isProviders) && (
-              <SearchBar
-                query={searchQuery}
-                onChange={setSearchQuery}
-              />
+              <SearchBar query={searchQuery} onChange={setSearchQuery} />
             )}
 
             {isDashboard && (
               <div className="flex gap-3 items-center">
                 <button
-                  className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2"
-                  onClick={handleAddItem}
-                >
-                  Agregar producto
-                </button>
+                    className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2"
+                    onClick={handleAddItem}
+                  >
+                    Agregar producto
+                  </button>
 
                 <button
                   className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2"
@@ -349,7 +338,7 @@ function InventoryPage() {
             {isProviders && (
               <button
                 className="bg-accent text-slate-900 font-semibold rounded-lg px-4 py-2"
-                onClick={handlePendingProvidersPayments}
+                onClick={() => setShowProvidersModal(true)}
               >
                 + Nueva Proveedora
               </button>
@@ -369,9 +358,7 @@ function InventoryPage() {
           </div>
 
           {notification && (
-            <div className="toast-notification">
-              {notification}
-            </div>
+            <div className="toast-notification">{notification}</div>
           )}
 
           {renderContent()}

@@ -1,18 +1,19 @@
 import { Fragment, useState, useMemo } from "react";
 import PaymentModal from "./PaymentModal.jsx";
 
-import { fetchProvidersComplete, updatePaymentStatus } from "../services/api.js";
+import {
+  updatePaymentStatus,
+} from "../services/api.js";
 
 export default function PaymentsTable({
-  inventory = [],
+  payments = [],
   providers = [],
   loading,
+  onPaymentsUpdated,
 }) {
   const [expandedProvider, setExpandedProvider] = useState(null);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [showMessagesForProvidersModal, setShowMessagesForProvidersModal] =
-    useState(false);
 
   const toggleExpanded = (proveedoraName) => {
     setExpandedProvider((prev) =>
@@ -20,19 +21,11 @@ export default function PaymentsTable({
     );
   };
 
-  // Agrupar productos vendidos por proveedora
   const paymentsByProvider = useMemo(() => {
     const groupedByProvider = {};
 
-    // Filtrar items vendidos que tienen proveedora
-    const soldItems = inventory.filter(
-      (item) =>
-        (item.estado || "").toLowerCase() === "vendido" && item.proveedora,
-    );
-
-    // Agrupar por proveedora
-    soldItems.forEach((item) => {
-      const provName = item.proveedora;
+    payments.forEach((item) => {
+      const provName = item.proveedora || "Sin proveedora";
       if (!groupedByProvider[provName]) {
         groupedByProvider[provName] = [];
       }
@@ -40,17 +33,17 @@ export default function PaymentsTable({
     });
 
     return groupedByProvider;
-  }, [inventory]);
+  }, [payments]);
 
-  // Obtener información de proveedoras (teléfono, alias, CBU, etc.)
   const getProviderInfo = async (provName) => {
     try {
       const data = await fetchProvidersComplete();
-      console.log("Proveedores completos:", data);
       return data.find(
         (p) =>
-          p.nombre === provName ||
-          `${p.nombre} ${p.apellido}`.trim() === provName,
+          p.nombre?.toLowerCase() === provName?.toLowerCase() ||
+          `${p.nombre || ""} ${p.apellido || ""}`
+            .trim()
+            .toLowerCase() === provName?.toLowerCase(),
       );
     } catch (err) {
       console.error("Error fetching complete providers:", err);
@@ -60,48 +53,67 @@ export default function PaymentsTable({
 
   const calculateProviderTotal = (items) => {
     return items.reduce((sum, item) => {
-      const precioSugerido = Number(item.precio) || 0;
-      const precioProveedora = precioSugerido * 0.6; // 60% del precio sugerido
+      const precioSugerido = Number(item.precioSugerido || item.precio) || 0;
+      const precioProveedora = precioSugerido * 0.6;
       return sum + precioProveedora;
     }, 0);
   };
 
-  const handleOpenPaymentModal = async (provName, items) => {
-    const providerInfo = await getProviderInfo(provName);
+  const handleContactToProvider = async (provName, items) => {
+    const providerData = providers.find(
+      (p) => p.nombre?.toLowerCase() === provName?.toLowerCase(),
+    );
+    const phone = providerData?.telefono;
 
-    console.log("Provider info resolved:", providerInfo);
+    if (!phone) {
+      alert("La proveedora no tiene teléfono cargado.");
+      return;
+    }
+
+    const productsText = items
+      .map((item) => {
+        const precioOriginal = Number(item.precioSugerido || item.precio) || 0;
+        const precioProveedora = precioOriginal * 0.6;
+
+        return `• ${item.descripcion || item.codigo || "Producto"} - $${precioProveedora.toLocaleString(
+          "es-AR",
+          {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          },
+        )}`;
+      })
+      .join("\n");
+
     const totalProvider = calculateProviderTotal(items);
 
-    const itemsWithProvider = items.map((item) => ({
-      ...item,
-      precioProveedora: (Number(item.precio) || 0) * 0.6,
-    }));
+    const message = `Hola ${provName}, ¿cómo estás?
 
-    setSelectedPayment({
-      proveedora: {
-        nombre: provName,
-        telefono: providerInfo?.telefono,
-        alias: providerInfo?.alias,
-        cbu: providerInfo?.cbu,
-      },
-      items: itemsWithProvider,
-      totalProvider,
-    });
+Te comparto el detalle de productos vendidos:
 
-    setShowPaymentModal(true);
-  };
+${productsText}
 
-  const loadPendingProviderPayments = async () => {
+Total a pagar: $${totalProvider.toLocaleString("es-AR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}
+
+Muchas gracias.`;
+
+    const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(
+      message,
+    )}`;
+
+    window.open(whatsappUrl, "_blank");
+
     try {
-      const data = await fetchProviderPayments();
-      setPendingProviderPayments(data);
-    } catch (error) {
-      console.error(
-        "Error cargando pagos pendientes de proveedoras:",
-        error,
-      );
-
-      setPendingProviderPayments([]);
+      const codigos = items.map((item) => item.codigo).filter(Boolean);
+      if (codigos.length > 0) {
+        await updatePaymentStatus(codigos, "contactado");
+        onPaymentsUpdated?.();
+      }
+    } catch (err) {
+      console.error("Error actualizando estado de pago:", err);
     }
   };
 
@@ -113,7 +125,7 @@ export default function PaymentsTable({
 
   if (providerNames.length === 0) {
     return (
-      <div className="table-state">No hay productos vendidos para pagar.</div>
+      <div className="table-state">No hay órdenes de pago en la hoja pagos maxi.</div>
     );
   }
 
@@ -124,19 +136,28 @@ export default function PaymentsTable({
           <thead>
             <tr>
               <th className="text-center">Proveedora</th>
-              <th>Productos vendidos</th>
-              <th>Total a pagar</th>
-              <th>Estado</th>
-              <th>Acciones</th>
+              <th className="text-center">Productos vendidos</th>
+              <th className="text-center">Total a pagar</th>
+              <th className="text-center">Estado</th>
+              <th className="text-center">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {providerNames.map((provName) => {
               const items = paymentsByProvider[provName];
               const totalProvider = calculateProviderTotal(items);
-              const isPaid = items.every(
-                (item) => (item.pagado || "").toLowerCase() === "si",
+              const allPaid = items.every(
+                (item) => (item.estado || "").toLowerCase() === "pagado",
               );
+              const anyContacted = items.some(
+                (item) => (item.estado || "").toLowerCase() === "contactado",
+              );
+
+              const statusLabel = allPaid
+                ? "Pagado"
+                : anyContacted
+                ? "Contactado"
+                : "Pendiente";
 
               return (
                 <Fragment key={`provider-${provName}`}>
@@ -144,19 +165,26 @@ export default function PaymentsTable({
                     <td className="text-center">{provName}</td>
                     <td className="text-center">{items.length}</td>
                     <td className="text-center">
-                      $
-                      {Number(totalProvider).toLocaleString("es-AR", {
+                      ${totalProvider.toLocaleString("es-AR", {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}
                     </td>
                     <td className="text-center">
-                      <span className={`inline-flex justify-center items-center px-3 py-1 rounded-full text-sm font-semibold ${isPaid ? 'bg-emerald-800/40 text-emerald-300 border border-emerald-700' : 'bg-amber-900/40 text-amber-200 border border-amber-700'}`}>
-                        {isPaid ? "✓ Pagado" : "○ Pendiente"}
+                      <span
+                        className={`inline-flex justify-center items-center px-3 py-1 rounded-full text-sm font-semibold ${
+                          allPaid
+                            ? "bg-emerald-800/40 text-emerald-300 border border-emerald-700"
+                            : anyContacted
+                            ? "bg-blue-800/40 text-blue-200 border border-blue-700"
+                            : "bg-amber-900/40 text-amber-200 border border-amber-700"
+                        }`}
+                      >
+                        {statusLabel}
                       </span>
                     </td>
                     <td>
-                      <div className="flex justify-center gap-2">
+                      <div className="flex flex-wrap justify-center gap-2">
                         <button
                           type="button"
                           className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2"
@@ -167,79 +195,21 @@ export default function PaymentsTable({
                         <button
                           type="button"
                           className="bg-accent text-slate-900 font-semibold rounded-lg px-4 py-2"
-                          onClick={async () => {
-                            const providerData = providers.find(
-                              (p) => p.nombre?.toLowerCase() === provName?.toLowerCase()
-                            );
-
-                            const phone = providerData?.telefono;
-
-                            if (!phone) {
-                              alert("La proveedora no tiene teléfono cargado.");
-                              return;
-                            }
-
-                            // Productos con cálculo del 60%
-                            const productsText = items
-                              .map((item) => {
-                                const precioOriginal = Number(item.precio || 0);
-                                const precioProveedora = precioOriginal * 0.6;
-
-                                return `• ${item.descripcion} - $${precioProveedora.toLocaleString(
-                                  "es-AR",
-                                  {
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2,
-                                  }
-                                )}`;
-                              })
-                              .join("\n");
-
-                            // Total correcto (60%)
-                            const totalProvider = items.reduce((acc, item) => {
-                              return acc + (Number(item.precio || 0) * 0.6);
-                            }, 0);
-
-                            const message = `
-Hola ${provName}, ¿cómo estás?
-
-Te comparto el detalle de productos vendidos:
-
-${productsText}
-
-Total a pagar: $${totalProvider.toLocaleString("es-AR", {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            })}
-
-Muchas gracias.
-`.trim();
-
-                            const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(
-                              message
-                            )}`;
-
-                            window.open(whatsappUrl, "_blank");
-
-                            // Actualizar estado de pago a "contactado" en la hoja "pagos maxi"
-                            try {
-                              const codigos = items
-                                .map((item) => item.codigo)
-                                .filter(Boolean);
-
-                              if (codigos.length > 0) {
-                                await updatePaymentStatus(codigos, "contactado");
-                              }
-                            } catch (err) {
-                              console.error("Error actualizando estado de pago:", err);
-                            }
-                          }}
+                          onClick={() => handleContactToProvider(provName, items)}
                         >
                           Contactar
+                        </button>
+                        <button
+                          type="button"
+                          className="bg-slate-700 text-slate-100 rounded-lg px-4 py-2"
+                          onClick={() => alert("Transferir aún no está disponible.")}
+                        >
+                          Transferir
                         </button>
                       </div>
                     </td>
                   </tr>
+
                   {expandedProvider === provName && (
                     <tr>
                       <td colSpan={5}>
@@ -249,28 +219,30 @@ Muchas gracias.
                               <tr>
                                 <th>Código</th>
                                 <th>Descripción</th>
-                                <th>Valor para proveedora (60%)</th>
+                                <th className="text-right">Valor para proveedora (60%)</th>
+                                <th className="text-center">Estado</th>
                               </tr>
                             </thead>
                             <tbody>
                               {items.map((item, itemIndex) => {
-                                const precioSugerido = Number(item.precio) || 0;
+                                const precioSugerido = Number(item.precioSugerido || item.precio) || 0;
                                 const precioProveedora = precioSugerido * 0.6;
 
                                 return (
-                                  <tr key={`${provName}-${itemIndex}`} className="odd:bg-slate-900/20">
+                                  <tr
+                                    key={`${provName}-${itemIndex}`}
+                                    className="odd:bg-slate-900/20"
+                                  >
                                     <td className="text-center">{item.codigo || "-"}</td>
-                                    <td className="text-center"> {item.descripcion || "-"}</td>
-
+                                    <td className="text-center">{item.descripcion || "-"}</td>
+                                    <td className="text-right">
+                                      ${precioProveedora.toLocaleString("es-AR", {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                      })}
+                                    </td>
                                     <td className="text-center">
-                                      $
-                                      {precioProveedora.toLocaleString(
-                                        "es-AR",
-                                        {
-                                          minimumFractionDigits: 2,
-                                          maximumFractionDigits: 2,
-                                        },
-                                      )}
+                                      {item.estado || "pendiente"}
                                     </td>
                                   </tr>
                                 );

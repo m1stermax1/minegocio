@@ -344,7 +344,7 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
         </>
       )}
 
-      {showModal && (
+      {/* {showModal && (
         <div className="fixed inset-0 bg-slate-900/80 backdrop-blur flex items-center justify-center p-5 z-50" role="dialog" aria-modal="true">
           <div className="w-full max-w-2xl bg-slate-800 border border-slate-700 rounded-2xl flex flex-col max-h-[calc(100vh-40px)] overflow-hidden shadow-2xl">
             <div className="flex items-start justify-between gap-4 p-6 border-b border-slate-700">
@@ -523,7 +523,7 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
     </div>
   );

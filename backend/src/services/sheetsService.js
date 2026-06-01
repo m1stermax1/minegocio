@@ -246,14 +246,33 @@ export async function getProvidersList() {
 }
 
 export async function getPendingPayments() {
-  const data = await getProvidersData();
+  const { sheets, spreadsheetId } = await getSheetsClient();
 
-  const pendientes = data.filter(
-    item =>
-      item.estado === "vendido" &&
-      item.pago === "impago"
-  );
-  return pendientes;
+  try {
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: "pagos maxi!A:H",
+    });
+
+    const rows = response.data.values || [];
+
+    return rows
+      .map((row, index) => ({
+        id: index,
+        fecha: row[0] || "",
+        codigo: row[1] || "",
+        descripcion: row[2] || "",
+        proveedora: row[3] || "",
+        porcentaje: row[4] || "",
+        precioSugerido: Number(row[5]) || 0,
+        totalProveedor: Number(row[6]) || 0,
+        estado: (row[7] || "").toString().trim().toLowerCase() || "pendiente",
+      }))
+      .filter((payment) => payment.proveedora && payment.codigo);
+  } catch (error) {
+    console.error("Error cargando pagos maxi:", error);
+    return [];
+  }
 }
 
 export async function getProvidersListComplete() {
@@ -563,7 +582,7 @@ export async function appendInventoryItems(items) {
     const codigo = crypto.randomUUID().split("-")[0].toUpperCase();
 
     // imprimir etiqueta
-    await generateBarcodeAndPrint(codigo);
+    // await generateBarcodeAndPrint(codigo);
 
 
     console.log("ESPERANDO 5 SEGUNDOS");
