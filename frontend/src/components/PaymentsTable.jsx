@@ -1,7 +1,7 @@
 import { Fragment, useState, useMemo } from "react";
 import PaymentModal from "./PaymentModal.jsx";
 
-import { fetchProvidersComplete } from "../services/api.js";
+import { fetchProvidersComplete, updatePaymentStatus } from "../services/api.js";
 
 export default function PaymentsTable({
   inventory = [],
@@ -167,7 +167,7 @@ export default function PaymentsTable({
                         <button
                           type="button"
                           className="bg-accent text-slate-900 font-semibold rounded-lg px-4 py-2"
-                          onClick={() => {
+                          onClick={async () => {
                             const providerData = providers.find(
                               (p) => p.nombre?.toLowerCase() === provName?.toLowerCase()
                             );
@@ -220,6 +220,19 @@ Muchas gracias.
                             )}`;
 
                             window.open(whatsappUrl, "_blank");
+
+                            // Actualizar estado de pago a "contactado" en la hoja "pagos maxi"
+                            try {
+                              const codigos = items
+                                .map((item) => item.codigo)
+                                .filter(Boolean);
+
+                              if (codigos.length > 0) {
+                                await updatePaymentStatus(codigos, "contactado");
+                              }
+                            } catch (err) {
+                              console.error("Error actualizando estado de pago:", err);
+                            }
                           }}
                         >
                           Contactar

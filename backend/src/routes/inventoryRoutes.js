@@ -8,6 +8,8 @@ import {
   addNewProvider,
   getSalesData,
   appendSaleRecord,
+  appendProviderPaymentOrders,
+  updateProviderPaymentStatus,
   getOwnerTotalForMonth,
   getPendingPayments,
 } from "../services/sheetsService.js";
@@ -134,6 +136,15 @@ router.post("/sales", async (req, res) => {
       }
     }
 
+    // Registrar órdenes de pago para items de proveedoras en la hoja "pagos maxi"
+    try {
+      const paymentResult = await appendProviderPaymentOrders(items);
+      console.log(`Órdenes de pago creadas: ${paymentResult.ordersCreated}`);
+    } catch (paymentError) {
+      // Log pero no bloquear la venta si falla el registro de pagos
+      console.error("Error registrando órdenes de pago (la venta se guardó igualmente):", paymentError);
+    }
+
     res.json({ success: true });
   } catch (error) {
     console.error("Error guardando venta:", error);
@@ -237,6 +248,27 @@ router.get("/providers/payments", async (req, res) => {
     res
       .status(500)
       .json({ error: "No se pudo cargar la lista de proveedoras" });
+  }
+});
+
+router.put("/providers/payments/status", async (req, res) => {
+  const { codigos, status } = req.body;
+
+  if (!Array.isArray(codigos) || codigos.length === 0) {
+    return res.status(400).json({ error: "Debe enviar al menos un código de producto." });
+  }
+
+  const validStatuses = ["contactado", "pagado", "pendiente"];
+  if (!status || !validStatuses.includes(status.toLowerCase())) {
+    return res.status(400).json({ error: `Estado inválido. Valores válidos: ${validStatuses.join(", ")}` });
+  }
+
+  try {
+    const result = await updateProviderPaymentStatus(codigos, status.toLowerCase());
+    res.json({ success: true, updatedCount: result.updatedCount });
+  } catch (error) {
+    console.error("Error actualizando estado de pago:", error);
+    res.status(500).json({ error: "No se pudo actualizar el estado de pago" });
   }
 });
 

@@ -684,6 +684,108 @@ export async function appendSaleRecord({ fecha, metodoPago, montoTotal, items })
   });
 }
 
+export async function appendProviderPaymentOrders(items) {
+  const { sheets, spreadsheetId } = await getSheetsClient();
+
+  // Filter only items that belong to a provider (not "mío" or empty)
+  const providerItems = items.filter((item) => {
+    const prov = (item.proveedora || "").trim().toLowerCase();
+    return prov && prov !== "mío" && prov !== "mio";
+  });
+
+  if (providerItems.length === 0) {
+    return { ordersCreated: 0 };
+  }
+
+  const fecha = new Date().toLocaleDateString("sv-SE");
+  const PROVIDER_PERCENTAGE = 60;
+
+  const values = providerItems.map((item) => {
+    const precioSugerido = Number(item.precio) || 0;
+    const montoProveedora = precioSugerido * (PROVIDER_PERCENTAGE / 100);
+
+    return [
+      fecha,
+      item.codigo || "",
+      item.descripcion || "",
+      item.proveedora || "",
+      `${PROVIDER_PERCENTAGE}%`,
+      precioSugerido,
+      montoProveedora,
+      "pendiente",
+    ];
+  });
+
+  try {
+    await sheets.spreadsheets.values.append({
+      spreadsheetId,
+      range: "pagos maxi!A:H",
+      valueInputOption: "RAW",
+      insertDataOption: "INSERT_ROWS",
+      requestBody: { values },
+    });
+
+    console.log(
+      `Se crearon ${values.length} órdenes de pago en "pagos maxi"`,
+    );
+
+    return { ordersCreated: values.length };
+  } catch (err) {
+    console.error("Error escribiendo en pagos maxi:", err.message);
+    throw new Error(`No se pudo registrar la orden de pago: ${err.message}`);
+  }
+}
+
+export async function updateProviderPaymentStatus(codigos, newStatus) {
+  const { sheets, spreadsheetId } = await getSheetsClient();
+
+  // Read all rows from "pagos maxi"
+  const response = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range: "pagos maxi!A:H",
+  });
+
+  const rows = response.data.values || [];
+  const updatedRows = [];
+
+  // Find rows matching the given codigos with status "pendiente"
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const codigo = (row[1] || "").trim();
+    const currentStatus = (row[7] || "").trim().toLowerCase();
+
+    if (codigos.includes(codigo) && currentStatus === "pendiente") {
+      // Update column H (index 7) — sheet rows are 1-indexed
+      const sheetRow = i + 1;
+      updatedRows.push(sheetRow);
+    }
+  }
+
+  if (updatedRows.length === 0) {
+    return { updatedCount: 0 };
+  }
+
+  // Batch update all matching rows
+  const data = updatedRows.map((sheetRow) => ({
+    range: `pagos maxi!H${sheetRow}`,
+    values: [[newStatus]],
+  }));
+
+  await sheets.spreadsheets.values.batchUpdate({
+    spreadsheetId,
+    requestBody: {
+      valueInputOption: "RAW",
+      data,
+    },
+  });
+
+  console.log(
+    `Se actualizaron ${updatedRows.length} órdenes de pago a "${newStatus}" en "pagos maxi"`,
+  );
+
+  return { updatedCount: updatedRows.length };
+}
+
 export async function getOwnerTotalForMonth(month, year) {
   const { sheets, spreadsheetId } = await getSheetsClient();
 
