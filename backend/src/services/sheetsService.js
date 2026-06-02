@@ -755,6 +755,135 @@ export async function appendProviderPaymentOrders(items) {
   }
 }
 
+export async function appendInvoiceRecord({
+  facturaId,
+  fecha,
+  producto,
+  montoTotal,
+  metodoPago,
+  items,
+  cuit,
+  tipoFactura,
+}) {
+  const { sheets, spreadsheetId } = await getSheetsClient();
+
+  const values = [[
+    facturaId,
+    fecha,
+    producto,
+    montoTotal,
+    metodoPago,
+    "pendiente",
+    tipoFactura,
+    cuit,
+    "",
+    JSON.stringify(items || []),
+  ]];
+
+  await sheets.spreadsheets.values.append({
+    spreadsheetId,
+    range: "facturacion maxi!A:J",
+    valueInputOption: "RAW",
+    insertDataOption: "INSERT_ROWS",
+    requestBody: { values },
+  });
+
+  return { facturaId };
+}
+
+export async function getInvoiceRecords() {
+  const { sheets, spreadsheetId } = await getSheetsClient();
+
+  const response = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range: "facturacion maxi!A:J",
+  });
+
+  const rows = response.data.values || [];
+
+  return rows
+    .filter((row) => {
+      if (!row.some((value) => value !== undefined && value !== "")) {
+        return false;
+      }
+      const firstCell = (row[0] || "").toString().trim().toLowerCase();
+      return firstCell !== "facturaid" && firstCell !== "fecha";
+    })
+    .map((row, index) => {
+      const facturaId = (row[0] || "").toString().trim();
+      const fecha = row[1] || "";
+      const producto = row[2] || "";
+      const montoTotal = Number(row[3]) || 0;
+      const metodoPago = row[4] || "";
+      const estadoFactura = row[5] || "pendiente";
+      const tipoFactura = row[6] || "C";
+      const cuit = row[7] || "";
+      const comprobante = row[8] || "";
+      let items = [];
+
+      if (row[9]) {
+        try {
+          items = JSON.parse(row[9]);
+        } catch {
+          items = [];
+        }
+      }
+
+      return {
+        id: index,
+        facturaId,
+        fecha,
+        producto,
+        montoTotal,
+        metodoPago,
+        estadoFactura,
+        tipoFactura,
+        cuit,
+        comprobante,
+        items,
+      };
+    });
+}
+
+export async function updateInvoiceRecordStatus(facturaId, estadoFactura, comprobante = "") {
+  const { sheets, spreadsheetId } = await getSheetsClient();
+
+  const response = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range: "facturacion maxi!A:J",
+  });
+
+  const rows = response.data.values || [];
+  const invoiceRowIndex = rows.findIndex((row) => (row[0] || "").toString().trim() === facturaId);
+
+  if (invoiceRowIndex < 0) {
+    throw new Error(`No se encontró la factura ${facturaId}`);
+  }
+
+  const sheetRow = invoiceRowIndex + 1;
+
+  const data = [
+    {
+      range: `facturacion maxi!F${sheetRow}`,
+      values: [[estadoFactura]],
+    },
+    {
+      range: `facturacion maxi!I${sheetRow}`,
+      values: [[comprobante]],
+    },
+  ];
+
+  await sheets.spreadsheets.values.batchUpdate({
+    spreadsheetId,
+    requestBody: {
+      valueInputOption: "RAW",
+      data,
+    },
+  });
+
+  return { facturaId, estadoFactura, comprobante };
+}
+
 export async function updateProviderPaymentStatus(codigos, newStatus) {
   const { sheets, spreadsheetId } = await getSheetsClient();
 

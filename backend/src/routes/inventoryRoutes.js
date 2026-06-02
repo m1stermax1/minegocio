@@ -9,10 +9,16 @@ import {
   getSalesData,
   appendSaleRecord,
   appendProviderPaymentOrders,
+  appendInvoiceRecord,
+  getInvoiceRecords,
+  updateInvoiceRecordStatus,
   updateProviderPaymentStatus,
   getOwnerTotalForMonth,
   getPendingPayments,
 } from "../services/sheetsService.js";
+import {
+  issueFacturaC,
+} from "../services/afipService.js";
 import {
   sendWhatsAppMessage,
   formatPhoneNumber,
@@ -80,6 +86,53 @@ router.get("/sales", async (req, res) => {
   }
 });
 
+router.get("/facturas", async (req, res) => {
+  try {
+    const facturas = await getInvoiceRecords();
+    res.json(facturas);
+  } catch (error) {
+    console.error("Error cargando facturas:", error);
+    res.status(500).json({ error: "No se pudieron cargar las facturas" });
+  }
+});
+
+router.post("/facturas/:facturaId/facturar", async (req, res) => {
+  const { facturaId } = req.params;
+
+  if (!facturaId) {
+    return res.status(400).json({ error: "Se requiere el identificador de factura." });
+  }
+
+  try {
+    const facturas = await getInvoiceRecords();
+    const factura = facturas.find((item) => item.facturaId === facturaId);
+
+    if (!factura) {
+      return res.status(404).json({ error: "Factura no encontrada." });
+    }
+
+    if (factura.estadoFactura?.toLowerCase() === "facturada") {
+      return res.status(400).json({ error: "La factura ya está facturada." });
+    }
+
+    const result = await issueFacturaC({
+      facturaId: factura.facturaId,
+      montoTotal: factura.montoTotal,
+      items: factura.items,
+      cuit: factura.cuit || "2039152322",
+      tipoFactura: factura.tipoFactura || "C",
+    });
+
+    const comprobante = result.CAE ? `CAE: ${result.CAE}` : JSON.stringify(result);
+    await updateInvoiceRecordStatus(facturaId, "facturada", comprobante);
+
+    res.json({ success: true, facturaId, result, comprobante });
+  } catch (error) {
+    console.error("Error facturando:", error);
+    res.status(500).json({ error: "No se pudo facturar la venta.", details: error.message });
+  }
+});
+
 router.get('/owner-total', async (req, res) => {
   try {
     const now = new Date();
@@ -122,12 +175,29 @@ router.post("/sales", async (req, res) => {
       totalVenta = total * 0.95;
     }
 
+    const facturaId = `FAC-${Date.now()}`;
+
     await appendSaleRecord({
       fecha: new Date().toLocaleDateString("sv-SE"),
       metodoPago: paymentMethod,
       montoTotal: totalVenta,
       items,
     });
+
+    if (paymentMethod === "transferencia") {
+      await appendInvoiceRecord({
+        facturaId,
+        fecha: new Date().toLocaleDateString("sv-SE"),
+        producto: items
+          .map((item) => item.descripcion || item.codigo || "producto")
+          .join(" / "),
+        montoTotal: totalVenta,
+        metodoPago: paymentMethod,
+        items,
+        cuit: "2039152322",
+        tipoFactura: "C",
+      });
+    }
 
     for (const item of items) {
       const rowId = Number(item.id);

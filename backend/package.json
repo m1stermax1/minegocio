@@ -9,6 +9,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@afipsdk/afip.js": "^1.2.3",
     "@mercadopago/sdk-react": "^1.0.7",
     "bwip-js": "^4.10.1",
     "cors": "^2.8.5",

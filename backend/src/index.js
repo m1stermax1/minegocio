@@ -3,8 +3,6 @@ import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
-
-
 import inventoryRoutes from "./routes/inventoryRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);

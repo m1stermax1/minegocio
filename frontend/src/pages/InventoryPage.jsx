@@ -8,6 +8,7 @@ import DashboardPage from "./DashboardPage.jsx";
 import SalesModal from "../components/SalesModal.jsx";
 import SalesTable from "../components/SalesTable.jsx";
 import PaymentsTable from "../components/PaymentsTable.jsx";
+import FacturacionPage from "./FacturacionPage.jsx";
 import ProvidersFormModal from "../components/ProvidersFormModal.jsx";
 import ItemsFormModal from "../components/ItemsFormModal.jsx";
 import MessageForProvidersModal from "../components/messagesForProvidersModal.jsx";
@@ -25,6 +26,7 @@ const PAGE_TITLES = {
   providers: "Proveedoras",
   ventas: "Ventas",
   pagos: "Pagos",
+  facturacion: "Facturación",
 };
 
 function InventoryPage() {
@@ -59,6 +61,7 @@ function InventoryPage() {
   const isProviders = activeView === "providers";
   const isSales = activeView === "ventas";
   const isPayments = activeView === "pagos";
+  const isFacturacion = activeView === "facturacion";
 
   const showNotification = (message) => {
     setNotification(message);
@@ -255,6 +258,10 @@ function InventoryPage() {
 
     if (isSales) {
       return <SalesTable sales={sales} loading={loadingSales} />;
+    }
+
+    if (isFacturacion) {
+      return <FacturacionPage />;
     }
 
     if (isPayments) {

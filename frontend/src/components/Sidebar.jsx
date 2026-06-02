@@ -53,9 +53,9 @@ function Sidebar({ activeView, onViewChange }) {
           <span>Pagos</span>
         </button>
         <button
-          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === 'pagos' ? 'bg-slate-700' : 'hover:bg-slate-700'}`}
+          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === 'facturacion' ? 'bg-slate-700' : 'hover:bg-slate-700'}`}
           type="button"
-          onClick={() => onViewChange('facturación')}
+          onClick={() => onViewChange('facturacion')}
         >
           <FiCreditCard className="w-5 h-5" />
           <span>Facturación</span>

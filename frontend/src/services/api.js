@@ -77,6 +77,18 @@ export async function createSale(payload) {
   return response.data;
 }
 
+export async function fetchInvoices() {
+  const response = await api.get('/inventory/facturas', {
+    params: { _t: Date.now() },
+  });
+  return response.data;
+}
+
+export async function issueInvoice(facturaId) {
+  const response = await api.post(`/inventory/facturas/${encodeURIComponent(facturaId)}/facturar`);
+  return response.data;
+}
+
 export async function sendWhatsAppMessage(payload) {
   const response = await api.post('/inventory/whatsapp/send', payload);
   return response.data;
