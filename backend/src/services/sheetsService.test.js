@@ -184,7 +184,7 @@ describe('sheetsService', () => {
 
     const batchCall = mockBatchUpdate.mock.calls[0][0];
     expect(batchCall.spreadsheetId).toBe('spreadsheet-id');
-    expect(batchCall.requestBody.requests).toHaveLength(7);
+    expect(batchCall.requestBody.requests).toHaveLength(9);
 
     expect(batchCall.requestBody.requests[4]).toEqual({
       repeatCell: {
@@ -308,7 +308,7 @@ describe('sheetsService', () => {
     expect(mockValuesUpdate).toHaveBeenCalledTimes(1);
 
     const updateCall = mockValuesUpdate.mock.calls[0][0];
-    expect(updateCall.range).toBe('LOCAL MAXI!A2:L3');
+    expect(updateCall.range).toBe('LOCAL MAXI!A2:M3');
     expect(updateCall.requestBody.values).toHaveLength(2);
     expect(updateCall.requestBody.values[0]).toEqual([
       expect.any(String),
@@ -323,6 +323,7 @@ describe('sheetsService', () => {
       '',
       'P1',
       expect.any(String),
+      'en stock',
     ]);
     expect(updateCall.requestBody.values[1]).toEqual([
       expect.any(String),
@@ -337,6 +338,7 @@ describe('sheetsService', () => {
       '',
       'P2',
       expect.any(String),
+      'en stock',
     ]);
   });
 });

@@ -1,14 +1,20 @@
 import fs from "fs";
+import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 import Afip from "@afipsdk/afip.js";
 
+dotenv.config();
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const CERT_PATH = path.join(__dirname, "..\\afip\\minegociokey.crt");
-const KEY_PATH = path.join(__dirname, "..\\afip\\privada.key");
-const CUIT = 2039152322;
+const CERT_PATH = process.env.TEST_CERT_PATH_KEY;
+const KEY_PATH = process.env.TEST_KEY_PATH_ID;
+const CUIT = process.env.ARCA_CUIT;
+
+console.log("Usando certificado:", CERT_PATH);
+console.log("Usando clave:", KEY_PATH);
 
 function computeTaxFields(totalAmount) {
   const total = Number(totalAmount) || 0;
@@ -22,6 +28,7 @@ const afip = new Afip({
   cert: fs.readFileSync(CERT_PATH, "utf8"),
   key: fs.readFileSync(KEY_PATH, "utf8"),
   production: false,
+  access_token: process.env.AFIP_ACCESS_TOKEN,
 });
 
 export async function issueFacturaC({
@@ -40,42 +47,24 @@ export async function issueFacturaC({
     .split("T")[0];
 
   const data = {
-    Concepto: concepto,
-    DocTipo: clienteDocTipo,
-    DocNro: clienteDocNro,
+    Concepto: 1,
+    DocTipo: 99,
+    DocNro: 0,
     MonId: "PES",
     MonCotiz: 1,
     ImpTotal: total,
     ImpTotConc: 0,
-    ImpNeto: base,
+    ImpNeto: total,
     ImpOpEx: 0,
-    ImpIVA: iva,
+    ImpIVA: 0,
     ImpTrib: 0,
-    PtoVta: puntoVenta,
+    PtoVta: 1,
     CbteTipo: 11,
+    CondicionIVAReceptorId: 5,
     CbteFch: parseInt(date.replace(/-/g, ""), 10),
-    Compradores: [
-      {
-        DocTipo: clienteDocTipo,
-        DocNro: clienteDocNro,
-        Porcentaje: 100,
-      },
-    ],
-    Iva: [
-      {
-        Id: 5,
-        BaseImp: base,
-        Importe: iva,
-      },
-    ],
-    Opcionales: [
-      {
-        Id: 17,
-        Valor: facturaId,
-      },
-    ],
   };
 
   const result = await afip.ElectronicBilling.createNextVoucher(data);
   return result;
 }
+

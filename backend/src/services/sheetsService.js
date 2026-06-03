@@ -368,10 +368,16 @@ export async function setInventoryRowStatus(rowIndex, estado, metodoPago, precio
 
   const sheetId = sheetData.properties.sheetId;
   const isVendido = estado?.toLowerCase() === "vendido";
+  const normalizedMetodoPago = (metodoPago || '').toLowerCase();
+  const effectiveMetodoPago =
+    normalizedMetodoPago === 'debito' || normalizedMetodoPago === 'credito'
+      ? 'debito/credito'
+      : normalizedMetodoPago;
 
   let precioVentaValue = { userEnteredValue: { numberValue: 0 } };
   let metodoPagoValue = { userEnteredValue: { stringValue: '' } };
   let gananciaValue = { userEnteredValue: { numberValue: 0 } };
+  let pagoValue = { userEnteredValue: { stringValue: 'no' } };
 
   if (isVendido) {
     const rowData = sheet.data?.[0]?.rowData?.[rowIndex];
@@ -383,14 +389,18 @@ export async function setInventoryRowStatus(rowIndex, estado, metodoPago, precio
     const porcentajeDueñaRaw = getCellText(porcentajeDueñaCell);
     const porcentajeDueñaNum = Number(porcentajeDueñaRaw) || 0;
 
+    const proveedoraCell = rowData?.values?.[10];
+    const proveedoraRaw = getCellText(proveedoraCell);
+    const isOwnProduct = !proveedoraRaw || ['mío', 'mio'].includes(proveedoraRaw.toLowerCase());
+
     let precioVenta = precioVentaManual ? Number(precioVentaManual) : 0;
 
-    if (!precioVentaManual && metodoPago) {
-      if (metodoPago === 'efectivo') {
+    if (!precioVentaManual && effectiveMetodoPago) {
+      if (effectiveMetodoPago === 'efectivo') {
         precioVenta = precioSuggeridoNum * 0.90; // 10% discount
-      } else if (metodoPago === 'transferencia') {
+      } else if (effectiveMetodoPago === 'transferencia') {
         precioVenta = precioSuggeridoNum * 0.95; // 5% discount
-      } else if (metodoPago === 'debito/credito') {
+      } else if (effectiveMetodoPago === 'debito/credito') {
         precioVenta = precioSuggeridoNum * 0.9441; // 5.59% discount
       }
     }
@@ -398,8 +408,9 @@ export async function setInventoryRowStatus(rowIndex, estado, metodoPago, precio
     const ganancia = precioVenta - porcentajeDueñaNum;
 
     precioVentaValue = { userEnteredValue: { numberValue: precioVenta } };
-    metodoPagoValue = { userEnteredValue: { stringValue: metodoPago || 'sin especificar' } };
+    metodoPagoValue = { userEnteredValue: { stringValue: effectiveMetodoPago || 'sin especificar' } };
     gananciaValue = { userEnteredValue: { numberValue: ganancia } };
+    pagoValue = { userEnteredValue: { stringValue: isOwnProduct ? 'si' : 'pendiente' } };
   }
 
   const greenBackground = isVendido
@@ -530,6 +541,19 @@ export async function setInventoryRowStatus(rowIndex, estado, metodoPago, precio
               sheetId,
               startRowIndex: rowIndex,
               endRowIndex: rowIndex + 1,
+              startColumnIndex: 8,
+              endColumnIndex: 9,
+            },
+            cell: pagoValue,
+            fields: "userEnteredValue",
+          },
+        },
+        {
+          repeatCell: {
+            range: {
+              sheetId,
+              startRowIndex: rowIndex,
+              endRowIndex: rowIndex + 1,
               startColumnIndex: 12,
               endColumnIndex: 13,
             },
@@ -579,7 +603,7 @@ export async function appendInventoryItems(items) {
 
   for (const item of items) {
     // Código único más seguro
-    const codigo = crypto.randomUUID().split("-")[0].toUpperCase();
+    const codigo = `INV-${crypto.randomUUID().split("-")[0].toUpperCase()}`;
 
     // imprimir etiqueta
     // await generateBarcodeAndPrint(codigo);

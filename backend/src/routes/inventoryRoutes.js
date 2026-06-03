@@ -119,7 +119,7 @@ router.post("/facturas/:facturaId/facturar", async (req, res) => {
       facturaId: factura.facturaId,
       montoTotal: factura.montoTotal,
       items: factura.items,
-      cuit: factura.cuit || "2039152322",
+      cuit: factura.cuit || "20391523224",
       tipoFactura: factura.tipoFactura || "C",
     });
 
@@ -167,43 +167,74 @@ router.post("/sales", async (req, res) => {
       return sum + price;
     }, 0);
 
+    const normalizedPaymentMethod = metodoPago.toLowerCase();
+    const paymentMethod =
+      normalizedPaymentMethod === "debito" || normalizedPaymentMethod === "credito"
+        ? "debito/credito"
+        : normalizedPaymentMethod;
+
     let totalVenta = total;
-    const paymentMethod = metodoPago.toLowerCase();
     if (paymentMethod === "efectivo") {
       totalVenta = total * 0.9;
     } else if (paymentMethod === "transferencia") {
       totalVenta = total * 0.95;
+    } else if (paymentMethod === "debito/credito") {
+      totalVenta = total * 0.9441;
     }
 
     const facturaId = `FAC-${Date.now()}`;
+    const productoDescripcion = items
+      .map((item) => item.descripcion || item.codigo || "producto")
+      .join(" / ");
+    const fechaVenta = new Date().toLocaleDateString("sv-SE");
 
     await appendSaleRecord({
-      fecha: new Date().toLocaleDateString("sv-SE"),
+      fecha: fechaVenta,
       metodoPago: paymentMethod,
       montoTotal: totalVenta,
       items,
     });
 
-    if (paymentMethod === "transferencia") {
-      await appendInvoiceRecord({
-        facturaId,
-        fecha: new Date().toLocaleDateString("sv-SE"),
-        producto: items
-          .map((item) => item.descripcion || item.codigo || "producto")
-          .join(" / "),
-        montoTotal: totalVenta,
-        metodoPago: paymentMethod,
-        items,
-        cuit: "2039152322",
-        tipoFactura: "C",
-      });
-    }
+    await appendInvoiceRecord({
+      facturaId,
+      fecha: fechaVenta,
+      producto: productoDescripcion,
+      montoTotal: totalVenta,
+      metodoPago: paymentMethod,
+      items,
+      cuit: "2039152322",
+      tipoFactura: "C",
+    });
 
     for (const item of items) {
       const rowId = Number(item.id);
       if (!Number.isNaN(rowId)) {
         await setInventoryRowStatus(rowId, "vendido", paymentMethod);
       }
+    }
+
+    try {
+      const facturaResult = await issueFacturaC({
+        facturaId,
+        montoTotal: totalVenta,
+        items,
+        cuit: "2039152322",
+        tipoFactura: "C",
+      });
+
+      const comprobante = facturaResult.CAE
+        ? `CAE: ${facturaResult.CAE}`
+        : JSON.stringify(facturaResult);
+
+      await updateInvoiceRecordStatus(facturaId, "facturada", comprobante);
+      console.log(`Factura AFIP generada con comprobante: ${comprobante}`);
+    } catch (afipError) {
+      console.error("Error generando factura AFIP/ARCA:", afipError);
+      await updateInvoiceRecordStatus(
+        facturaId,
+        "error",
+        afipError.message || "Error al generar factura AFIP/ARCA",
+      );
     }
 
     // Registrar órdenes de pago para items de proveedoras en la hoja "pagos maxi"

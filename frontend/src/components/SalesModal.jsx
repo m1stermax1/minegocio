@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createSale } from "../services/api.js";
 
 const formatPrice = (value) => {
@@ -42,21 +42,42 @@ export default function SalesModal({ isOpen, onClose, inventoryItems = [], onSal
 
   const efectivoTotal = totalAmount * 0.9;
   const transferenciaTotal = totalAmount * 0.95;
+  const tarjetaTotal = totalAmount * 0.9441;
   const selectedTotal =
     paymentMethod === "efectivo"
       ? efectivoTotal
       : paymentMethod === "transferencia"
       ? transferenciaTotal
+      : paymentMethod === "debito/credito"
+      ? tarjetaTotal
       : totalAmount;
 
   const handleAddItem = (item) => {
     setError("");
-    setSelectedItems((prev) => [...prev, item]);
+    setSelectedItems((prev) => {
+      if (prev.some((selected) => selected.id === item.id)) {
+        return prev;
+      }
+      return [...prev, item];
+    });
+    setSearchTerm("");
   };
 
   const handleRemoveItem = (id) => {
     setSelectedItems((prev) => prev.filter((item) => item.id !== id));
   };
+
+  useEffect(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term || availableItems.length !== 1) {
+      return;
+    }
+
+    const item = availableItems[0];
+    if (item.codigo?.toLowerCase() === term && !selectedItems.some((selected) => selected.id === item.id)) {
+      handleAddItem(item);
+    }
+  }, [searchTerm, availableItems, selectedItems]);
 
   const normalizeBarcodeSearch = (value) => {
     return value.replace(/[’'‘]/g, '-');
@@ -191,12 +212,13 @@ export default function SalesModal({ isOpen, onClose, inventoryItems = [], onSal
                   <div className="text-sm text-slate-400 flex justify-between"><span>Total bruto</span><span>{formatPrice(totalAmount)}</span></div>
                   <div className="text-sm text-emerald-400 flex justify-between"><span>Efectivo (10% off)</span><span>{formatPrice(efectivoTotal)}</span></div>
                   <div className="text-sm text-accent flex justify-between"><span>Transferencia (5% off)</span><span>{formatPrice(transferenciaTotal)}</span></div>
+                  <div className="text-sm text-slate-300 flex justify-between"><span>Débito / Crédito (5.59% off)</span><span>{formatPrice(tarjetaTotal)}</span></div>
                 </div>
 
                 <div className="p-4 bg-slate-900/20 border border-slate-700 rounded-md">
                   <p className="font-bold text-accent mb-2">Método de pago</p>
                   <div className="grid grid-cols-2 gap-2">
-                    {[{ value: 'efectivo', label: 'Efectivo' }, { value: 'transferencia', label: 'Transferencia' }, { value: 'debito', label: 'Débito' }, { value: 'credito', label: 'Crédito' }].map((option) => (
+                    {[{ value: 'efectivo', label: 'Efectivo' }, { value: 'transferencia', label: 'Transferencia' }, { value: 'debito/credito', label: 'Débito / Crédito' }].map((option) => (
                       <button key={option.value} type="button" className={paymentMethod === option.value ? 'bg-accent text-slate-900 rounded-lg px-3 py-2' : 'bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2'} onClick={() => setPaymentMethod(option.value)}>{option.label}</button>
                     ))}
                   </div>

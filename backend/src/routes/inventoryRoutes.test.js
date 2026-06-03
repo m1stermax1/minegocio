@@ -7,6 +7,14 @@ vi.mock('../services/sheetsService.js', () => ({
   getProvidersData: vi.fn(),
   setInventoryRowStatus: vi.fn(),
   appendInventoryItems: vi.fn(),
+  appendSaleRecord: vi.fn(),
+  appendProviderPaymentOrders: vi.fn(),
+  appendInvoiceRecord: vi.fn(),
+  updateInvoiceRecordStatus: vi.fn(),
+}));
+
+vi.mock('../services/afipService.js', () => ({
+  issueFacturaC: vi.fn(),
 }));
 
 import inventoryRoutes from './inventoryRoutes.js';
@@ -15,7 +23,12 @@ import {
   getProvidersData,
   setInventoryRowStatus,
   appendInventoryItems,
+  appendSaleRecord,
+  appendProviderPaymentOrders,
+  appendInvoiceRecord,
+  updateInvoiceRecordStatus,
 } from '../services/sheetsService.js';
+import { issueFacturaC } from '../services/afipService.js';
 
 const app = express();
 app.use(express.json());
@@ -160,5 +173,30 @@ describe('inventoryRoutes', () => {
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ success: true });
     expect(setInventoryRowStatus).toHaveBeenCalledWith(3, 'vendido', undefined, undefined);
+  });
+
+  it('creates a sale, invoice and provider payment orders on POST /inventory/sales', async () => {
+    appendSaleRecord.mockResolvedValue();
+    appendInvoiceRecord.mockResolvedValue();
+    appendProviderPaymentOrders.mockResolvedValue({ ordersCreated: 1 });
+    issueFacturaC.mockResolvedValue({ CAE: '12345678901234' });
+    updateInvoiceRecordStatus.mockResolvedValue();
+
+    const items = [
+      { id: 2, codigo: 'CAB-001', descripcion: 'Remera', precio: '1200', proveedora: 'Proveedor X' },
+    ];
+
+    const response = await request(app)
+      .post('/inventory/sales')
+      .send({ items, metodoPago: 'efectivo' });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ success: true });
+    expect(appendSaleRecord).toHaveBeenCalledOnce();
+    expect(appendInvoiceRecord).toHaveBeenCalledOnce();
+    expect(appendProviderPaymentOrders).toHaveBeenCalledOnce();
+    expect(issueFacturaC).toHaveBeenCalledOnce();
+    expect(updateInvoiceRecordStatus).toHaveBeenCalledOnce();
+    expect(setInventoryRowStatus).toHaveBeenCalledWith(2, 'vendido', 'efectivo');
   });
 });
