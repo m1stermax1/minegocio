@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "nodemon src/index.js",
+    "start": "node src/index.js",
+    "build": "node src/index.js",
     "dev": "nodemon src/index.js",
     "test": "vitest run",
     "test:watch": "vitest"
