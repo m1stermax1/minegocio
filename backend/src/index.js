@@ -27,9 +27,6 @@ app.use("/inventory", inventoryRoutes);
 
 const port = process.env.PORT || 3001;
 
-app.get("/holadesderender", (req, res) => { 
-  console.log("Hola desde Render!");
-});
 
 app.listen(port, () => {
   console.log(

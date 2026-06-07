@@ -23,13 +23,13 @@ function computeTaxFields(totalAmount) {
   return { base, iva, total };
 }
 
-const afip = new Afip({
-  CUIT,
-  cert: fs.readFileSync(CERT_PATH, "utf8"),
-  key: fs.readFileSync(KEY_PATH, "utf8"),
-  production: false,
-  access_token: process.env.AFIP_ACCESS_TOKEN,
-});
+// const afip = new Afip({
+//   CUIT,
+//   cert: fs.readFileSync(CERT_PATH, "utf8"),
+//   key: fs.readFileSync(KEY_PATH, "utf8"),
+//   production: false,
+//   access_token: process.env.AFIP_ACCESS_TOKEN,
+// });
 
 export async function issueFacturaC({
   facturaId,
