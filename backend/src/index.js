@@ -22,7 +22,7 @@ app.use(
 );
 
 app.get("/holadesderender", (req, res) => { 
-  console.log("Hola desde el render");
+  res.send("Hola desde Render!");
 });
 
 app.use(express.json());
