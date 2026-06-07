@@ -15,13 +15,21 @@ dotenv.config({
 
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "https://minegocio-18kr.onrender.com/",
+  })
+);
 app.use(express.json());
 app.use('/barcodes', express.static(path.join(__dirname, '..', 'barcodes')));
 
 app.use("/inventory", inventoryRoutes);
 
 const port = process.env.PORT || 3001;
+
+app.get("/holadesderender", (req, res) => { 
+  console.log("Hola desde Render!");
+});
 
 app.listen(port, () => {
   console.log(
