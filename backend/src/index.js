@@ -20,6 +20,11 @@ app.use(
     origin: "https://minegocio-18kr.onrender.com/",
   })
 );
+
+app.get("/holadesderender", (req, res) => { 
+  console.log("Hola desde el render");
+});
+
 app.use(express.json());
 app.use('/barcodes', express.static(path.join(__dirname, '..', 'barcodes')));
 
