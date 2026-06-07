@@ -30,6 +30,13 @@ const PAGE_TITLES = {
 };
 
 function InventoryPage() {
+  const obtenerSaludo = async () => {
+    const res = await fetch("https://minegocio-18kr.onrender.com/holadesderender");
+
+    const data = await res.json();
+
+    console.log(data);
+  };
   const inventoryTableRef = useRef(null);
 
   const [activeView, setActiveView] = useState("dashboard");
@@ -311,11 +318,11 @@ function InventoryPage() {
             {isDashboard && (
               <div className="flex gap-3 items-center">
                 <button
-                    className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2"
-                    onClick={handleAddItem}
-                  >
-                    Agregar producto
-                  </button>
+                  className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2"
+                  onClick={handleAddItem}
+                >
+                  Agregar producto
+                </button>
 
                 <button
                   className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2"
