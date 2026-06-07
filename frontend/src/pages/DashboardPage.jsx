@@ -1,5 +1,10 @@
-import { useEffect, useState } from 'react';
-import { fetchDashboardCounts, fetchProvidersComplete, fetchSales, fetchOwnerTotal } from '../services/api.js';
+import { useEffect, useState } from "react";
+import {
+  fetchDashboardCounts,
+  fetchProvidersComplete,
+  fetchSales,
+  fetchOwnerTotal,
+} from "../services/api.js";
 
 function StatCard({ title, value, subtitle }) {
   return (
@@ -11,7 +16,12 @@ function StatCard({ title, value, subtitle }) {
   );
 }
 
-export default function DashboardPage({ onAddProduct, onAddSale, onAddProvider, refresh }) {
+export default function DashboardPage({
+  onAddProduct,
+  onAddSale,
+  onAddProvider,
+  refresh,
+}) {
   const [counts, setCounts] = useState({ inStockCount: 0, soldCount: 0 });
   const [providersCount, setProvidersCount] = useState(0);
   const [totalSold, setTotalSold] = useState(0);
@@ -34,18 +44,27 @@ export default function DashboardPage({ onAddProduct, onAddSale, onAddProvider, 
     return Number.isNaN(parsed.getTime()) ? null : parsed;
   };
 
-
   useEffect(() => {
     let mounted = true;
     async function load() {
       try {
         setLoading(true);
-        const [dashboardData, providers, salesData, ownerTotal] = await Promise.all([
-          fetchDashboardCounts(),
-          fetchProvidersComplete(),
-          fetchSales(),
-          fetchOwnerTotal(),
-        ]);
+        const API_URL = import.meta.env.VITE_API_URL;
+
+        console.log(API_URL);
+
+        const obtenerSaludo = async () => {
+          const res = await fetch(`${API_URL}/holadesderender`);
+          const data = await res.json();
+          console.log(data);
+        };
+        const [dashboardData, providers, salesData, ownerTotal] =
+          await Promise.all([
+            fetchDashboardCounts(),
+            fetchProvidersComplete(),
+            fetchSales(),
+            fetchOwnerTotal(),
+          ]);
         if (mounted) {
           setCounts(dashboardData || { inStockCount: 0, soldCount: 0 });
           setProvidersCount(providers?.length || 0);
@@ -59,7 +78,11 @@ export default function DashboardPage({ onAddProduct, onAddSale, onAddProvider, 
           let monthlyTotal = 0;
           (salesData || []).forEach((sale) => {
             const saleDate = parseSaleDate(sale.fecha);
-            if (saleDate && saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear) {
+            if (
+              saleDate &&
+              saleDate.getMonth() === currentMonth &&
+              saleDate.getFullYear() === currentYear
+            ) {
               monthlyTotal += Number(sale.montoTotal) || 0;
             }
           });
@@ -69,7 +92,7 @@ export default function DashboardPage({ onAddProduct, onAddSale, onAddProvider, 
           setTotalOwner(ownerTotal || 0);
         }
       } catch (err) {
-        console.error('Error cargando dashboard:', err);
+        console.error("Error cargando dashboard:", err);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -78,7 +101,7 @@ export default function DashboardPage({ onAddProduct, onAddSale, onAddProvider, 
     return () => (mounted = false);
   }, [refresh]);
   const formatCurrency = (value) => {
-    return `$ ${Number(value).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+    return `$ ${Number(value).toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
   };
 
   return (

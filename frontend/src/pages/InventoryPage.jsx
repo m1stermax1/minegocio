@@ -30,13 +30,6 @@ const PAGE_TITLES = {
 };
 
 function InventoryPage() {
-  const obtenerSaludo = async () => {
-    const res = await fetch("https://minegocio-18kr.onrender.com/holadesderender");
-
-    const data = await res.json();
-
-    console.log(data);
-  };
   const inventoryTableRef = useRef(null);
 
   const [activeView, setActiveView] = useState("dashboard");
@@ -80,6 +73,7 @@ function InventoryPage() {
 
   const loadInventory = async () => {
     try {
+      
       setLoadingInventory(true);
       const data = await fetchInventory();
       setInventory(data);
