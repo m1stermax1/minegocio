@@ -58,6 +58,8 @@ export default function DashboardPage({
           const data = await res.json();
           console.log(data);
         };
+
+        obtenerSaludo();
         const [dashboardData, providers, salesData, ownerTotal] =
           await Promise.all([
             fetchDashboardCounts(),

@@ -17,24 +17,21 @@ const app = express();
 
 app.use(
   cors({
-    origin: "https://minegocio-18kr.onrender.com/",
-  })
+    origin: ["https://minegocio-18kr.onrender.com/", "http://localhost:5173"],
+  }),
 );
 
-app.get("/holadesderender", (req, res) => { 
+app.get("/holadesderender", (req, res) => {
   res.send("Hola desde Render!");
 });
 
 app.use(express.json());
-app.use('/barcodes', express.static(path.join(__dirname, '..', 'barcodes')));
+app.use("/barcodes", express.static(path.join(__dirname, "..", "barcodes")));
 
 app.use("/inventory", inventoryRoutes);
 
 const port = process.env.PORT || 3001;
 
-
 app.listen(port, () => {
-  console.log(
-    `Backend iniciado en http://localhost:${port}`,
-  );
+  console.log(`Backend iniciado en http://localhost:${port}`);
 });
