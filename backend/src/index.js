@@ -17,7 +17,10 @@ const app = express();
 
 app.use(
   cors({
-    origin: ["https://minegocio-18kr.onrender.com/", "http://localhost:5173"],
+    origin: [
+      "http://localhost:5173",
+      "https://minegocio-gold.vercel.app",
+    ],
   }),
 );
 
