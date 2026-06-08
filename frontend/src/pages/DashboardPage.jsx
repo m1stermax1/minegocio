@@ -49,27 +49,25 @@ export default function DashboardPage({
     async function load() {
       try {
         setLoading(true);
+        console.log("A");
+        setLoading(true);
+        console.log("B");
         const API_URL = import.meta.env.VITE_API_URL;
-
-        console.log(API_URL);
-
+        console.log("C", API_URL);
         const obtenerSaludo = async () => {
-          try {
-            console.log("Ejecutando obtenerSaludo");
+          console.log("D");
 
-            const res = await fetch(`${API_URL}/inventory`);
+          const res = await fetch(`${API_URL}/inventory`);
 
-            console.log("Status:", res.status);
+          console.log("E", res.status);
 
-            const text = await res.text();
+          const text = await res.text();
 
-            console.log("Respuesta:", text);
-          } catch (error) {
-            console.error("Error fetch:", error);
-          }
+          console.log("F", text);
         };
-
+        console.log("G");
         await obtenerSaludo();
+        console.log("H");
         const [dashboardData, providers, salesData, ownerTotal] =
           await Promise.all([
             fetchDashboardCounts(),
@@ -77,6 +75,7 @@ export default function DashboardPage({
             fetchSales(),
             fetchOwnerTotal(),
           ]);
+          console.log("I");
         if (mounted) {
           setCounts(dashboardData || { inStockCount: 0, soldCount: 0 });
           setProvidersCount(providers?.length || 0);
