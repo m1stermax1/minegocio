@@ -56,7 +56,7 @@ export default function DashboardPage({
         const obtenerSaludo = async () => {
           const res = await fetch(`${API_URL}/inventory`);
           const data = await res.json();
-          console.log(data);
+          console.log("Respuesta del backend:", data);
         };
 
         obtenerSaludo();
