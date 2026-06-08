@@ -54,7 +54,7 @@ export default function DashboardPage({
         console.log(API_URL);
 
         const obtenerSaludo = async () => {
-          const res = await fetch(`${API_URL}/holadesderender`);
+          const res = await fetch(`${API_URL}/inventory`);
           const data = await res.json();
           console.log(data);
         };
