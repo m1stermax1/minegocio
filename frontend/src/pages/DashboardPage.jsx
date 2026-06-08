@@ -54,12 +54,22 @@ export default function DashboardPage({
         console.log(API_URL);
 
         const obtenerSaludo = async () => {
-          const res = await fetch(`${API_URL}/inventory`);
-          const data = await res.json();
-          console.log("Respuesta del backend:", data);
+          try {
+            console.log("Ejecutando obtenerSaludo");
+
+            const res = await fetch(`${API_URL}/inventory`);
+
+            console.log("Status:", res.status);
+
+            const text = await res.text();
+
+            console.log("Respuesta:", text);
+          } catch (error) {
+            console.error("Error fetch:", error);
+          }
         };
 
-        obtenerSaludo();
+        await obtenerSaludo();
         const [dashboardData, providers, salesData, ownerTotal] =
           await Promise.all([
             fetchDashboardCounts(),
