@@ -5,6 +5,10 @@ import path from "path";
 import { fileURLToPath } from "url";
 import inventoryRoutes from "./routes/inventoryRoutes.js";
 
+import authRoutes from "./routes/authRoutes.js";
+
+
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -24,13 +28,9 @@ app.use(
   }),
 );
 
-app.get("/holadesderender", (req, res) => {
-  res.send("Hola desde Render!");
-});
-
 app.use(express.json());
 app.use("/barcodes", express.static(path.join(__dirname, "..", "barcodes")));
-
+app.use("/api/auth", authRoutes);
 app.use("/inventory", inventoryRoutes);
 
 const port = process.env.PORT || 3001;

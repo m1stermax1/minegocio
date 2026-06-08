@@ -1,7 +1,24 @@
 import { AiOutlineAppstore, AiOutlineDashboard } from 'react-icons/ai';
 import { FiBox, FiTrendingUp, FiCreditCard } from 'react-icons/fi';
+import { logoutUser } from '../services/authService.js';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from "../services/supabase.js";
 
 function Sidebar({ activeView, onViewChange }) {
+  const navigate = useNavigate();
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+      supabase.auth.onAuthStateChange((event, session) => {
+        if (event === "SIGNED_OUT") {
+          // limpiar estado global
+        }
+      });
+      navigate("/login");
+    } catch (error) {
+      console.error(error);
+    }
+  };
   return (
     <aside className="bg-slate-800 p-8 flex flex-col gap-8">
       <div className="flex items-center gap-4">
@@ -59,6 +76,14 @@ function Sidebar({ activeView, onViewChange }) {
         >
           <FiCreditCard className="w-5 h-5" />
           <span>Facturación</span>
+        </button>
+        <button
+          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === 'facturacion' ? 'bg-slate-700' : 'hover:bg-slate-700'}`}
+          type="button"
+          onClick={handleLogout}
+        >
+          <FiCreditCard className="w-5 h-5" />
+          <span>Log Out</span>
         </button>
       </nav>
     </aside>
