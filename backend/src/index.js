@@ -7,8 +7,6 @@ import inventoryRoutes from "./routes/inventoryRoutes.js";
 
 import authRoutes from "./routes/authRoutes.js";
 
-
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 

@@ -6,6 +6,7 @@ export async function createUserOrganization({
     email,
     businessName,
 }) {
+    console.log("Creating organization for user:", { userId, name, email, businessName });
     const { data: organization, error: organizationError } =
         await supabaseAdmin
             .from("organizations")
@@ -31,7 +32,7 @@ export async function createUserOrganization({
                 email,
                 name,
                 organization_id: organization.id,
-                role: "ADMIN",
+                role: "USER",
             })
             .select()
             .single();

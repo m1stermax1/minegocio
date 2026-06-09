@@ -15,6 +15,7 @@ router.post("/register", async (req, res) => {
 
     const organization =
       await createUserOrganization({
+        name,
         userId,
         email,
         businessName,
