@@ -3,6 +3,7 @@ import { FiBox, FiTrendingUp, FiCreditCard } from 'react-icons/fi';
 import { logoutUser } from '../services/authService.js';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from "../services/supabase.js";
+import { Link } from 'react-router-dom';
 
 function Sidebar({ activeView, onViewChange }) {
   const navigate = useNavigate();
@@ -29,6 +30,9 @@ function Sidebar({ activeView, onViewChange }) {
       </div>
 
       <nav className="sidebar flex flex-col gap-2">
+        <Link type="button"
+          to="/dashboard"
+          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === 'dashboard' ? 'bg-slate-700' : 'hover:bg-slate-700'}`}>Dahsboad</Link>
         <button
           className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === 'dashboard' ? 'bg-slate-700' : 'hover:bg-slate-700'}`}
           type="button"

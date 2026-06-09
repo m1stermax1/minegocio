@@ -13,8 +13,8 @@ const CERT_PATH = process.env.TEST_CERT_PATH_KEY;
 const KEY_PATH = process.env.TEST_KEY_PATH_ID;
 const CUIT = process.env.ARCA_CUIT;
 
-console.log("Usando certificado:", CERT_PATH);
-console.log("Usando clave:", KEY_PATH);
+// console.log("Usando certificado:", CERT_PATH);
+// console.log("Usando clave:", KEY_PATH);
 
 function computeTaxFields(totalAmount) {
   const total = Number(totalAmount) || 0;

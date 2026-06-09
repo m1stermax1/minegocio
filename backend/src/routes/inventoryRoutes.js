@@ -29,7 +29,6 @@ import {
   isValidAlias,
   isValidCBU,
 } from "../services/mercadoPagoService.js";
-
 import twilio from "twilio";
 
 const router = express.Router();
@@ -37,11 +36,13 @@ const router = express.Router();
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const twilioPhoneNumber = process.env.TWILIO_WHATSAPP_NUMBER;
-
 const client = twilio(accountSid, authToken);
+
+
 
 router.get("/", async (req, res) => {
   try {
+    console.log(req);
     const inventory = await getInventoryData();
     res.json(inventory);
   } catch (error) {

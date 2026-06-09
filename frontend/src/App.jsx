@@ -1,4 +1,5 @@
 import InventoryPage from './pages/InventoryPage.jsx';
+import DashboardPage from './pages/DashboardPage.jsx';
 import './styles.css';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
@@ -48,6 +49,13 @@ function App() {
 
       <Route
         path="/"
+        element={
+          user ? <DashboardPage /> : <Navigate to="/login" />
+        }
+      />
+
+      <Route
+        path="/inventory"
         element={
           user ? <InventoryPage /> : <Navigate to="/login" />
         }

@@ -7,10 +7,7 @@ const api = axios.create({
   },
 });
 
-console.log("API URL:", api.defaults.baseURL);
-
 export async function fetchInventory() {
-  console.log("API URL:", api.defaults.baseURL);
   const response = await api.get("/inventory");
   return response.data;
 }

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 import Sidebar from "../components/Sidebar.jsx";
 import SearchBar from "../components/SearchBar.jsx";
@@ -32,7 +33,7 @@ const PAGE_TITLES = {
 function InventoryPage() {
   const inventoryTableRef = useRef(null);
 
-  const [activeView, setActiveView] = useState("dashboard");
+  // const [activeView, setActiveView] = useState("dashboard");
 
   const [inventory, setInventory] = useState([]);
   const [providers, setProviders] = useState([]);
@@ -56,12 +57,12 @@ function InventoryPage() {
   const [showMessagesForProvidersModal, setShowMessagesForProvidersModal] =
     useState(false);
 
-  const isDashboard = activeView === "dashboard";
-  const isInventory = activeView === "inventory";
-  const isProviders = activeView === "providers";
-  const isSales = activeView === "ventas";
-  const isPayments = activeView === "pagos";
-  const isFacturacion = activeView === "facturacion";
+  // const isDashboard = activeView === "dashboard";
+  // const isInventory = activeView === "inventory";
+  // const isProviders = activeView === "providers";
+  // const isSales = activeView === "ventas";
+  // const isPayments = activeView === "pagos";
+  // const isFacturacion = activeView === "facturacion";
 
   const showNotification = (message) => {
     setNotification(message);
@@ -128,23 +129,23 @@ function InventoryPage() {
     loadProviders();
   }, []);
 
-  useEffect(() => {
-    if (isProviders) {
-      loadProviders();
-    }
+  // useEffect(() => {
+  //   if (isProviders) {
+  //     loadProviders();
+  //   }
 
-    if (isInventory || isSales || isPayments) {
-      loadInventory();
-    }
+  //   if (isInventory || isSales || isPayments) {
+  //     loadInventory();
+  //   }
 
-    if (isSales || isPayments) {
-      loadSales();
-    }
+  //   if (isSales || isPayments) {
+  //     loadSales();
+  //   }
 
-    if (isPayments) {
-      loadPendingProviderPayments();
-    }
-  }, [activeView]);
+  //   if (isPayments) {
+  //     loadPendingProviderPayments();
+  //   }
+  // }, [activeView]);
 
   useEffect(() => {
     if (isProviders || isPayments) {
@@ -240,55 +241,55 @@ function InventoryPage() {
     );
   }, [filteredProviders]);
 
-  const renderContent = () => {
-    if (isDashboard) {
-      return <DashboardPage refresh={dashboardRefresh} />;
-    }
+  // const renderContent = () => {
+  //   if (isDashboard) {
+  //     return <DashboardPage refresh={dashboardRefresh} />;
+  //   }
 
-    if (isInventory) {
-      return (
-        <InventoryTable
-          ref={inventoryTableRef}
-          items={filteredInventory}
-          loading={loadingInventory}
-          onItemAdded={handleItemAdded}
-          providers={providers}
-        />
-      );
-    }
+  //   if (isInventory) {
+  //     return (
+  //       <InventoryTable
+  //         ref={inventoryTableRef}
+  //         items={filteredInventory}
+  //         loading={loadingInventory}
+  //         onItemAdded={handleItemAdded}
+  //         providers={providers}
+  //       />
+  //     );
+  //   }
 
-    if (isSales) {
-      return <SalesTable sales={sales} loading={loadingSales} />;
-    }
+  //   if (isSales) {
+  //     return <SalesTable sales={sales} loading={loadingSales} />;
+  //   }
 
-    if (isFacturacion) {
-      return <FacturacionPage />;
-    }
+  //   if (isFacturacion) {
+  //     return <FacturacionPage />;
+  //   }
 
-    if (isPayments) {
-      return (
-        <PaymentsTable
-          payments={pendingProviderPayments}
-          providers={providers}
-          loading={loadingPayments || loadingProviders}
-          onPaymentsUpdated={loadPendingProviderPayments}
-        />
-      );
-    }
+  //   if (isPayments) {
+  //     return (
+  //       <PaymentsTable
+  //         payments={pendingProviderPayments}
+  //         providers={providers}
+  //         loading={loadingPayments || loadingProviders}
+  //         onPaymentsUpdated={loadPendingProviderPayments}
+  //       />
+  //     );
+  //   }
 
-    return (
-      <ProvidersTable
-        providers={filteredProviders}
-        inventoryItems={filteredInventory}
-        loading={loadingProviders}
-        onDataChange={loadProviders}
-      />
-    );
-  };
+  //   return (
+  //     <ProvidersTable
+  //       providers={filteredProviders}
+  //       inventoryItems={filteredInventory}
+  //       loading={loadingProviders}
+  //       onDataChange={loadProviders}
+  //     />
+  //   );
+  // };
 
   return (
     <div className="min-h-screen md:grid md:grid-cols-[280px_1fr]">
-      <Sidebar activeView={activeView} onViewChange={setActiveView} />
+      <Sidebar />
 
       <main className="p-8">
         <div className="flex items-end justify-between gap-6 mb-7">
@@ -298,7 +299,7 @@ function InventoryPage() {
             </p>
 
             <h1 className="text-3xl md:text-4xl m-0">
-              {PAGE_TITLES[activeView]}
+              Deashboard
             </h1>
           </div>
         </div>

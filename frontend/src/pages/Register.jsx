@@ -11,12 +11,14 @@ export default function Register() {
 
     const handleRegister = async (e) => {
         e.preventDefault();
+        
         if (loading) return; // 👈 evita doble submit
         setLoading(true);
+        console.log("REGISTER USER CALL");
+
         try {
-            console.log("Registering user with:", { name, email, password, businessName });
             await registerUser({
-                name,
+                name: name,
                 email,
                 password,
                 businessName,
