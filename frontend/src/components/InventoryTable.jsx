@@ -1,8 +1,18 @@
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { FaCheck } from "react-icons/fa";
-import { fetchProviders, updateInventoryRowStatus, addInventoryItem, fetchProvidersComplete, sendWhatsAppMessage } from "../services/api.js";
+import {
+  fetchProviders,
+  updateInventoryRowStatus,
+  addInventoryItem,
+  fetchProvidersComplete,
+  sendWhatsAppMessage,
+} from "../services/api.js";
 
-const InventoryTable = forwardRef(function InventoryTable({ items, loading, onItemAdded, providers = [], showSelection = true }, ref) {
+const InventoryTable = forwardRef(function InventoryTable(
+  { items, loading, onItemAdded, providers = [], showSelection = true },
+  ref,
+) {
+  console.log(loading);
   const [selectedItems, setSelectedItems] = useState([]);
   const [tableItems, setTableItems] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -25,12 +35,11 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
         const data = await fetchProvidersComplete();
         setProvidersComplete(data || []);
       } catch (err) {
-        console.error('Error cargando proveedoras:', err);
+        console.error("Error cargando proveedoras:", err);
       }
     };
     loadProviders();
   }, []);
-
 
   useEffect(() => {
     setProviderDropdown((prev) => {
@@ -54,11 +63,7 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
   }));
 
   if (loading) {
-    return (
-      <div className="table-state">
-        Cargando inventario...
-      </div>
-    );
+    return <div className="table-state">Cargando inventario...</div>;
   }
 
   const hasItems = tableItems.length > 0;
@@ -82,9 +87,7 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
     if (!currentItem) return;
 
     const nextState =
-      currentItem.estado?.toLowerCase() === "vendido"
-        ? "en stock"
-        : "vendido";
+      currentItem.estado?.toLowerCase() === "vendido" ? "en stock" : "vendido";
 
     // If changing to "vendido", open payment modal
     if (nextState === "vendido") {
@@ -107,7 +110,7 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
       try {
         await updateInventoryRowStatus(itemId, nextState);
       } catch (error) {
-        console.error('Error actualizando estado en Sheets:', error);
+        console.error("Error actualizando estado en Sheets:", error);
       }
     }
   };
@@ -121,11 +124,11 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
 
     // Calculate discount based on payment method
     let discountedPrice = currentItem.precio;
-    if (metodoPago === 'efectivo') {
-      discountedPrice = currentItem.precio * 0.90; // 10% discount
-    } else if (metodoPago === 'transferencia') {
+    if (metodoPago === "efectivo") {
+      discountedPrice = currentItem.precio * 0.9; // 10% discount
+    } else if (metodoPago === "transferencia") {
       discountedPrice = currentItem.precio * 0.95; // 5% discount
-    } else if (metodoPago === 'debito/credito') {
+    } else if (metodoPago === "debito/credito") {
       discountedPrice = currentItem.precio * 0.9441; // 5.59% discount
     }
 
@@ -146,14 +149,14 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
         pendingItemId,
         "vendido",
         metodoPago,
-        discountedPrice
+        discountedPrice,
       );
 
       setShowPaymentModal(false);
       setSaleNotification("Venta cargada correctamente");
       setTimeout(() => setSaleNotification(""), 3200);
     } catch (error) {
-      console.error('Error actualizando estado en Sheets:', error);
+      console.error("Error actualizando estado en Sheets:", error);
       setSaleNotification("Error al cargar la venta");
       setTimeout(() => setSaleNotification(""), 3200);
     } finally {
@@ -161,15 +164,14 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
     }
   };
 
-
   const formatInventoryPrice = (value) => {
     const amount = Number(value);
     return Number.isFinite(amount)
-      ? `$ ${amount.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
-      : '-';
+      ? `$ ${amount.toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+      : "-";
   };
 
-  const formatText = (value) => value?.toString().trim() || '-';
+  const formatText = (value) => value?.toString().trim() || "-";
 
   const openModal = () => {
     setFormError("");
@@ -183,21 +185,21 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
   };
 
   const handleItemChange = (index, field, value) => {
-
     setPendingItems((prev) =>
       prev.map((item, itemIndex) =>
         itemIndex === index
           ? {
-            ...item,
-            [field]: value,
-          }
+              ...item,
+              [field]: value,
+            }
           : item,
       ),
     );
   };
 
   const addPendingItemRow = () => {
-    const lastProveedora = pendingItems[pendingItems.length - 1]?.proveedora || "";
+    const lastProveedora =
+      pendingItems[pendingItems.length - 1]?.proveedora || "";
     setPendingItems((prev) => [
       ...prev,
       { nombre: "", precio: "", proveedora: lastProveedora },
@@ -205,7 +207,9 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
   };
 
   const removePendingItemRow = (index) => {
-    setPendingItems((prev) => prev.filter((_, itemIndex) => itemIndex !== index));
+    setPendingItems((prev) =>
+      prev.filter((_, itemIndex) => itemIndex !== index),
+    );
   };
 
   const handleSubmit = async (event) => {
@@ -225,9 +229,9 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
     }
 
     const itemsToSend = pendingItems.map((item) => {
-      const precioNumero = Number(item.precio.toString().replace(/,/g, '.'));
+      const precioNumero = Number(item.precio.toString().replace(/,/g, "."));
       if (Number.isNaN(precioNumero)) {
-        throw new Error('Precio inválido');
+        throw new Error("Precio inválido");
       }
 
       return {
@@ -247,16 +251,16 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
       try {
         await sendWhatsAppMessage({ barcodes });
       } catch (whError) {
-        console.error('Error sending WhatsApp message:', whError);
+        console.error("Error sending WhatsApp message:", whError);
       }
       closeModal();
       onItemAdded?.();
     } catch (error) {
-      console.error('Error agregando item en Sheets:', error);
+      console.error("Error agregando item en Sheets:", error);
       setFormError(
-        error?.message?.includes('Precio inválido')
-          ? 'Al menos un precio es inválido.'
-          : 'No se pudo agregar el item. Intenta de nuevo.',
+        error?.message?.includes("Precio inválido")
+          ? "Al menos un precio es inválido."
+          : "No se pudo agregar el item. Intenta de nuevo.",
       );
     } finally {
       setIsSaving(false);
@@ -269,19 +273,21 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
 
   const closeProviderDropdown = (index) => {
     setTimeout(() => {
-      setProviderDropdown((prev) => prev.map((v, i) => (i === index ? false : v)));
+      setProviderDropdown((prev) =>
+        prev.map((v, i) => (i === index ? false : v)),
+      );
     }, 150);
   };
 
   const selectProvider = (index, nombre) => {
-
-    handleItemChange(index, 'proveedora', nombre);
-    setProviderDropdown((prev) => prev.map((v, i) => (i === index ? false : v)));
+    handleItemChange(index, "proveedora", nombre);
+    setProviderDropdown((prev) =>
+      prev.map((v, i) => (i === index ? false : v)),
+    );
   };
 
   return (
     <div className="overflow-x-auto">
-
       {saleNotification && (
         <div className="toast-notification">{saleNotification}</div>
       )}
@@ -322,17 +328,21 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
               {tableItems.map((item, index) => (
                 <tr
                   key={`${item.codigo}-${index}`}
-                  className={isSelected(item.id) ? 'bg-emerald-900/10' : ''}
+                  className={isSelected(item.id) ? "bg-emerald-900/10" : ""}
                 >
-                  <td className="text-center">{formatText(item.descripcion)}</td>
+                  <td className="text-center">
+                    {formatText(item.descripcion)}
+                  </td>
 
-                  <td className="text-center">{formatInventoryPrice(item.precio)}</td>
+                  <td className="text-center">
+                    {formatInventoryPrice(item.precio)}
+                  </td>
 
                   <td className="text-center">{formatText(item.proveedora)}</td>
 
                   <td className="text-center">
                     <span
-                      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${item.estado?.toLowerCase() === 'vendido' ? 'bg-rose-800/40 text-rose-300 border border-rose-700' : 'bg-emerald-800/40 text-emerald-300 border border-emerald-700'}`}
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${item.estado?.toLowerCase() === "vendido" ? "bg-rose-800/40 text-rose-300 border border-rose-700" : "bg-emerald-800/40 text-emerald-300 border border-emerald-700"}`}
                     >
                       {item.estado}
                     </span>
@@ -524,7 +534,6 @@ const InventoryTable = forwardRef(function InventoryTable({ items, loading, onIt
           </div>
         </div>
       )} */}
-
     </div>
   );
 });

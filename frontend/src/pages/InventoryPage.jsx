@@ -9,7 +9,7 @@ import DashboardPage from "./DashboardPage.jsx";
 import SalesModal from "../components/SalesModal.jsx";
 import SalesTable from "../components/SalesTable.jsx";
 import PaymentsTable from "../components/PaymentsTable.jsx";
-import FacturacionPage from "./FacturacionPage.jsx";
+// import FacturacionPage from "./FacturacionPage.jsx";
 import ProvidersFormModal from "../components/ProvidersFormModal.jsx";
 import ItemsFormModal from "../components/ItemsFormModal.jsx";
 import MessageForProvidersModal from "../components/messagesForProvidersModal.jsx";
@@ -57,13 +57,6 @@ function InventoryPage() {
   const [showMessagesForProvidersModal, setShowMessagesForProvidersModal] =
     useState(false);
 
-  // const isDashboard = activeView === "dashboard";
-  // const isInventory = activeView === "inventory";
-  // const isProviders = activeView === "providers";
-  // const isSales = activeView === "ventas";
-  // const isPayments = activeView === "pagos";
-  // const isFacturacion = activeView === "facturacion";
-
   const showNotification = (message) => {
     setNotification(message);
 
@@ -74,7 +67,6 @@ function InventoryPage() {
 
   const loadInventory = async () => {
     try {
-      
       setLoadingInventory(true);
       const data = await fetchInventory();
       setInventory(data);
@@ -126,8 +118,11 @@ function InventoryPage() {
   };
 
   useEffect(() => {
-    loadProviders();
+    // loadProviders();
+    loadInventory();
   }, []);
+
+  // loadInventory();
 
   // useEffect(() => {
   //   if (isProviders) {
@@ -147,11 +142,11 @@ function InventoryPage() {
   //   }
   // }, [activeView]);
 
-  useEffect(() => {
-    if (isProviders || isPayments) {
-      loadProviders();
-    }
-  }, [providersRefresh]);
+  // useEffect(() => {
+  //   if (isProviders || isPayments) {
+  //     loadProviders();
+  //   }
+  // }, [providersRefresh]);
 
   const handleAddItem = () => {
     setShowItemsModal(true);
@@ -298,79 +293,31 @@ function InventoryPage() {
               Panel
             </p>
 
-            <h1 className="text-3xl md:text-4xl m-0">
-              Deashboard
-            </h1>
+            <h1 className="text-3xl md:text-4xl m-0">Inventory</h1>
           </div>
         </div>
 
         <section className="bg-slate-800/70 border border-slate-700 rounded-2xl p-7 min-h-[72vh] shadow-soft">
           <div className="grid grid-cols-[1fr_max-content] gap-4 items-center mb-6">
-            {(isInventory || isProviders) && (
-              <SearchBar query={searchQuery} onChange={setSearchQuery} />
-            )}
-
-            {isDashboard && (
-              <div className="flex gap-3 items-center">
-                <button
-                  className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2"
-                  onClick={handleAddItem}
-                >
-                  Agregar producto
-                </button>
-
-                <button
-                  className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2"
-                  onClick={handleAddSale}
-                >
-                  Agregar venta
-                </button>
-
-                <button
-                  className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2"
-                  onClick={() => setShowProvidersModal(true)}
-                >
-                  Agregar proveedora
-                </button>
-              </div>
-            )}
-
-            {isInventory && (
-              <button
-                className="bg-accent text-slate-900 font-semibold rounded-lg px-4 py-2"
-                onClick={handleAddItem}
-              >
-                Agregar producto
-              </button>
-            )}
-
-            {isProviders && (
-              <button
-                className="bg-accent text-slate-900 font-semibold rounded-lg px-4 py-2"
-                onClick={() => setShowProvidersModal(true)}
-              >
-                + Nueva Proveedora
-              </button>
-            )}
-
-            {/* {isPayments && (
-              <button
-                className="bg-accent text-slate-900 font-semibold rounded-lg px-4 py-2"
-                onClick={() => {
-                  loadPendingProviderPayments();
-                  setShowMessagesForProvidersModal(true);
-                }}
-              >
-                Contactar proveedoras
-              </button>
-            )} */}
+            <SearchBar query={searchQuery} onChange={setSearchQuery} />
+            <button
+              className="bg-accent text-slate-900 font-semibold rounded-lg px-4 py-2"
+              onClick={handleAddItem}
+            >
+              Agregar producto
+            </button>
           </div>
 
           {notification && (
             <div className="toast-notification">{notification}</div>
           )}
-
-          {renderContent()}
+          <InventoryTable
+            ref={inventoryTableRef}
+            items={filteredInventory}
+            loading={loadingInventory}
+            onItemAdded={handleItemAdded}
+            providers={providers}
+          />
         </section>
       </main>
 

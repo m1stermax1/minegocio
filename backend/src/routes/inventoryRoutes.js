@@ -42,7 +42,6 @@ const client = twilio(accountSid, authToken);
 
 router.get("/", async (req, res) => {
   try {
-    console.log(req);
     const inventory = await getInventoryData();
     res.json(inventory);
   } catch (error) {

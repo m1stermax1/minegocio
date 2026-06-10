@@ -188,12 +188,12 @@ a:hover {
   text-decoration: underline !important;
 }
 
-.sidebar button {
+.sidebar a {
   color: #ffffff !important;
   background-color: var(--dashboard-card-bg) !important;
 }
 
-.sidebar button:hover {
+.sidebar a:hover {
   background-color: var(--btn-hover-primary) !important;
   color: #ffffff !important;
 }

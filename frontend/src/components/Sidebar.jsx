@@ -1,9 +1,9 @@
-import { AiOutlineAppstore, AiOutlineDashboard } from 'react-icons/ai';
-import { FiBox, FiTrendingUp, FiCreditCard } from 'react-icons/fi';
-import { logoutUser } from '../services/authService.js';
-import { useNavigate } from 'react-router-dom';
+import { AiOutlineAppstore, AiOutlineDashboard } from "react-icons/ai";
+import { FiBox, FiTrendingUp, FiCreditCard } from "react-icons/fi";
+import { logoutUser } from "../services/authService.js";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "../services/supabase.js";
-import { Link } from 'react-router-dom';
+import { Link } from "react-router-dom";
 
 function Sidebar({ activeView, onViewChange }) {
   const navigate = useNavigate();
@@ -30,59 +30,52 @@ function Sidebar({ activeView, onViewChange }) {
       </div>
 
       <nav className="sidebar flex flex-col gap-2">
-        <Link type="button"
-          to="/dashboard"
-          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === 'dashboard' ? 'bg-slate-700' : 'hover:bg-slate-700'}`}>Dahsboad</Link>
-        <button
-          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === 'dashboard' ? 'bg-slate-700' : 'hover:bg-slate-700'}`}
-          type="button"
-          onClick={() => onViewChange('dashboard')}
+        <Link
+          to={{ pathname: "/" }}
+          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === "dashboard" ? "bg-slate-700" : "hover:bg-slate-700"}`}
         >
           <AiOutlineDashboard className="w-5 h-5" />
           <span>Dashboard</span>
-        </button>
-        <button
-          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === 'inventory' ? 'bg-slate-700' : 'hover:bg-slate-700'}`}
+        </Link>
+        <Link
+        to={{ pathname: "/inventory" }}
+          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === "inventory" ? "bg-slate-700" : "hover:bg-slate-700"}`}
           type="button"
-          onClick={() => onViewChange('inventory')}
         >
           <FiBox className="w-5 h-5" />
           <span>Inventario</span>
-        </button>
-        <button
-          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === 'providers' ? 'bg-slate-700' : 'hover:bg-slate-700'}`}
+        </Link>
+        <Link to={{ pathname: "/providers" }}
+          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === "providers" ? "bg-slate-700" : "hover:bg-slate-700"}`}
           type="button"
-          onClick={() => onViewChange('providers')}
         >
           <FiBox className="w-5 h-5" />
           <span>Proveedoras</span>
-        </button>
-        <button
-          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === 'ventas' ? 'bg-slate-700' : 'hover:bg-slate-700'}`}
+        </Link>
+        <Link to={{ pathname: "/sales" }}
+          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === "ventas" ? "bg-slate-700" : "hover:bg-slate-700"}`}
           type="button"
-          onClick={() => onViewChange('ventas')}
         >
           <FiTrendingUp className="w-5 h-5" />
           <span>Ventas</span>
-        </button>
-        <button
-          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === 'pagos' ? 'bg-slate-700' : 'hover:bg-slate-700'}`}
+        </Link>
+        <Link to={{ pathname: "/payments" }}
+          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === "pagos" ? "bg-slate-700" : "hover:bg-slate-700"}`}
           type="button"
-          onClick={() => onViewChange('pagos')}
+        
         >
           <FiCreditCard className="w-5 h-5" />
           <span>Pagos</span>
-        </button>
-        <button
-          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === 'facturacion' ? 'bg-slate-700' : 'hover:bg-slate-700'}`}
+        </Link>
+        <Link to={{ pathname: "/billings" }}
+          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === "facturacion" ? "bg-slate-700" : "hover:bg-slate-700"}`}
           type="button"
-          onClick={() => onViewChange('facturacion')}
         >
           <FiCreditCard className="w-5 h-5" />
           <span>Facturación</span>
-        </button>
+        </Link>
         <button
-          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === 'facturacion' ? 'bg-slate-700' : 'hover:bg-slate-700'}`}
+          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === "facturacion" ? "bg-slate-700" : "hover:bg-slate-700"}`}
           type="button"
           onClick={handleLogout}
         >

@@ -32,7 +32,7 @@ export async function createUserOrganization({
                 email,
                 name,
                 organization_id: organization.id,
-                role: "USER",
+                role: "ADMIN",
             })
             .select()
             .single();
