@@ -5,7 +5,7 @@ function ProvidersFormModal({ isOpen, onClose, onProviderAdded }) {
   const [nombre, setNombre] = useState('');
   const [apellido, setApellido] = useState('');
   const [telefono, setTelefono] = useState('');
-  const [notas, setNotas] = useState('');
+  const [bankalias, setbankalias] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -13,22 +13,24 @@ function ProvidersFormModal({ isOpen, onClose, onProviderAdded }) {
     e.preventDefault();
     setError('');
 
-    if (!nombre.trim() || !apellido.trim() || !telefono.trim()) {
-      setError('Nombre, apellido y teléfono son obligatorios');
-      return;
-    }
+    // if (!nombre.trim() || !apellido.trim() || !telefono.trim()) {
+    //   setError('Nombre, apellido y teléfono son obligatorios');
+    //   return;
+    // }
 
     setLoading(true);
     try {
-      await addProvider(nombre, apellido, telefono, notas);
+      await addProvider(nombre, apellido, telefono, bankalias);
       setNombre('');
       setApellido('');
       setTelefono('');
-      setNotas('');
+      setbankalias('');
+
       if (onProviderAdded) {
         await onProviderAdded();
       }
       onClose();
+
     } catch (err) {
       console.error('Error agregando proveedora:', err);
       setError(err.response?.data?.error || 'Error al agregar la proveedora');
@@ -102,8 +104,8 @@ function ProvidersFormModal({ isOpen, onClose, onProviderAdded }) {
               <input
                 type="text"
                 className="w-full mt-2 rounded-lg bg-slate-900/60 border border-slate-700 px-3 py-2 text-slate-100"
-                value={notas}
-                onChange={(e) => setNotas(e.target.value)}
+                value={bankalias}
+                onChange={(e) => setbankalias(e.target.value)}
                 placeholder="Ej: mi.alias.mp o CBU de 22 dígitos"
                 disabled={loading}
               />

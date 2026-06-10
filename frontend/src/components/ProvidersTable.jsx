@@ -3,6 +3,7 @@ import ProvidersFormModal from "./ProvidersFormModal.jsx";
 import ItemsFormModal from "./ItemsFormModal.jsx";
 
 function ProvidersTable({ providers = [], inventoryItems = [], loading, onDataChange }) {
+  console.log(providers)
   const [expandedProviders, setExpandedProviders] = useState(new Set());
   const [showProvidersModal, setShowProvidersModal] = useState(false);
   const [showItemsModal, setShowItemsModal] = useState(false);

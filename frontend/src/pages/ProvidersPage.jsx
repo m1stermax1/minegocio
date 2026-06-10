@@ -9,6 +9,7 @@ import ProvidersFormModal from "../components/ProvidersFormModal.jsx";
 
 import {
   fetchInventory,
+  fetchProviders,
   fetchProvidersComplete,
 } from "../services/api.js";
 
@@ -33,8 +34,13 @@ function ProvidersPage() {
   const loadProviders = async () => {
     try {
       setLoadingProviders(true);
-      const data = await fetchProvidersComplete();
-      setProviders(data);
+
+      console.log("cargando providers");
+      // const data = await fetchProviders();
+      // console.log(data);
+      // setProviders(data);
+
+
     } catch (error) {
       console.error("Error cargando proveedoras:", error);
       setProviders([]);
@@ -50,8 +56,10 @@ function ProvidersPage() {
   const handleProviderAdded = async () => {
     await loadProviders();
 
-    setProvidersRefresh((prev) => prev + 1);
-    setDashboardRefresh((prev) => prev + 1);
+    console.log("pasa por aca?")
+
+    // setProvidersRefresh((prev) => prev + 1);
+    // setDashboardRefresh((prev) => prev + 1);
 
     showNotification("Proveedora agregada correctamente.");
   };
@@ -123,7 +131,7 @@ function ProvidersPage() {
           )}
 
           <ProvidersTable
-            providers={filteredProviders}
+            providers={providers}
             inventoryItems={filteredInventory}
             loading={loadingProviders}
             onDataChange={loadProviders}

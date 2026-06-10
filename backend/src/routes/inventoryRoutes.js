@@ -5,7 +5,6 @@ import {
   setInventoryRowStatus,
   appendInventoryItems,
   getProvidersListComplete,
-  addNewProvider,
   getSalesData,
   appendSaleRecord,
   appendProviderPaymentOrders,
@@ -37,7 +36,7 @@ const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const twilioPhoneNumber = process.env.TWILIO_WHATSAPP_NUMBER;
 const client = twilio(accountSid, authToken);
-
+ 
 
 
 router.get("/", async (req, res) => {
@@ -50,15 +49,15 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.get("/providers", async (req, res) => {
-  try {
-    const providers = await getProvidersData();
-    res.json(providers);
-  } catch (error) {
-    console.error("Error al cargar proveedoras:", error);
-    res.status(500).json({ error: "No se pudo cargar las proveedoras" });
-  }
-});
+// router.get("/providers", async (req, res) => {
+//   try {
+//     const providers = await getProvidersData();
+//     res.json(providers);
+//   } catch (error) {
+//     console.error("Error al cargar proveedoras:", error);
+//     res.status(500).json({ error: "No se pudo cargar las proveedoras" });
+//   }
+// });
 
 router.get("/counts", async (req, res) => {
   try {
@@ -373,28 +372,28 @@ router.put("/providers/payments/status", async (req, res) => {
   }
 });
 
-router.post("/providers", async (req, res) => {
-  const { nombre, apellido, telefono, notas } = req.body;
+// router.post("/providers", async (req, res) => {
+//   const { nombre, apellido, telefono, notas } = req.body;
 
-  if (!nombre || !apellido || !telefono) {
-    return res
-      .status(400)
-      .json({ error: "nombre, apellido y telefono son obligatorios" });
-  }
+//   if (!nombre || !apellido || !telefono) {
+//     return res
+//       .status(400)
+//       .json({ error: "nombre, apellido y telefono son obligatorios" });
+//   }
 
-  try {
-    const result = await addNewProvider(
-      nombre,
-      apellido,
-      telefono,
-      notas || "",
-    );
-    res.json(result);
-  } catch (error) {
-    console.error("Error agregando proveedora:", error);
-    res.status(500).json({ error: "No se pudo agregar la proveedora" });
-  }
-});
+//   try {
+//     const result = await addNewProvider(
+//       nombre,
+//       apellido,
+//       telefono,
+//       notas || "",
+//     );
+//     res.json(result);
+//   } catch (error) {
+//     console.error("Error agregando proveedora:", error);
+//     res.status(500).json({ error: "No se pudo agregar la proveedora" });
+//   }
+// });
 
 // WhatsApp endpoint
 router.post("/whatsapp/send", async (req, res) => {

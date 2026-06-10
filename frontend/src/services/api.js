@@ -13,9 +13,10 @@ export async function fetchInventory() {
 }
 
 export async function fetchProviders() {
-  const response = await api.get("/inventory/providers", {
-    params: { _t: Date.now() },
-  });
+  // const response = await api.get("/inventory/providers", {
+  //   params: { _t: Date.now() },
+  // });
+  const response = await api.get("/providers");
   return response.data;
 }
 
@@ -33,13 +34,15 @@ export async function fetchProviderPayments() {
   return response.data;
 }
 
-export async function addProvider(nombre, apellido, telefono, notas = "") {
-  const response = await api.post("/inventory/providers", {
+export async function addProvider(nombre, apellido, telefono, bankalias = "") {
+  console.log("pase por el add provider")
+  const response = await api.post("/providers/add", {
     nombre,
     apellido,
     telefono,
-    notas,
+    bankalias,
   });
+  console.log(response);
   return response.data;
 }
 

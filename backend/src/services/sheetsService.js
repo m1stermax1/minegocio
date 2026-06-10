@@ -317,24 +317,24 @@ export async function getProvidersListComplete() {
   }
 }
 
-export async function addNewProvider(nombre, apellido, telefono, notas = '') {
-  const { sheets, spreadsheetId } = await getSheetsClient();
+// export async function addNewProvider(nombre, apellido, telefono, notas = '') {
+//   const { sheets, spreadsheetId } = await getSheetsClient();
 
-  const values = [[nombre, apellido, telefono, notas]];
+//   const values = [[nombre, apellido, telefono, notas]];
 
-  try {
-    await sheets.spreadsheets.values.append({
-      spreadsheetId,
-      range: 'proveedoras maxi!A:D',
-      valueInputOption: 'RAW',
-      requestBody: { values },
-    });
+//   try {
+//     await sheets.spreadsheets.values.append({
+//       spreadsheetId,
+//       range: 'proveedoras maxi!A:D',
+//       valueInputOption: 'RAW',
+//       requestBody: { values },
+//     });
 
-    return { success: true, nombre, apellido, telefono };
-  } catch (err) {
-    throw new Error(`Failed to add provider: ${err.message}`);
-  }
-}
+//     return { success: true, nombre, apellido, telefono };
+//   } catch (err) {
+//     throw new Error(`Failed to add provider: ${err.message}`);
+//   }
+// }
 
 export async function setInventoryRowStatus(rowIndex, estado, metodoPago, precioVentaManual) {
   const { sheets, spreadsheetId } = await getSheetsClient();
