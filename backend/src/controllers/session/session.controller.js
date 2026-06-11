@@ -1,11 +1,11 @@
-import { supabaseAdmin } from "../../services/supabaseService.js";
+import { supabase } from "../../services/supabaseService.js";
 
 export async function getSessionUser() {
   const {
     data: { user },
-  } = await supabaseAdmin.auth.getSession;
+  } = await supabase.auth.getSession;
 
-  console.log(await supabaseAdmin.auth.getUser())
+  console.log(await supabase.auth.getUser())
   const userId = "hola";
 
   return userId;

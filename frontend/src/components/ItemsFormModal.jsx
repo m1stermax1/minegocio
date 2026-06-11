@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { addInventoryItem, fetchProvidersComplete } from '../services/api.js';
+import { fetchProviders } from '../services/api.js';
 
 function ItemsFormModal({ isOpen, onClose, onItemsAdded, defaultProviderId, providersRefresh, providers: parentProviders = [] }) {
   const [providers, setProviders] = useState([]);
@@ -12,17 +13,14 @@ function ItemsFormModal({ isOpen, onClose, onItemsAdded, defaultProviderId, prov
 
   useEffect(() => {
     if (!isOpen) return;
-    if (parentProviders?.length > 0) {
+    if (parentProviders?.data?.length > 0) {
       setProviders(parentProviders);
       return;
     }
     (async () => {
       try {
-        const data = await fetchProvidersComplete();
-        setProviders(data || []);
-        if (defaultProviderId !== undefined && data?.[defaultProviderId]) {
-          setSelectedProvider(data[defaultProviderId]);
-        }
+        const data = await fetchProviders();
+        setProviders(data?.data || []);
       } catch (err) {
         console.error('Error cargando proveedoras:', err);
       }
@@ -66,7 +64,7 @@ function ItemsFormModal({ isOpen, onClose, onItemsAdded, defaultProviderId, prov
   const generateWhatsAppMessage = () => {
     if (!items.length || !selectedProvider) return '';
 
-    let message = `Hola ${selectedProvider.nombre}, aquí te envío los detalles de las prendas:\n\n`;
+    let message = `Hola, te paso el detalle de las prendas:\n\n`;
     const total = items.reduce((s, it) => s + it.precio, 0);
 
     items.forEach((item) => {
@@ -87,18 +85,20 @@ function ItemsFormModal({ isOpen, onClose, onItemsAdded, defaultProviderId, prov
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSelectedProvider(selectedProvider?.id);
     if (!selectedProvider) return setError('Selecciona una proveedora');
-    if (!items.length) return setError('Agrega al menos un item');
+    if (!items?.length) return setError('Agrega al menos un item');
+
 
     setLoading(true);
     try {
-      const itemsToAdd = items.map((item) => ({ nombre: item.nombre, precio: item.precio.toString(), proveedora: selectedProvider.nombre }));
+      const itemsToAdd = items.map((item) => ({ nombre: item.nombre, precio: item.precio.toString(), proveedora: selectedProvider?.id, orgId: selectedProvider?.organization_id, providerName: selectedProvider?.first_name }));
 
       await addInventoryItem(itemsToAdd);
       setItems([]);
       setNewItemName('');
       setNewItemPrice('');
-      setSelectedProvider(null);
+      setSelectedProvider("");
       onItemsAdded?.();
       const whatsappLink = generateWhatsAppLink();
       window.open(whatsappLink, '_blank');
@@ -132,10 +132,10 @@ function ItemsFormModal({ isOpen, onClose, onItemsAdded, defaultProviderId, prov
 
             <div>
               <label className="text-sm font-medium text-slate-200">Proveedora *</label>
-              <select className="w-full mt-2 rounded-lg bg-slate-900/60 border border-slate-700 px-3 py-2 text-slate-100" value={selectedProvider?.id ?? ''} onChange={(e) => { const id = parseInt(e.target.value); setSelectedProvider(providers.find((prov) => prov.id === id) || null); }} disabled={loading}>
+              <select className="w-full mt-2 rounded-lg bg-slate-900/60 border border-slate-700 px-3 py-2 text-slate-100" value={selectedProvider?.id ?? ''} onChange={(e) => { const id = e.target.value; setSelectedProvider(providers?.data?.find((prov) => prov.id === id) || null); }} disabled={loading}>
                 <option value="">Selecciona una proveedora</option>
-                {providers.map((prov) => (
-                  <option key={prov.id} value={prov.id}>{prov.nombre} {prov.apellido}</option>
+                {providers?.data?.map((prov) => (
+                  <option key={prov.id} value={prov.id}>{prov.first_name} {prov.last_name}</option>
                 ))}
               </select>
             </div>

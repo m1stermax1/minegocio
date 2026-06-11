@@ -1,7 +1,7 @@
 import express from "express";
 import { getProviders } from "../controllers/providers/providers.controller.js";
 import { getUsers } from "../controllers/users/users.controller.js";
-import { supabaseAdmin } from "../services/supabaseService.js";
+import { supabase } from "../services/supabaseService.js";
 
 const router = express.Router();
 
@@ -28,7 +28,7 @@ router.post("/add", async (req, res) => {
     const { orgId, nombre, apellido, telefono, bankalias } = req.body;
     console.log("Body: ", req.body);
 
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await supabase
       .from("providers")
       .insert([
         {

@@ -28,25 +28,12 @@ const InventoryTable = forwardRef(function InventoryTable(
   const [saleNotification, setSaleNotification] = useState("");
   const [providersComplete, setProvidersComplete] = useState([]);
 
-  // Cargar proveedoras de "proveedoras maxi"
-  useEffect(() => {
-    const loadProviders = async () => {
-      try {
-        const data = await fetchProvidersComplete();
-        setProvidersComplete(data || []);
-      } catch (err) {
-        console.error("Error cargando proveedoras:", err);
-      }
-    };
-    loadProviders();
-  }, []);
-
   useEffect(() => {
     setProviderDropdown((prev) => {
       const next = pendingItems.map((_, i) => prev[i] || false);
       return next;
     });
-  }, [pendingItems.length]);
+  }, [pendingItems?.length]);
 
   useEffect(() => {
     setTableItems(items);
@@ -66,103 +53,7 @@ const InventoryTable = forwardRef(function InventoryTable(
     return <div className="table-state">Cargando inventario...</div>;
   }
 
-  const hasItems = tableItems.length > 0;
-
-  const toggleSelect = (itemId) => {
-    setSelectedItems((prev) => {
-      if (prev.includes(itemId)) {
-        return prev.filter((id) => id !== itemId);
-      }
-
-      return [...prev, itemId];
-    });
-  };
-
-  const isSelected = (itemId) => {
-    return selectedItems.includes(itemId);
-  };
-
-  const toggleStatus = async (itemId) => {
-    const currentItem = tableItems.find((item) => item.id === itemId);
-    if (!currentItem) return;
-
-    const nextState =
-      currentItem.estado?.toLowerCase() === "vendido" ? "en stock" : "vendido";
-
-    // If changing to "vendido", open payment modal
-    if (nextState === "vendido") {
-      setPendingItemId(itemId);
-      setShowPaymentModal(true);
-    } else {
-      // If changing to "en stock", just update without modal
-      setTableItems((prevItems) =>
-        prevItems.map((item) => {
-          if (item.id === itemId) {
-            return {
-              ...item,
-              estado: nextState,
-            };
-          }
-          return item;
-        }),
-      );
-
-      try {
-        await updateInventoryRowStatus(itemId, nextState);
-      } catch (error) {
-        console.error("Error actualizando estado en Sheets:", error);
-      }
-    }
-  };
-
-  const handlePaymentConfirm = async (metodoPago) => {
-    if (!pendingItemId) return;
-
-    // Get the current item to access its price
-    const currentItem = tableItems.find((item) => item.id === pendingItemId);
-    if (!currentItem) return;
-
-    // Calculate discount based on payment method
-    let discountedPrice = currentItem.precio;
-    if (metodoPago === "efectivo") {
-      discountedPrice = currentItem.precio * 0.9; // 10% discount
-    } else if (metodoPago === "transferencia") {
-      discountedPrice = currentItem.precio * 0.95; // 5% discount
-    } else if (metodoPago === "debito/credito") {
-      discountedPrice = currentItem.precio * 0.9441; // 5.59% discount
-    }
-
-    setTableItems((prevItems) =>
-      prevItems.map((item) => {
-        if (item.id === pendingItemId) {
-          return {
-            ...item,
-            estado: "vendido",
-          };
-        }
-        return item;
-      }),
-    );
-
-    try {
-      await updateInventoryRowStatus(
-        pendingItemId,
-        "vendido",
-        metodoPago,
-        discountedPrice,
-      );
-
-      setShowPaymentModal(false);
-      setSaleNotification("Venta cargada correctamente");
-      setTimeout(() => setSaleNotification(""), 3200);
-    } catch (error) {
-      console.error("Error actualizando estado en Sheets:", error);
-      setSaleNotification("Error al cargar la venta");
-      setTimeout(() => setSaleNotification(""), 3200);
-    } finally {
-      setPendingItemId(null);
-    }
-  };
+  const hasItems = tableItems?.length > 0;
 
   const formatInventoryPrice = (value) => {
     const amount = Number(value);
@@ -327,24 +218,23 @@ const InventoryTable = forwardRef(function InventoryTable(
             <tbody>
               {tableItems.map((item, index) => (
                 <tr
-                  key={`${item.codigo}-${index}`}
-                  className={isSelected(item.id) ? "bg-emerald-900/10" : ""}
+                  key={`${item.id}-${index}`}
                 >
                   <td className="text-center">
-                    {formatText(item.descripcion)}
+                    {formatText(item.description)}
                   </td>
 
                   <td className="text-center">
-                    {formatInventoryPrice(item.precio)}
+                    {formatInventoryPrice(item.price)}
                   </td>
 
-                  <td className="text-center">{formatText(item.proveedora)}</td>
+                  <td className="text-center">{formatText(item.providerName)}</td>
 
                   <td className="text-center">
                     <span
                       className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${item.estado?.toLowerCase() === "vendido" ? "bg-rose-800/40 text-rose-300 border border-rose-700" : "bg-emerald-800/40 text-emerald-300 border border-emerald-700"}`}
                     >
-                      {item.estado}
+                      {item.status == 'AVAILABLE' ? 'En Stock' : ''}
                     </span>
                   </td>
                 </tr>

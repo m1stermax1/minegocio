@@ -16,6 +16,7 @@ import MessageForProvidersModal from "../components/messagesForProvidersModal.js
 
 import {
   fetchInventory,
+  fetchProviders,
   fetchProvidersComplete,
   fetchSales,
   fetchProviderPayments,
@@ -81,8 +82,9 @@ function InventoryPage() {
   const loadProviders = async () => {
     try {
       setLoadingProviders(true);
-      const data = await fetchProvidersComplete();
-      setProviders(data);
+      const data = await fetchProviders();
+      console.log("Cargo las proveedoras" ,data);
+      setProviders(data); 
     } catch (error) {
       console.error("Error cargando proveedoras:", error);
       setProviders([]);
@@ -118,35 +120,9 @@ function InventoryPage() {
   };
 
   useEffect(() => {
-    // loadProviders();
+    loadProviders();
     loadInventory();
   }, []);
-
-  // loadInventory();
-
-  // useEffect(() => {
-  //   if (isProviders) {
-  //     loadProviders();
-  //   }
-
-  //   if (isInventory || isSales || isPayments) {
-  //     loadInventory();
-  //   }
-
-  //   if (isSales || isPayments) {
-  //     loadSales();
-  //   }
-
-  //   if (isPayments) {
-  //     loadPendingProviderPayments();
-  //   }
-  // }, [activeView]);
-
-  // useEffect(() => {
-  //   if (isProviders || isPayments) {
-  //     loadProviders();
-  //   }
-  // }, [providersRefresh]);
 
   const handleAddItem = () => {
     setShowItemsModal(true);
@@ -189,98 +165,54 @@ function InventoryPage() {
     setShowMessagesForProvidersModal(true);
   };
 
-  const filteredInventory = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
 
-    if (!query) {
-      return inventory;
-    }
+  // const filteredInventory = useMemo(() => {
+  //   const query = searchQuery.trim().toLowerCase();
 
-    return inventory.filter(({ codigo, descripcion }) => {
-      return (
-        codigo?.toLowerCase().includes(query) ||
-        descripcion?.toLowerCase().includes(query)
-      );
-    });
-  }, [inventory, searchQuery]);
-
-  const filteredProviders = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-
-    if (!query) {
-      return providers;
-    }
-
-    return providers.filter((provider) => {
-      const nombre =
-        `${provider.nombre || ""} ${provider.apellido || ""}`.toLowerCase();
-
-      return (
-        nombre.includes(query) ||
-        provider.telefono?.toLowerCase().includes(query) ||
-        provider.alias?.toLowerCase().includes(query) ||
-        provider.cbu?.toLowerCase().includes(query)
-      );
-    });
-  }, [providers, searchQuery]);
-
-  const filteredSales = useMemo(() => {
-    return filteredInventory.filter(
-      (item) => item.estado?.toLowerCase() === "vendido",
-    );
-  }, [filteredInventory]);
-
-  const filteredPayments = useMemo(() => {
-    return filteredProviders.filter(
-      (item) => item.pago?.toLowerCase() === "pagado",
-    );
-  }, [filteredProviders]);
-
-  // const renderContent = () => {
-  //   if (isDashboard) {
-  //     return <DashboardPage refresh={dashboardRefresh} />;
+  //   if (!query) {
+  //     return inventory;
   //   }
 
-  //   if (isInventory) {
+  //   return inventory.filter(({ codigo, descripcion }) => {
   //     return (
-  //       <InventoryTable
-  //         ref={inventoryTableRef}
-  //         items={filteredInventory}
-  //         loading={loadingInventory}
-  //         onItemAdded={handleItemAdded}
-  //         providers={providers}
-  //       />
+  //       codigo?.toLowerCase().includes(query) ||
+  //       descripcion?.toLowerCase().includes(query)
   //     );
+  //   });
+  // }, [inventory, searchQuery]);
+
+  // const filteredProviders = useMemo(() => {
+  //   const query = searchQuery.trim().toLowerCase();
+
+  //   if (!query) {
+  //     return providers;
   //   }
 
-  //   if (isSales) {
-  //     return <SalesTable sales={sales} loading={loadingSales} />;
-  //   }
+  //   return providers.filter((provider) => {
+  //     const nombre =
+  //       `${provider.nombre || ""} ${provider.apellido || ""}`.toLowerCase();
 
-  //   if (isFacturacion) {
-  //     return <FacturacionPage />;
-  //   }
-
-  //   if (isPayments) {
   //     return (
-  //       <PaymentsTable
-  //         payments={pendingProviderPayments}
-  //         providers={providers}
-  //         loading={loadingPayments || loadingProviders}
-  //         onPaymentsUpdated={loadPendingProviderPayments}
-  //       />
+  //       nombre.includes(query) ||
+  //       provider.telefono?.toLowerCase().includes(query) ||
+  //       provider.alias?.toLowerCase().includes(query) ||
+  //       provider.cbu?.toLowerCase().includes(query)
   //     );
-  //   }
+  //   });
+  // }, [providers, searchQuery]);
 
-  //   return (
-  //     <ProvidersTable
-  //       providers={filteredProviders}
-  //       inventoryItems={filteredInventory}
-  //       loading={loadingProviders}
-  //       onDataChange={loadProviders}
-  //     />
+  // const filteredSales = useMemo(() => {
+  //   return filteredInventory.filter(
+  //     (item) => item.estado?.toLowerCase() === "vendido",
   //   );
-  // };
+  // }, [filteredInventory]);
+
+  // const filteredPayments = useMemo(() => {
+  //   return filteredProviders.filter(
+  //     (item) => item.pago?.toLowerCase() === "pagado",
+  //   );
+  // }, [filteredProviders]);
+
 
   return (
     <div className="min-h-screen md:grid md:grid-cols-[280px_1fr]">
@@ -313,7 +245,7 @@ function InventoryPage() {
           )}
           <InventoryTable
             ref={inventoryTableRef}
-            items={filteredInventory}
+            items={inventory?.data}
             loading={loadingInventory}
             onItemAdded={handleItemAdded}
             providers={providers}
@@ -321,34 +253,12 @@ function InventoryPage() {
         </section>
       </main>
 
-      <ProvidersFormModal
-        isOpen={showProvidersModal}
-        onClose={() => setShowProvidersModal(false)}
-        onProviderAdded={handleProviderAdded}
-      />
-
       <ItemsFormModal
         isOpen={showItemsModal}
         onClose={() => setShowItemsModal(false)}
         onItemsAdded={handleItemAdded}
         providers={providers}
         providersRefresh={providersRefresh}
-      />
-
-      <SalesModal
-        isOpen={showSaleModal}
-        onClose={() => setShowSaleModal(false)}
-        inventoryItems={inventory}
-        isLoadingInventory={loadingInventory}
-        onSaleCreated={handleSaleCreated}
-      />
-
-      <MessageForProvidersModal
-        isOpen={showMessagesForProvidersModal}
-        onClose={() => setShowMessagesForProvidersModal(false)}
-        listOfPendingPayments={pendingProviderPayments}
-        sales={sales}
-        providers={providers}
       />
     </div>
   );

@@ -13,9 +13,6 @@ export async function fetchInventory() {
 }
 
 export async function fetchProviders() {
-  // const response = await api.get("/inventory/providers", {
-  //   params: { _t: Date.now() },
-  // });
   const response = await api.get("/providers");
   return response.data;
 }
@@ -62,7 +59,8 @@ export async function updateInventoryRowStatus(
 }
 
 export async function addInventoryItem(item) {
-  const response = await api.post("/inventory", item);
+  console.log("Llegamos hasta hacer el post");
+  const response = await api.post("/inventory/add", item);
   return response.data;
 }
 

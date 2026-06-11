@@ -1,4 +1,4 @@
-import { supabaseAdmin } from "./supabaseService.js";
+import { supabase } from "./supabaseService.js";
 
 export async function createUserOrganization({
     userId,
@@ -8,7 +8,7 @@ export async function createUserOrganization({
 }) {
     console.log("Creating organization for user:", { userId, name, email, businessName });
     const { data: organization, error: organizationError } =
-        await supabaseAdmin
+        await supabase
             .from("organizations")
             .insert({
                 name: businessName,
@@ -25,7 +25,7 @@ export async function createUserOrganization({
     }
 
     const { data: profile, error: profileError } =
-        await supabaseAdmin
+        await supabase
             .from("profiles")
             .insert({
                 id: userId,

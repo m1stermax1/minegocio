@@ -1,7 +1,7 @@
-import { supabaseAdmin } from "../../services/supabaseService.js";
+import { supabase } from "../../services/supabaseService.js";
 
 export async function getProviders() {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await supabase
         .from("providers")
         .select("*");
 
