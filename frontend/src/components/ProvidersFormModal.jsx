@@ -1,39 +1,43 @@
-import { useState } from 'react';
-import { addProvider } from '../services/api.js';
+import { useState } from "react";
+import { addProvider } from "../services/api.js";
+// import supabase from "../services/supabase.js";
+import { getProfile } from "../services/users.js";
 
 function ProvidersFormModal({ isOpen, onClose, onProviderAdded }) {
-  const [nombre, setNombre] = useState('');
-  const [apellido, setApellido] = useState('');
-  const [telefono, setTelefono] = useState('');
-  const [bankalias, setbankalias] = useState('');
+  const [orgId, seOrgId] = useState("");
+  const [nombre, setNombre] = useState("");
+  const [apellido, setApellido] = useState("");
+  const [telefono, setTelefono] = useState("");
+  const [bankalias, setbankalias] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     // if (!nombre.trim() || !apellido.trim() || !telefono.trim()) {
     //   setError('Nombre, apellido y teléfono son obligatorios');
     //   return;
     // }
-
+    const getOrgId = await getProfile();
+    console.log(getOrgId[0].organization_id);
+    seOrgId(getOrgId[0].organization_id);
     setLoading(true);
     try {
-      await addProvider(nombre, apellido, telefono, bankalias);
-      setNombre('');
-      setApellido('');
-      setTelefono('');
-      setbankalias('');
+      await addProvider(orgId, nombre, apellido, telefono, bankalias);
+      setNombre("");
+      setApellido("");
+      setTelefono("");
+      setbankalias("");
 
       if (onProviderAdded) {
         await onProviderAdded();
       }
       onClose();
-
     } catch (err) {
-      console.error('Error agregando proveedora:', err);
-      setError(err.response?.data?.error || 'Error al agregar la proveedora');
+      console.error("Error agregando proveedora:", err);
+      setError(err.response?.data?.error || "Error al agregar la proveedora");
     } finally {
       setLoading(false);
     }
@@ -47,7 +51,9 @@ function ProvidersFormModal({ isOpen, onClose, onProviderAdded }) {
         <div className="flex items-start justify-between gap-4 p-6 border-b border-slate-700">
           <div>
             <h2 className="text-xl font-semibold">Nueva Proveedora</h2>
-            <p className="text-slate-400 text-sm m-0">Completa los datos de la proveedora</p>
+            <p className="text-slate-400 text-sm m-0">
+              Completa los datos de la proveedora
+            </p>
           </div>
           <button
             type="button"
@@ -61,10 +67,16 @@ function ProvidersFormModal({ isOpen, onClose, onProviderAdded }) {
 
         <form onSubmit={handleSubmit}>
           <div className="p-6 grid gap-4">
-            {error && <div className="text-rose-300 bg-rose-900/20 border border-rose-800 rounded-md p-3">{error}</div>}
+            {error && (
+              <div className="text-rose-300 bg-rose-900/20 border border-rose-800 rounded-md p-3">
+                {error}
+              </div>
+            )}
 
             <div>
-              <label className="text-sm font-medium text-slate-200">Nombre *</label>
+              <label className="text-sm font-medium text-slate-200">
+                Nombre *
+              </label>
               <input
                 type="text"
                 className="w-full mt-2 rounded-lg bg-slate-900/60 border border-slate-700 px-3 py-2 text-slate-100"
@@ -76,7 +88,9 @@ function ProvidersFormModal({ isOpen, onClose, onProviderAdded }) {
             </div>
 
             <div>
-              <label className="text-sm font-medium text-slate-200">Apellido *</label>
+              <label className="text-sm font-medium text-slate-200">
+                Apellido *
+              </label>
               <input
                 type="text"
                 className="w-full mt-2 rounded-lg bg-slate-900/60 border border-slate-700 px-3 py-2 text-slate-100"
@@ -88,7 +102,9 @@ function ProvidersFormModal({ isOpen, onClose, onProviderAdded }) {
             </div>
 
             <div>
-              <label className="text-sm font-medium text-slate-200">Teléfono *</label>
+              <label className="text-sm font-medium text-slate-200">
+                Teléfono *
+              </label>
               <input
                 type="text"
                 className="w-full mt-2 rounded-lg bg-slate-900/60 border border-slate-700 px-3 py-2 text-slate-100"
@@ -100,7 +116,9 @@ function ProvidersFormModal({ isOpen, onClose, onProviderAdded }) {
             </div>
 
             <div>
-              <label className="text-sm font-medium text-slate-200">Alias o CBU (opcional)</label>
+              <label className="text-sm font-medium text-slate-200">
+                Alias o CBU (opcional)
+              </label>
               <input
                 type="text"
                 className="w-full mt-2 rounded-lg bg-slate-900/60 border border-slate-700 px-3 py-2 text-slate-100"
@@ -126,7 +144,7 @@ function ProvidersFormModal({ isOpen, onClose, onProviderAdded }) {
               className="bg-accent text-slate-900 font-semibold rounded-lg px-4 py-2"
               disabled={loading}
             >
-              {loading ? 'Guardando...' : 'Guardar'}
+              {loading ? "Guardando..." : "Guardar"}
             </button>
           </div>
         </form>

@@ -14,3 +14,5 @@ export async function getProfile() {
 
   return data;
 }
+
+export async function getOrganization() {}

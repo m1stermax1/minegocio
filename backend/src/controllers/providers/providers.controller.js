@@ -27,7 +27,7 @@ export async function addNewProvider(nombre, apellido, telefono, bankalias = '')
     //   requestBody: { values },
     // });
 
-    return { success: true, nombre, apellido, telefono };
+    return { success: true, nombre, apellido, telefono, bankalias };
   } catch (err) {
     throw new Error(`Failed to add provider: ${err.message}`);
   }

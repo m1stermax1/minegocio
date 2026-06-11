@@ -34,15 +34,16 @@ export async function fetchProviderPayments() {
   return response.data;
 }
 
-export async function addProvider(nombre, apellido, telefono, bankalias = "") {
+export async function addProvider(orgId, nombre, apellido, telefono, bankalias = "") {
   console.log("pase por el add provider")
   const response = await api.post("/providers/add", {
+    orgId,
     nombre,
     apellido,
     telefono,
     bankalias,
   });
-  console.log(response);
+  console.log("aca hizo el post al endpoint");
   return response.data;
 }
 

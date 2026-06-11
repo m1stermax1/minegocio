@@ -36,9 +36,9 @@ function ProvidersPage() {
       setLoadingProviders(true);
 
       console.log("cargando providers");
-      // const data = await fetchProviders();
-      // console.log(data);
-      // setProviders(data);
+      const providersList = await fetchProviders();
+      console.log(providersList);
+      setProviders(providersList.data);
 
 
     } catch (error) {
@@ -56,7 +56,7 @@ function ProvidersPage() {
   const handleProviderAdded = async () => {
     await loadProviders();
 
-    console.log("pasa por aca?")
+    console.log("despues de guardar me vuelvo a cargar la lista de providers")
 
     // setProvidersRefresh((prev) => prev + 1);
     // setDashboardRefresh((prev) => prev + 1);

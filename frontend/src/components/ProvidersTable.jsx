@@ -60,7 +60,7 @@ function ProvidersTable({ providers = [], inventoryItems = [], loading, onDataCh
         (item) => (item.estado || "").toLowerCase() === "vendido",
       ).length;
 
-      return {
+      return { 
         provider,
         relatedItems,
         productsCount: relatedItems.length,
