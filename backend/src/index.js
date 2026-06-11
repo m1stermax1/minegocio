@@ -5,6 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import inventoryRoutes from "./routes/inventoryRoutes.js";
 import providersRoutes from "./routes/providersRoutes.js";
+import salesRoutes from "./routes/salesRoutes.js";
 
 import authRoutes from "./routes/authRoutes.js";
 
@@ -34,6 +35,7 @@ app.use("/barcodes", express.static(path.join(__dirname, "..", "barcodes")));
 app.use("/api/auth", authRoutes);
 app.use("/providers", providersRoutes);
 app.use("/inventory", inventoryRoutes); 
+app.use("/sales", salesRoutes);
 
 
 

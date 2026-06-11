@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import {
+  fetchInventory,
   fetchDashboardCounts,
   fetchProvidersComplete,
   fetchSales,
@@ -7,15 +8,10 @@ import {
 } from "../services/api.js";
 import Sidebar from "../components/Sidebar.jsx";
 import SearchBar from "../components/SearchBar.jsx";
-
 import ProvidersFormModal from "../components/ProvidersFormModal.jsx";
 import ItemsFormModal from "../components/ItemsFormModal.jsx";
 import SalesModal from "../components/SalesModal.jsx";
 import MessageForProvidersModal from "../components/messagesForProvidersModal.jsx";
-
-
-
-
 
 function StatCard({ title, value, subtitle }) {
   return (
@@ -126,18 +122,19 @@ export default function DashboardPage({
   //   return `$ ${Number(value).toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
   // };
 
-    const loadInventory = async () => {
-      try {
-        setLoadingInventory(true);
-        const data = await fetchInventory();
-        setInventory(data);
-      } catch (error) {
-        console.error("Error cargando inventario:", error);
-        setInventory([]);
-      } finally {
-        setLoadingInventory(false);
-      }
-    };
+  const loadInventory = async () => {
+    try {
+      setLoadingInventory(true);
+      const data = await fetchInventory();
+      setInventory(data);
+    } catch (error) {
+      console.error("Error cargando inventario:", error);
+      setInventory([]);
+    } finally {
+      console.log("llega al finally en el load inventory?");
+      setLoadingInventory(false);
+    }
+  };
   const handleAddItem = () => {
     setShowItemsModal(true);
   };
@@ -147,10 +144,15 @@ export default function DashboardPage({
     showNotification("Item agregado correctamente a la lista.");
   };
   const handleAddSale = async () => {
+    console.log("llega al finally en el load inventory?");
+
+    const updatedInventory = await fetchInventory();
+    setInventory(updatedInventory?.data);
+    console.log("inventario actualizado?", updatedInventory);
+          setLoadingInventory(false);
     if (!inventory.length) {
       await loadInventory();
     }
-
     setShowSaleModal(true);
   };
   const handleProviderAdded = async () => {
@@ -178,10 +180,9 @@ export default function DashboardPage({
   //   }, 3200);
   // };
 
-
   return (
     <div className="min-h-screen md:grid md:grid-cols-[280px_1fr]">
-      <Sidebar activeView="dashboard"/>
+      <Sidebar activeView="dashboard" />
 
       <main className="p-8">
         <div>
@@ -191,9 +192,7 @@ export default function DashboardPage({
                 Panel
               </p>
 
-              <h1 className="text-3xl md:text-4xl m-0">
-                Dashboard
-              </h1>
+              <h1 className="text-3xl md:text-4xl m-0">Dashboard</h1>
             </div>
           </div>
 
@@ -243,7 +242,6 @@ export default function DashboardPage({
                 </>
               )}
             </div>
-
           </section>
         </div>
       </main>
@@ -271,10 +269,10 @@ export default function DashboardPage({
       />
 
       <MessageForProvidersModal
-        // isOpen={showMessagesForProvidersModal}
-        // onClose={() => setShowMessagesForProvidersModal(false)}
-        // sales={sales}
-        // providers={providers}
+      // isOpen={showMessagesForProvidersModal}
+      // onClose={() => setShowMessagesForProvidersModal(false)}
+      // sales={sales}
+      // providers={providers}
       />
     </div>
   );
