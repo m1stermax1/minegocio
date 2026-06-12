@@ -58,9 +58,8 @@ export async function updateInventoryRowStatus(
   return response.data;
 }
 
-export async function addInventoryItem(item) {
-  console.log("Llegamos hasta hacer el post");
-  const response = await api.post("/inventory/add", item);
+export async function addInventoryItem(items) {
+  const response = await api.post("/inventory/add", items);
   return response.data;
 }
 

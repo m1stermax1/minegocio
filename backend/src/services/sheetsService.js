@@ -133,50 +133,50 @@ async function getSheetsClient() {
   };
 }
 
-export async function getInventoryData() {
-  const { sheets, spreadsheetId } = await getSheetsClient();
+// export async function getInventoryData() {
+//   const { sheets, spreadsheetId } = await getSheetsClient();
 
-  const response = await sheets.spreadsheets.get({
-    spreadsheetId,
-    ranges: ["LOCAL MAXI!A:M"],
-    includeGridData: true,
-  });
+//   const response = await sheets.spreadsheets.get({
+//     spreadsheetId,
+//     ranges: ["LOCAL MAXI!A:M"],
+//     includeGridData: true,
+//   });
 
-  const rows = response.data.sheets[0].data[0].rowData || [];
+//   const rows = response.data.sheets[0].data[0].rowData || [];
 
-  return rows
-    .filter((row) => {
-      const cells = row.values || [];
+//   return rows
+//     .filter((row) => {
+//       const cells = row.values || [];
 
-      return cells.some((cell) => {
-        const value =
-          cell?.formattedValue ||
-          cell?.effectiveValue?.stringValue ||
-          cell?.effectiveValue?.numberValue;
+//       return cells.some((cell) => {
+//         const value =
+//           cell?.formattedValue ||
+//           cell?.effectiveValue?.stringValue ||
+//           cell?.effectiveValue?.numberValue;
 
-        return value !== undefined && value !== "";
-      });
-    })
-    .map((row, index) => {
-      const cells = row.values || [];
+//         return value !== undefined && value !== "";
+//       });
+//     })
+//     .map((row, index) => {
+//       const cells = row.values || [];
 
-      const codigo = getCellText(cells[0]);
-      const descripcion = getCellText(cells[1]);
-      const precio = getCellText(cells[2]);
-      const proveedora = getCellText(cells[10]) || "mío";
+//       const codigo = getCellText(cells[0]);
+//       const descripcion = getCellText(cells[1]);
+//       const precio = getCellText(cells[2]);
+//       const proveedora = getCellText(cells[10]) || "mío";
 
-      const estado = getCellText(cells[12]) || "en stock";
+//       const estado = getCellText(cells[12]) || "en stock";
 
-      return {
-        id: index,
-        codigo,
-        descripcion,
-        precio,
-        proveedora,
-        estado,
-      };
-    });
-}
+//       return {
+//         id: index,
+//         codigo,
+//         descripcion,
+//         precio,
+//         proveedora,
+//         estado,
+//       };
+//     });
+// }
 
 export async function getProvidersData() {
   const { sheets, spreadsheetId } = await getSheetsClient();
@@ -570,6 +570,7 @@ export async function setInventoryRowStatus(rowIndex, estado, metodoPago, precio
   });
 }
 
+//Agregar items al excel y generar un codigo de barras
 export async function appendInventoryItems(items) {
   console.log("Items recibidos:", items.length);
   console.log(items);

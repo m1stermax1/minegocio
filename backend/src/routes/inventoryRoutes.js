@@ -1,4 +1,11 @@
 import express from "express";
+import path from "path";
+import { fileURLToPath } from "url";
+import fs from "fs";
+import bwipjs from "bwip-js";
+import sharp from "sharp";
+import crypto from "crypto";
+import { exec } from "child_process";
 import {
   getProvidersData,
   setInventoryRowStatus,
@@ -36,8 +43,97 @@ const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const twilioPhoneNumber = process.env.TWILIO_WHATSAPP_NUMBER;
 const client = twilio(accountSid, authToken);
- 
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const TEMP_DIR = path.join(__dirname, "..", "..", "temp");
+fs.mkdirSync(TEMP_DIR, { recursive: true });
+
+async function generateBarcodeAndPrint(code) {
+  const safeCode = code.replace(/[^A-Za-z0-9_-]/g, "_");
+
+  const filePath = path.join(
+    TEMP_DIR,
+    `${safeCode}-${Date.now()}.png`
+  );
+
+  // Generar barcode chico y nítido
+  const barcodeBuffer = await bwipjs.toBuffer({
+    bcid: "code128",
+    text: code,
+
+    scale: 3,
+    height: 8,
+
+    includetext: true,
+    textxalign: "center",
+    textsize: 7,
+
+    paddingwidth: 0,
+    paddingheight: 0,
+
+    backgroundcolor: "FFFFFF",
+  });
+
+  // Rotar barcode
+  const rotatedBarcode = await sharp(barcodeBuffer)
+    .rotate(90)
+    .resize({
+      width: 90,
+      height: 260,
+      fit: "inside",
+      withoutEnlargement: true,
+    })
+    .png()
+    .toBuffer();
+
+  // Canvas exacto para 1.5cm x 3cm
+  const finalImage = await sharp({
+    create: {
+      width: 96,
+      height: 300,
+      channels: 3,
+      background: "#FFFFFF",
+    },
+  })
+    .composite([
+      {
+        input: rotatedBarcode,
+        gravity: "center",
+      },
+    ])
+    .png()
+    .toBuffer();
+
+  fs.writeFileSync(filePath, finalImage);
+  console.log("INICIO IMPRESION:", code);
+
+  await new Promise((resolve, reject) => {
+    exec(
+      `python -m niimprint -m d110 -c usb -a COM3 --density 3 -i "${filePath}"`,
+      (error, stdout, stderr) => {
+        console.log("FIN IMPRESION:", code);
+        console.log("STDOUT:", stdout);
+        console.log("STDERR:", stderr);
+
+        if (error) {
+          reject(stderr || error.message);
+          return;
+        }
+
+        resolve();
+      }
+    );
+  });
+
+  fs.unlinkSync(filePath);
+
+
+  return {
+    success: true,
+    code,
+  };
+}
 
 router.get("/", async (req, res) => {
   try {
@@ -49,9 +145,8 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/add", async (req, res) => {  
+router.post("/add", async (req, res) => {
   const items = Array.isArray(req.body) ? req.body : [req.body];
-  console.log("Llegan los items al add:", items);
 
   if (!items.length) {
     return res
@@ -60,8 +155,8 @@ router.post("/add", async (req, res) => {
   }
 
   const preparedItems = [];
-
   for (const item of items) {
+    const codigo = `INV${crypto.randomUUID().split("-")[0].toUpperCase()}`;
     const nombre = item.nombre?.toString().trim();
     const precio = item.precio?.toString().trim();
     const proveedora = item.proveedora?.toString().trim();
@@ -82,18 +177,27 @@ router.post("/add", async (req, res) => {
       return res.status(400).json({ error: "Precio inválido" });
     }
 
-    preparedItems.push({ nombre, precio: precioNumero, proveedora, orgId, providerName });
+    preparedItems.push({ nombre, precio: precioNumero, proveedora, orgId, providerName, barcode: codigo });
+
+    // imprimir etiqueta
+    await generateBarcodeAndPrint(codigo);
+    console.log("ESPERANDO 5 SEGUNDOS");
+
+    await new Promise(resolve => setTimeout(resolve, 2000));
   }
 
+
+
   try {
-    console.log("Items preparados: ",preparedItems)
     const result = await addItemToInventory(preparedItems);
-    // const barcodeUrls = result.generatedBarcodes.map(
+
+    // const barcodeUrls = result?.data?.generatedBarcodes.map(
     //   ({ codigo, fileName }) => ({
     //     codigo,
     //     url: `/barcodes/${fileName}`,
     //   }),
     // );
+    console.log("Lista de codigos de barras: ", barcodeUrls);
     res.json({ success: true, barcodes: "test" });
   } catch (error) {
     console.error("Error agregando item en Sheets:", error);

@@ -29,7 +29,7 @@ export const addItemToInventory = async (preparedItems) => {
   try {
     console.log("Llegamos al addItemToInventory");
 
-    const payload = preparedItems?.map((item) => ({ organization_id: item?.orgId, provider_id: item?.proveedora, description: item?.nombre, price: item?.precio, status: 'AVAILABLE', providerName: item?.providerName}));
+    const payload = preparedItems?.map((item) => ({ organization_id: item?.orgId, provider_id: item?.proveedora, description: item?.nombre, price: item?.precio, status: 'AVAILABLE', providerName: item?.providerName, barcode: item?.barcode}));
 
     const { data, error } = await supabase
       .from('inventory')
