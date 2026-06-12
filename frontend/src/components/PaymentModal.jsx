@@ -1,7 +1,15 @@
 import { useState } from "react";
-import { sendWhatsAppMessage, createMercadoPagoTransfer } from "../services/api.js";
+import {
+  sendWhatsAppMessage,
+  createMercadoPagoTransfer,
+} from "../services/api.js";
 
-export default function PaymentModal({ isOpen, onClose, payment = null, onPaymentUpdated }) {
+export default function PaymentModal({
+  isOpen,
+  onClose,
+  payment = null,
+  onPaymentUpdated,
+}) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -11,22 +19,27 @@ export default function PaymentModal({ isOpen, onClose, payment = null, onPaymen
   }
 
   const proveedora = payment.proveedora;
-  const itemsText = payment.items.map((item) => `${item.descripcion || item.nombre}`).join("\n");
-  const bulletList = itemsText.split('\n').map(i => `- ${i}`).join('\n');
+  const itemsText = payment.items
+    .map((item) => `${item.descripcion || item.nombre}`)
+    .join("\n");
+  const bulletList = itemsText
+    .split("\n")
+    .map((i) => `- ${i}`)
+    .join("\n");
   const itemCount = payment.items.length;
 
-  const messageText = itemCount === 1
-    ? `Hola! <3
+  const messageText =
+    itemCount === 1
+      ? `Hola! <3
 Se vendió esta prenda de la lista:
 ${bulletList}
 
 De Viernes a Domingo hacemos transferencias!`
-    : `Hola! <3
+      : `Hola! <3
 Se vendieron estas prendas de la lista:
 ${bulletList}
 
 De Viernes a Domingo hacemos transferencias!`;
-
 
   const handleSendWhatsApp = async () => {
     setError("");
@@ -89,8 +102,13 @@ De Viernes a Domingo hacemos transferencias!`;
       <div className="w-full max-w-lg bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden max-h-[90vh]">
         <div className="flex items-start justify-between gap-4 p-6 border-b border-slate-700">
           <div>
-            <h2 className="text-xl font-semibold">Pago a {proveedora?.nombre}</h2>
-            <p className="text-slate-400 text-sm m-0">{itemCount} producto{itemCount !== 1 ? "s" : ""} vendido{itemCount !== 1 ? "s" : ""}</p>
+            <h2 className="text-xl font-semibold">
+              Pago a {proveedora?.nombre}
+            </h2>
+            <p className="text-slate-400 text-sm m-0">
+              {itemCount} producto{itemCount !== 1 ? "s" : ""} vendido
+              {itemCount !== 1 ? "s" : ""}
+            </p>
           </div>
           <button
             type="button"
@@ -104,7 +122,11 @@ De Viernes a Domingo hacemos transferencias!`;
         </div>
 
         <div className="p-6 overflow-y-auto">
-          {error && <div className="text-rose-300 bg-rose-900/20 border border-rose-800 rounded-md p-3">{error}</div>}
+          {error && (
+            <div className="text-rose-300 bg-rose-900/20 border border-rose-800 rounded-md p-3">
+              {error}
+            </div>
+          )}
           {success && (
             <div className="p-3 bg-emerald-900/20 text-emerald-300 border border-emerald-800 rounded-md mb-4">
               {success}
@@ -126,10 +148,14 @@ De Viernes a Domingo hacemos transferencias!`;
                     <tr key={index}>
                       <td>{item.descripcion || item.nombre || "-"}</td>
                       <td>
-                        ${Number(item.precioProveedora || 0).toLocaleString("es-AR", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
+                        $
+                        {Number(item.precioProveedora || 0).toLocaleString(
+                          "es-AR",
+                          {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          },
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -140,13 +166,23 @@ De Viernes a Domingo hacemos transferencias!`;
           <div className="mb-6 p-4 bg-slate-900/20 border border-slate-700 rounded-lg">
             <div className="flex items-center justify-between">
               <span className="text-sm">Total a transferir</span>
-              <strong className="text-lg text-accent">${Number(payment.totalProvider || 0).toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+              <strong className="text-lg text-accent">
+                $
+                {Number(payment.totalProvider || 0).toLocaleString("es-AR", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </strong>
             </div>
           </div>
 
           <div className="mb-6 p-4 bg-slate-900/20 border border-slate-700 rounded-lg">
-            <p className="mb-3 text-sm font-semibold text-accent">Mensaje que se enviará:</p>
-            <p className="text-sm whitespace-pre-wrap text-slate-200">{messageText}</p>
+            <p className="mb-3 text-sm font-semibold text-accent">
+              Mensaje que se enviará:
+            </p>
+            <p className="text-sm whitespace-pre-wrap text-slate-200">
+              {messageText}
+            </p>
           </div>
 
           <div className="flex flex-col gap-3 mb-6">

@@ -31,8 +31,14 @@ export async function fetchProviderPayments() {
   return response.data;
 }
 
-export async function addProvider(orgId, nombre, apellido, telefono, bankalias = "") {
-  console.log("pase por el add provider")
+export async function addProvider(
+  orgId,
+  nombre,
+  apellido,
+  telefono,
+  bankalias = "",
+) {
+  console.log("pase por el add provider");
   const response = await api.post("/providers/add", {
     orgId,
     nombre,
@@ -79,7 +85,8 @@ export async function fetchOwnerTotal() {
 }
 
 export async function createSale(payload) {
-  const response = await api.post("/inventory/sales", payload);
+  console.log("Dentro de create sale");
+  const response = await api.post("/sales/add", payload);
   return response.data;
 }
 
