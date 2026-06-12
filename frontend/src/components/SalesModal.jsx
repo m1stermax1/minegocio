@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createSale } from "../services/api.js";
+import { getProfile } from "../services/users.js";
 
 const formatPrice = (value) => {
   const number = Number(value);
@@ -113,14 +114,17 @@ export default function SalesModal({
 
     setLoading(true);
     try {
-      console.log("Cargando venta");
+      const perfil = await getProfile();
       await createSale({
+        orgId: perfil[0]?.organization_id,
+        totalSale: selectedTotal,
         items: selectedItems.map((item) => ({
           id: item.id,
           codigo: item.barcode,
           descripcion: item.description,
           precio: item.price,
           proveedora: item.provider_id,
+          orgId: item.organization_id,
         })),
         metodoPago: paymentMethod,
       });

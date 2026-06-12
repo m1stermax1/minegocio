@@ -122,6 +122,19 @@ export default function DashboardPage({
   //   return `$ ${Number(value).toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
   // };
 
+  const loadSales = async () => {
+    try {
+      setLoadingSales(true);
+      const data = await fetchSales();
+      setSales(data);
+    } catch (error) {
+      console.error("Error cargando ventas:", error);
+      setSales([]);
+    } finally {
+      setLoadingSales(false);
+    }
+  };
+
   const loadInventory = async () => {
     try {
       setLoadingInventory(true);
@@ -149,7 +162,7 @@ export default function DashboardPage({
     const updatedInventory = await fetchInventory();
     setInventory(updatedInventory?.data);
     console.log("inventario actualizado?", updatedInventory);
-          setLoadingInventory(false);
+    setLoadingInventory(false);
     if (!inventory.length) {
       await loadInventory();
     }
@@ -163,6 +176,7 @@ export default function DashboardPage({
 
     showNotification("Proveedora agregada correctamente.");
   };
+  
   const handleSaleCreated = () => {
     loadInventory();
     loadSales();
