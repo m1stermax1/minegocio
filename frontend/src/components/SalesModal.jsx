@@ -22,6 +22,7 @@ export default function SalesModal({
   const [paymentMethod, setPaymentMethod] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [notification, setNotification] = useState("");
 
   const availableItems = useMemo(() => {
     console.log("Lista de items: ", inventoryItems);
@@ -115,7 +116,7 @@ export default function SalesModal({
     setLoading(true);
     try {
       const perfil = await getProfile();
-      await createSale({
+      const salesCreated = await createSale({
         orgId: perfil[0]?.organization_id,
         totalSale: selectedTotal,
         items: selectedItems.map((item) => ({
@@ -138,10 +139,14 @@ export default function SalesModal({
       }
 
       onClose();
+      console.log("Respuesta del createSale: ", salesCreated)
+
+      return salesCreated;
     } catch (err) {
       console.error("Error cargando venta:", err);
       setError(err.response?.data?.error || "No se pudo guardar la venta.");
     } finally {
+
       setLoading(false);
     }
   };

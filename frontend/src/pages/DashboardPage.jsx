@@ -35,14 +35,16 @@ export default function DashboardPage({
   // const [totalOwner, setTotalOwner] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  const [dashboardRefresh, setDashboardRefresh] = useState(0);
+
   const [providers, setProviders] = useState([]);
   const [providersRefresh, setProvidersRefresh] = useState(0);
 
   const [inventory, setInventory] = useState([]);
 
-  // const [sales, setSales] = useState([]);
+  const [sales, setSales] = useState([]);
 
-  // const [notification, setNotification] = useState("");
+  const [notification, setNotification] = useState("");
 
   const [showItemsModal, setShowItemsModal] = useState(false);
   const [showSaleModal, setShowSaleModal] = useState(false);
@@ -54,6 +56,14 @@ export default function DashboardPage({
   const [loadingProviders, setLoadingProviders] = useState(false);
   const [loadingSales, setLoadingSales] = useState(false);
   const [loadingPayments, setLoadingPayments] = useState(false);
+
+    const showNotification = (message) => {
+    setNotification(message);
+
+    window.setTimeout(() => {
+      setNotification("");
+    }, 3200);
+  };
 
   // const parseSaleDate = (dateString) => {
   //   if (!dateString) return null;

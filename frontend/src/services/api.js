@@ -85,8 +85,8 @@ export async function fetchOwnerTotal() {
 }
 
 export async function createSale(payload) {
-  console.log("Dentro de create sale");
   const response = await api.post("/sales/add", payload);
+  console.log("Respuesta del createSale: ", response.data)
   return response.data;
 }
 

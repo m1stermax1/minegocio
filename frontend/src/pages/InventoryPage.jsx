@@ -22,20 +22,8 @@ import {
   fetchProviderPayments,
 } from "../services/api.js";
 
-const PAGE_TITLES = {
-  dashboard: "Dashboard",
-  inventory: "Inventario",
-  providers: "Proveedoras",
-  ventas: "Ventas",
-  pagos: "Pagos",
-  facturacion: "Facturación",
-};
-
 function InventoryPage() {
   const inventoryTableRef = useRef(null);
-
-  // const [activeView, setActiveView] = useState("dashboard");
-
   const [inventory, setInventory] = useState([]);
   const [providers, setProviders] = useState([]);
   const [sales, setSales] = useState([]);
@@ -44,7 +32,6 @@ function InventoryPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [notification, setNotification] = useState("");
 
-  const [dashboardRefresh, setDashboardRefresh] = useState(0);
   const [providersRefresh, setProvidersRefresh] = useState(0);
 
   const [loadingInventory, setLoadingInventory] = useState(true);
@@ -166,20 +153,20 @@ function InventoryPage() {
   };
 
 
-  // const filteredInventory = useMemo(() => {
-  //   const query = searchQuery.trim().toLowerCase();
+  const filteredInventory = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
 
-  //   if (!query) {
-  //     return inventory;
-  //   }
+    if (!query) {
+      return inventory?.data;
+    }
 
-  //   return inventory.filter(({ codigo, descripcion }) => {
-  //     return (
-  //       codigo?.toLowerCase().includes(query) ||
-  //       descripcion?.toLowerCase().includes(query)
-  //     );
-  //   });
-  // }, [inventory, searchQuery]);
+    return inventory?.data?.filter(({ barcode, description }) => {
+      return (
+        barcode?.toLowerCase().includes(query) ||
+        description?.toLowerCase().includes(query)
+      );
+    });
+  }, [inventory, searchQuery]);
 
   // const filteredProviders = useMemo(() => {
   //   const query = searchQuery.trim().toLowerCase();
@@ -245,14 +232,14 @@ function InventoryPage() {
           )}
           <InventoryTable
             ref={inventoryTableRef}
-            items={inventory?.data}
+            items={filteredInventory}
             loading={loadingInventory}
             onItemAdded={handleItemAdded}
             providers={providers}
           />
         </section>
       </main>
-
+ 
       <ItemsFormModal
         isOpen={showItemsModal}
         onClose={() => setShowItemsModal(false)}

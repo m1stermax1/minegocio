@@ -16,13 +16,10 @@ router.get("/", async (req, res) => {
 
 router.post("/add", async (req, res) => {
   try {
-    console.log("Dentro del endpoint add", req.body);
-    const itemsId = req.body.items?.map((item) => item?.id);
-    console.log("Listas de id", itemsId);
+    const itemsId = req.body.items;
 
     const payload = {
       organization_id: req.body?.orgId,
-      products: itemsId,
       amount: req.body?.totalSale,
       payment_method: req.body?.metodoPago,
     };

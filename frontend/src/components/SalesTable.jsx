@@ -1,13 +1,10 @@
 import { Fragment, useState, useMemo } from "react";
-import { getInventory } from "../../../backend/src/controllers/inventory/inventory.controller";
 
 export default function SalesTable({ sales = [] }) {
   const [expandedSale, setExpandedSale] = useState(null);
   const [dateFilter, setDateFilter] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
-
-  console.log("Sales en sale table: ", sales)
 
   const toggleExpanded = (index) => {
     setExpandedSale((prev) => (prev === index ? null : index));
@@ -28,39 +25,34 @@ export default function SalesTable({ sales = [] }) {
   };
 
   const filteredSales = useMemo(() => {
-    
 
     return sales?.data?.filter((sale) => {
-      const saleDate = new Date(sale?.data?.sale_date);
+      const saleDate = sale?.sale_date?.split("T")[0];
 
       if (!saleDate) return true;
 
       if (dateFilter) {
-        const filterDate = new Date(dateFilter);
-        return saleDate.toDateString() === filterDate.toDateString();
+        return saleDate === dateFilter;
       }
 
       if (dateFrom) {
-        const fromDate = new Date(dateFrom);
-        if (saleDate < fromDate) return false;
+        if (saleDate < dateFrom) return false;
       }
 
       if (dateTo) {
-        const toDate = new Date(dateTo);
-        toDate.setHours(23, 59, 59);
+        const toDate = dateTo;
         if (saleDate > toDate) return false;
       }
 
       return true;
     });
   }, [sales, dateFilter, dateFrom, dateTo]);
-        console.log("Pasa poraca?", sales?.data)
+
+  console.log("Sales filtradas: ", filteredSales)
 
   if (!sales?.data?.length) {
     return <div className="table-state">No se encontraron ventas.</div>;
   }
-
-
 
   return (
     <div className="overflow-x-auto">
@@ -154,7 +146,7 @@ export default function SalesTable({ sales = [] }) {
         </div>
         <button
           className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2"
-          // onClick={handleAddSale}
+        // onClick={handleAddSale}
         >
           Agregar venta
         </button>
