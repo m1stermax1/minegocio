@@ -1,7 +1,18 @@
 import express from "express";
 import { supabase } from "../services/supabaseService.js";
+import { getSales } from "../controllers/sales/sales.controller.js";
 
 const router = express.Router();
+
+router.get("/", async (req, res) => {
+  try {
+    const inventory = await getSales();
+    res.json(inventory);
+  } catch (error) {
+    console.error("Error al cargar inventario:", error);
+    res.status(500).json({ error: "No se pudo cargar el inventario" });
+  }
+});
 
 router.post("/add", async (req, res) => {
   try {

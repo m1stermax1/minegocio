@@ -12,14 +12,14 @@ function ProvidersTable({ providers = [], inventoryItems = [], loading, onDataCh
   const normalize = (value) => (value || "").toString().trim().toLowerCase();
 
   const getProviderFullName = (provider) =>
-    `${provider.nombre || ""} ${provider.apellido || ""}`.trim();
+    `${provider.first_name || ""} ${provider.last_name || ""}`.trim();
 
   const providerKeyByLowerName = useMemo(() => {
     const mapping = new Map();
     providers.forEach((provider) => {
       const fullName = getProviderFullName(provider);
       const lowerFullName = normalize(fullName);
-      const lowerName = normalize(provider.nombre);
+      const lowerName = normalize(provider.first_name);
 
       if (lowerName) {
         mapping.set(lowerName, fullName);
@@ -35,7 +35,7 @@ function ProvidersTable({ providers = [], inventoryItems = [], loading, onDataCh
     const result = new Map();
 
     inventoryItems.forEach((item) => {
-      const itemProvider = normalize(item.proveedora);
+      const itemProvider = normalize(item.id);
       const mappedProvider = providerKeyByLowerName.get(itemProvider) || itemProvider;
       const providerName = mappedProvider || "Sin nombre";
 
@@ -160,14 +160,14 @@ function ProvidersTable({ providers = [], inventoryItems = [], loading, onDataCh
           <tbody>
             {providerRows.map((row, index) => {
               const fullName = getProviderFullName(row.provider);
-              const displayName = fullName || row.provider.nombre || "Sin nombre";
+              const displayName = fullName || row.provider.first_name || "Sin nombre";
               const isExpanded = expandedProviders.has(displayName);
 
               return (
                 <Fragment key={`${displayName}-${index}`}>
                   <tr className="provider-group-row">
                     <td className="text-center">{displayName}</td>
-                    <td className="text-center">{row.provider.telefono || "-"}</td>
+                    <td className="text-center">{row.provider.phone || "-"}</td>
                     <td className="text-center">{row.productsCount}</td>
                     <td className="text-center">{row.soldCount}</td>
                     <td className="text-center">{formatPrice(row.totalGain)}</td>

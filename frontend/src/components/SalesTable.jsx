@@ -1,10 +1,13 @@
 import { Fragment, useState, useMemo } from "react";
+import { getInventory } from "../../../backend/src/controllers/inventory/inventory.controller";
 
 export default function SalesTable({ sales = [] }) {
   const [expandedSale, setExpandedSale] = useState(null);
   const [dateFilter, setDateFilter] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+
+  console.log("Sales en sale table: ", sales)
 
   const toggleExpanded = (index) => {
     setExpandedSale((prev) => (prev === index ? null : index));
@@ -25,8 +28,11 @@ export default function SalesTable({ sales = [] }) {
   };
 
   const filteredSales = useMemo(() => {
-    return sales.filter((sale) => {
-      const saleDate = sale.fecha ? new Date(sale.fecha) : null;
+    
+
+    return sales?.data?.filter((sale) => {
+      const saleDate = new Date(sale?.data?.sale_date);
+
       if (!saleDate) return true;
 
       if (dateFilter) {
@@ -48,10 +54,13 @@ export default function SalesTable({ sales = [] }) {
       return true;
     });
   }, [sales, dateFilter, dateFrom, dateTo]);
+        console.log("Pasa poraca?", sales?.data)
 
-  if (!sales.length) {
+  if (!sales?.data?.length) {
     return <div className="table-state">No se encontraron ventas.</div>;
   }
+
+
 
   return (
     <div className="overflow-x-auto">
@@ -166,12 +175,12 @@ export default function SalesTable({ sales = [] }) {
             <Fragment key={`sale-${index}`}>
               <tr>
                 <td className="text-center text-sm font-medium">
-                  {formatDateArg(sale.fecha)}
+                  {formatDateArg(sale.sale_date)}
                 </td>
-                <td className="text-center">{sale.metodoPago || "-"}</td>
+                <td className="text-center">{sale.payment_method || "-"}</td>
                 <td className="text-center">
                   $
-                  {Number(sale.montoTotal || 0).toLocaleString("es-AR", {
+                  {Number(sale.amount || 0).toLocaleString("es-AR", {
                     minimumFractionDigits: 0,
                     maximumFractionDigits: 2,
                   })}
@@ -201,10 +210,10 @@ export default function SalesTable({ sales = [] }) {
                           </tr>
                         </thead>
                         <tbody>
-                          {sale.items?.map((item, itemIndex) => (
+                          {sale?.data?.products?.map((item, itemIndex) => (
                             <tr key={`${index}-${itemIndex}`}>
                               <td className="text-center">
-                                {item.codigo || "-"}
+                                {item.id || "-"}
                               </td>
                               <td className="text-center">
                                 {item.descripcion || "-"}

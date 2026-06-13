@@ -75,7 +75,7 @@ export async function fetchDashboardCounts() {
 }
 
 export async function fetchSales() {
-  const response = await api.get("/inventory/sales");
+  const response = await api.get("/sales");
   return response.data;
 }
 

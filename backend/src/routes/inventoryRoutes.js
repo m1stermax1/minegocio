@@ -11,7 +11,6 @@ import {
   setInventoryRowStatus,
   appendInventoryItems,
   getProvidersListComplete,
-  getSalesData,
   appendSaleRecord,
   appendProviderPaymentOrders,
   appendInvoiceRecord,
