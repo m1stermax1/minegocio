@@ -1,9 +1,7 @@
 import { Fragment, useState, useMemo } from "react";
 import PaymentModal from "./PaymentModal.jsx";
 
-import {
-  updatePaymentStatus,
-} from "../services/api.js";
+import { updatePaymentStatus } from "../services/api.js";
 
 export default function PaymentsTable({
   payments = [],
@@ -41,9 +39,8 @@ export default function PaymentsTable({
       return data.find(
         (p) =>
           p.nombre?.toLowerCase() === provName?.toLowerCase() ||
-          `${p.nombre || ""} ${p.apellido || ""}`
-            .trim()
-            .toLowerCase() === provName?.toLowerCase(),
+          `${p.nombre || ""} ${p.apellido || ""}`.trim().toLowerCase() ===
+            provName?.toLowerCase(),
       );
     } catch (err) {
       console.error("Error fetching complete providers:", err);
@@ -125,7 +122,9 @@ Muchas gracias.`;
 
   if (providerNames.length === 0) {
     return (
-      <div className="table-state">No hay órdenes de pago en la hoja pagos maxi.</div>
+      <div className="table-state">
+        No hay órdenes de pago en la hoja pagos maxi.
+      </div>
     );
   }
 
@@ -156,8 +155,8 @@ Muchas gracias.`;
               const statusLabel = allPaid
                 ? "Pagado"
                 : anyContacted
-                ? "Contactado"
-                : "Pendiente";
+                  ? "Contactado"
+                  : "Pendiente";
 
               return (
                 <Fragment key={`provider-${provName}`}>
@@ -165,7 +164,8 @@ Muchas gracias.`;
                     <td className="text-center">{provName}</td>
                     <td className="text-center">{items.length}</td>
                     <td className="text-center">
-                      ${totalProvider.toLocaleString("es-AR", {
+                      $
+                      {totalProvider.toLocaleString("es-AR", {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}
@@ -176,8 +176,8 @@ Muchas gracias.`;
                           allPaid
                             ? "bg-emerald-800/40 text-emerald-300 border border-emerald-700"
                             : anyContacted
-                            ? "bg-blue-800/40 text-blue-200 border border-blue-700"
-                            : "bg-amber-900/40 text-amber-200 border border-amber-700"
+                              ? "bg-blue-800/40 text-blue-200 border border-blue-700"
+                              : "bg-amber-900/40 text-amber-200 border border-amber-700"
                         }`}
                       >
                         {statusLabel}
@@ -190,19 +190,25 @@ Muchas gracias.`;
                           className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2"
                           onClick={() => toggleExpanded(provName)}
                         >
-                          {expandedProvider === provName ? "Ocultar" : "Ver detalles"}
+                          {expandedProvider === provName
+                            ? "Ocultar"
+                            : "Ver detalles"}
                         </button>
                         <button
                           type="button"
                           className="bg-accent text-slate-900 font-semibold rounded-lg px-4 py-2"
-                          onClick={() => handleContactToProvider(provName, items)}
+                          onClick={() =>
+                            handleContactToProvider(provName, items)
+                          }
                         >
                           Contactar
                         </button>
                         <button
                           type="button"
                           className="bg-slate-700 text-slate-100 rounded-lg px-4 py-2"
-                          onClick={() => alert("Transferir aún no está disponible.")}
+                          onClick={() =>
+                            alert("Transferir aún no está disponible.")
+                          }
                         >
                           Transferir
                         </button>
@@ -219,13 +225,17 @@ Muchas gracias.`;
                               <tr>
                                 <th>Código</th>
                                 <th>Descripción</th>
-                                <th className="text-right">Valor para proveedora (60%)</th>
+                                <th className="text-right">
+                                  Valor para proveedora (60%)
+                                </th>
                                 <th className="text-center">Estado</th>
                               </tr>
                             </thead>
                             <tbody>
                               {items.map((item, itemIndex) => {
-                                const precioSugerido = Number(item.precioSugerido || item.precio) || 0;
+                                const precioSugerido =
+                                  Number(item.precioSugerido || item.precio) ||
+                                  0;
                                 const precioProveedora = precioSugerido * 0.6;
 
                                 return (
@@ -233,13 +243,21 @@ Muchas gracias.`;
                                     key={`${provName}-${itemIndex}`}
                                     className="odd:bg-slate-900/20"
                                   >
-                                    <td className="text-center">{item.codigo || "-"}</td>
-                                    <td className="text-center">{item.descripcion || "-"}</td>
+                                    <td className="text-center">
+                                      {item.codigo || "-"}
+                                    </td>
+                                    <td className="text-center">
+                                      {item.descripcion || "-"}
+                                    </td>
                                     <td className="text-right">
-                                      ${precioProveedora.toLocaleString("es-AR", {
-                                        minimumFractionDigits: 2,
-                                        maximumFractionDigits: 2,
-                                      })}
+                                      $
+                                      {precioProveedora.toLocaleString(
+                                        "es-AR",
+                                        {
+                                          minimumFractionDigits: 2,
+                                          maximumFractionDigits: 2,
+                                        },
+                                      )}
                                     </td>
                                     <td className="text-center">
                                       {item.estado || "pendiente"}

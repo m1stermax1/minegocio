@@ -2,7 +2,7 @@ import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
-import bwipjs from "bwip-js";
+import bwipjs from "bwip-js"; 
 import sharp from "sharp";
 import crypto from "crypto";
 import { exec } from "child_process";
@@ -35,6 +35,7 @@ import {
 } from "../services/mercadoPagoService.js";
 import twilio from "twilio";
 import { getInventory, addItemToInventory } from "../controllers/inventory/inventory.controller.js";
+import { supabase } from "../services/supabaseService.js";
 
 const router = express.Router();
 
@@ -179,7 +180,7 @@ router.post("/add", async (req, res) => {
     preparedItems.push({ nombre, precio: precioNumero, proveedora, orgId, providerName, barcode: codigo });
 
     // imprimir etiqueta
-    await generateBarcodeAndPrint(codigo);
+    // await generateBarcodeAndPrint(codigo);
     console.log("ESPERANDO 5 SEGUNDOS");
 
     await new Promise(resolve => setTimeout(resolve, 2000));
@@ -196,7 +197,7 @@ router.post("/add", async (req, res) => {
     //     url: `/barcodes/${fileName}`,
     //   }),
     // );
-    console.log("Lista de codigos de barras: ", barcodeUrls);
+    // console.log("Lista de codigos de barras: ", barcodeUrls);
     res.json({ success: true, barcodes: "test" });
   } catch (error) {
     console.error("Error agregando item en Sheets:", error);
@@ -204,30 +205,48 @@ router.post("/add", async (req, res) => {
   }
 });
 
-router.put("/:id/status", async (req, res) => {
-  const rowIndex = Number(req.params.id);
-  const { estado, metodoPago, precioVentaManual } = req.body;
+// router.put("/:id/status", async (req, res) => {
+//   const rowIndex = Number(req.params.id);
+//   const { estado, metodoPago, precioVentaManual } = req.body;
 
-  if (Number.isNaN(rowIndex) || rowIndex < 0) {
-    return res.status(400).json({ error: "ID de fila inválido" });
+//   if (Number.isNaN(rowIndex) || rowIndex < 0) {
+//     return res.status(400).json({ error: "ID de fila inválido" });
+//   }
+
+//   if (!estado || !["vendido", "en stock"].includes(estado.toLowerCase())) {
+//     return res.status(400).json({ error: "Estado inválido" });
+//   }
+
+//   try {
+//     await setInventoryRowStatus(
+//       rowIndex,
+//       estado,
+//       metodoPago,
+//       precioVentaManual,
+//     );
+//     res.json({ success: true });
+//   } catch (error) {
+//     console.error("Error actualizando estado en Sheets:", error);
+//     res.status(500).json({ error: "No se pudo actualizar el estado" });
+//   }
+// });
+router.patch("/:id/status", async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  console.log("Llego aca?", req.body)
+
+  const { data, error } = await supabase
+    .from("inventory")
+    .update({ status })
+    .eq("id", id)
+    .select();
+
+  if (error) {
+    return res.status(500).json(error);
   }
 
-  if (!estado || !["vendido", "en stock"].includes(estado.toLowerCase())) {
-    return res.status(400).json({ error: "Estado inválido" });
-  }
-
-  try {
-    await setInventoryRowStatus(
-      rowIndex,
-      estado,
-      metodoPago,
-      precioVentaManual,
-    );
-    res.json({ success: true });
-  } catch (error) {
-    console.error("Error actualizando estado en Sheets:", error);
-    res.status(500).json({ error: "No se pudo actualizar el estado" });
-  }
+  res.json(data);
 });
 
 // Endpoints para Proveedoras

@@ -44,4 +44,36 @@ router.post("/add", async (req, res) => {
   }
 });
 
+router.post("/add-sale-item", async (req, res) => {
+  try {
+    const payload = req.body;
+
+    const salesItems = req.body?.items?.map((item) => ({sale_id: req.body?.saleId, product_id: item?.id, quantity: 1, unit_price: item?.price}))
+
+    console.log("llegue: ", salesItems)
+
+    const { data, error } = await supabase
+      .from("sale_items")
+      .insert(salesItems)
+      .select();
+
+       console.log("llegue: ", salesItems)
+
+    if (error) {
+      throw error;
+    }
+
+    return res.status(201).json({
+      success: true,
+      data: data,
+    });
+
+    // res.json(inventory);
+  } catch (error) {
+    console.log("Error guardando venta: ", error)
+  }
+});
+
+
+
 export default router;

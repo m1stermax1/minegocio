@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { createSale } from "../services/api.js";
+import { createSale, createSalesItem } from "../services/api.js";
 import { getProfile } from "../services/users.js";
+import { fetchInventory, updateInventoryRowStatus} from "../services/api.js";
 
 const formatPrice = (value) => {
   const number = Number(value);
@@ -119,17 +120,19 @@ export default function SalesModal({
       const salesCreated = await createSale({
         orgId: perfil[0]?.organization_id,
         totalSale: selectedTotal,
-        items: selectedItems.map((item) => ({
-          id: item.id,
-          codigo: item.barcode,
-          descripcion: item.description,
-          precio: item.price,
-          proveedora: item.provider_id,
-          orgId: item.organization_id,
-        })),
+        // items: selectedItems.map((item) => ({
+        //   id: item.id,
+        //   codigo: item.barcode,
+        //   descripcion: item.description,
+        //   precio: item.price,
+        //   proveedora: item.provider_id,
+        //   orgId: item.organization_id,
+        // })),
         metodoPago: paymentMethod,
       });
 
+      // const salesCreated = "";
+      
       setSelectedItems([]);
       setPaymentMethod("");
       setSearchTerm("");
@@ -139,7 +142,12 @@ export default function SalesModal({
       }
 
       onClose();
-      console.log("Respuesta del createSale: ", salesCreated)
+      const createSaleItem = await createSalesItem({saleId: salesCreated?.data[0]?.id, items: selectedItems});
+      selectedItems?.forEach(element => {
+        updateInventoryRowStatus(element?.id, element?.status);
+      });
+      console.log("Available Items: ", selectedItems)
+      // console.log("Respuesta del que sale: ", queSale)
 
       return salesCreated;
     } catch (err) {

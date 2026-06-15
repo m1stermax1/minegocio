@@ -53,13 +53,9 @@ export async function addProvider(
 export async function updateInventoryRowStatus(
   id,
   estado,
-  metodoPago,
-  precioVentaManual,
 ) {
-  const response = await api.put(`/inventory/${id}/status`, {
-    estado,
-    metodoPago,
-    precioVentaManual,
+  const response = await api.patch(`/inventory/${id}/status`, {
+    status: estado == 'AVAILABLE' ? "SOLD" : "AVAILABLE",
   });
   return response.data;
 }
@@ -70,7 +66,7 @@ export async function addInventoryItem(items) {
 }
 
 export async function fetchDashboardCounts() {
-  const response = await api.get("/inventory/counts");
+  const response = await api.get("/dashboard/counts");
   return response.data;
 }
 
@@ -86,8 +82,14 @@ export async function fetchOwnerTotal() {
 
 export async function createSale(payload) {
   const response = await api.post("/sales/add", payload);
-  console.log("Respuesta del createSale: ", response.data)
+  console.log("Respuesta del createSale: ", response.data);
   return response.data;
+}
+
+export async function createSalesItem(payload) {
+  const response = await api.post("/sales/add-sale-item", payload);
+  console.log("Pasa por el craete: ", payload);
+    return response.data;
 }
 
 export async function fetchInvoices() {

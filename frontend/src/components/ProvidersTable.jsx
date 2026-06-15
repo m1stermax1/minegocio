@@ -2,8 +2,12 @@ import { Fragment, useMemo, useState } from "react";
 import ProvidersFormModal from "./ProvidersFormModal.jsx";
 import ItemsFormModal from "./ItemsFormModal.jsx";
 
-function ProvidersTable({ providers = [], inventoryItems = [], loading, onDataChange }) {
-  console.log(providers)
+function ProvidersTable({
+  providers = [],
+  inventoryItems = [],
+  loading,
+  onDataChange,
+}) {
   const [expandedProviders, setExpandedProviders] = useState(new Set());
   const [showProvidersModal, setShowProvidersModal] = useState(false);
   const [showItemsModal, setShowItemsModal] = useState(false);
@@ -11,32 +15,25 @@ function ProvidersTable({ providers = [], inventoryItems = [], loading, onDataCh
 
   const normalize = (value) => (value || "").toString().trim().toLowerCase();
 
-  const getProviderFullName = (provider) =>
-    `${provider.first_name || ""} ${provider.last_name || ""}`.trim();
+  const getProviderId = (provider) => `${provider.id || ""}`.trim();
 
   const providerKeyByLowerName = useMemo(() => {
     const mapping = new Map();
     providers.forEach((provider) => {
-      const fullName = getProviderFullName(provider);
-      const lowerFullName = normalize(fullName);
-      const lowerName = normalize(provider.first_name);
-
-      if (lowerName) {
-        mapping.set(lowerName, fullName);
-      }
-      if (lowerFullName) {
-        mapping.set(lowerFullName, fullName);
-      }
+      const providerId = getProviderId(provider);
     });
     return mapping;
   }, [providers]);
+
+  console.log(providerKeyByLowerName);
 
   const relatedItemsByProvider = useMemo(() => {
     const result = new Map();
 
     inventoryItems.forEach((item) => {
       const itemProvider = normalize(item.id);
-      const mappedProvider = providerKeyByLowerName.get(itemProvider) || itemProvider;
+      const mappedProvider =
+        providerKeyByLowerName.get(itemProvider) || itemProvider;
       const providerName = mappedProvider || "Sin nombre";
 
       if (!result.has(providerName)) {
@@ -50,7 +47,7 @@ function ProvidersTable({ providers = [], inventoryItems = [], loading, onDataCh
 
   const providerRows = useMemo(() => {
     return providers.map((provider) => {
-      const fullName = getProviderFullName(provider);
+      const fullName = getProviderId(provider);
       const relatedItems = relatedItemsByProvider.get(fullName) || [];
       const totalPrice = relatedItems.reduce(
         (sum, item) => sum + (Number(item.precio) || 0),
@@ -60,7 +57,7 @@ function ProvidersTable({ providers = [], inventoryItems = [], loading, onDataCh
         (item) => (item.estado || "").toLowerCase() === "vendido",
       ).length;
 
-      return { 
+      return {
         provider,
         relatedItems,
         productsCount: relatedItems.length,
@@ -69,6 +66,24 @@ function ProvidersTable({ providers = [], inventoryItems = [], loading, onDataCh
       };
     });
   }, [providers, relatedItemsByProvider]);
+
+  const inventoryItemsForSort = inventoryItems;
+  console.log(inventoryItemsForSort);
+  const providersList = providers;
+  console.log(providersList);
+  const groupedByProvider = inventoryItemsForSort.reduce((acc, item) => {
+    const providerId = item.provider_id;
+
+    if (!acc[providerId]) {
+      acc[providerId] = [];
+    }
+
+    acc[providerId].push(item);
+
+    return acc;
+  }, {});
+
+  console.log(groupedByProvider);
 
   const toggleProvider = (providerName) => {
     setExpandedProviders((prev) => {
@@ -159,8 +174,9 @@ function ProvidersTable({ providers = [], inventoryItems = [], loading, onDataCh
           </thead>
           <tbody>
             {providerRows.map((row, index) => {
-              const fullName = getProviderFullName(row.provider);
-              const displayName = fullName || row.provider.first_name || "Sin nombre";
+              const fullName = getProviderId(row.provider);
+              const displayName =
+                fullName || row.provider.first_name || "Sin nombre";
               const isExpanded = expandedProviders.has(displayName);
 
               return (
@@ -170,12 +186,22 @@ function ProvidersTable({ providers = [], inventoryItems = [], loading, onDataCh
                     <td className="text-center">{row.provider.phone || "-"}</td>
                     <td className="text-center">{row.productsCount}</td>
                     <td className="text-center">{row.soldCount}</td>
-                    <td className="text-center">{formatPrice(row.totalGain)}</td>
+                    <td className="text-center">
+                      {formatPrice(row.totalGain)}
+                    </td>
                     <td className="flex justify-center gap-2">
-                      <button type="button" className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2" onClick={() => toggleProvider(displayName)}>
+                      <button
+                        type="button"
+                        className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2"
+                        onClick={() => toggleProvider(displayName)}
+                      >
                         {isExpanded ? "Ocultar" : "Ver productos"}
                       </button>
-                      <button type="button" className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 ml-2" onClick={() => handleAddItemClick(index)}>
+                      <button
+                        type="button"
+                        className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 ml-2"
+                        onClick={() => handleAddItemClick(index)}
+                      >
                         + Producto
                       </button>
                     </td>
@@ -198,22 +224,35 @@ function ProvidersTable({ providers = [], inventoryItems = [], loading, onDataCh
                               </thead>
                               <tbody>
                                 {row.relatedItems.map((item, itemIndex) => (
-                                  <tr key={`${displayName}-${itemIndex}-${item.codigo || item.descripcion}`} className="odd:bg-slate-900/20">
+                                  <tr
+                                    key={`${displayName}-${itemIndex}-${item.codigo || item.descripcion}`}
+                                    className="odd:bg-slate-900/20"
+                                  >
                                     <td>{item.codigo || "-"}</td>
                                     <td>{item.descripcion || "-"}</td>
                                     <td>{formatPrice(item.precio)}</td>
                                     <td>
-                                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${item.estado === 'vendido' ? 'bg-rose-800/40 text-rose-300 border border-rose-700' : 'bg-emerald-800/40 text-emerald-300 border border-emerald-700'}`}>{item.estado || '-'}</span>
+                                      <span
+                                        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${item.estado === "vendido" ? "bg-rose-800/40 text-rose-300 border border-rose-700" : "bg-emerald-800/40 text-emerald-300 border border-emerald-700"}`}
+                                      >
+                                        {item.estado || "-"}
+                                      </span>
                                     </td>
                                     <td>
-                                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${(item.pago || '').toLowerCase() === 'pagado' ? 'bg-emerald-800/40 text-emerald-300 border border-emerald-700' : 'bg-amber-900/40 text-amber-200 border border-amber-700'}`}>{item.pago || 'no'}</span>
+                                      <span
+                                        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${(item.pago || "").toLowerCase() === "pagado" ? "bg-emerald-800/40 text-emerald-300 border border-emerald-700" : "bg-amber-900/40 text-amber-200 border border-amber-700"}`}
+                                      >
+                                        {item.pago || "no"}
+                                      </span>
                                     </td>
                                   </tr>
                                 ))}
                               </tbody>
                             </table>
                           ) : (
-                            <div className="table-state">No hay productos relacionados a esta proveedora.</div>
+                            <div className="table-state">
+                              No hay productos relacionados a esta proveedora.
+                            </div>
                           )}
                         </div>
                       </td>

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import {
   fetchInventory,
   fetchDashboardCounts,
-  fetchProvidersComplete,
+  fetchProviders,
   fetchSales,
   fetchOwnerTotal,
 } from "../services/api.js";
@@ -29,10 +29,10 @@ export default function DashboardPage({
   onAddProvider,
   refresh,
 }) {
-  // const [counts, setCounts] = useState({ inStockCount: 0, soldCount: 0 });
-  // const [providersCount, setProvidersCount] = useState(0);
-  // const [totalSold, setTotalSold] = useState(0);
-  // const [totalOwner, setTotalOwner] = useState(0);
+  const [counts, setCounts] = useState({ inStockCount: 0, soldCount: 0 });
+  const [providersCount, setProvidersCount] = useState(0);
+  const [totalSold, setTotalSold] = useState(0);
+  const [totalOwner, setTotalOwner] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const [dashboardRefresh, setDashboardRefresh] = useState(0);
@@ -57,7 +57,7 @@ export default function DashboardPage({
   const [loadingSales, setLoadingSales] = useState(false);
   const [loadingPayments, setLoadingPayments] = useState(false);
 
-    const showNotification = (message) => {
+  const showNotification = (message) => {
     setNotification(message);
 
     window.setTimeout(() => {
@@ -65,72 +65,60 @@ export default function DashboardPage({
     }, 3200);
   };
 
-  // const parseSaleDate = (dateString) => {
-  //   if (!dateString) return null;
+  useEffect(() => {
+    console.log("Pasa por aca?");
+    let mounted = true;
+    async function load() {
+      try {
+        console.log("Carga?");
+        setLoading(true);
+        const [dashboardData, providers, salesData, ownerTotal] =
+          await Promise.all([
+            fetchDashboardCounts(),
+            fetchProviders(),
+            fetchSales(),
+            // fetchOwnerTotal(),
+          ]);
+        
+        console.log("Pasa por aca?", dashboardData);
+        if (mounted) {
+          setCounts(dashboardData || { inStockCount: 0, soldCount: 0 });
+          setProvidersCount(providers?.data?.length || 0);
 
-  //   // formato YYYY-MM-DD
-  //   if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
-  //     const [year, month, day] = dateString.split("-").map(Number);
+          // Calcular totales del mes actual
+          const now = new Date();
+          const currentMonth = now.getMonth();
+          const currentYear = now.getFullYear();
 
-  //     return new Date(year, month - 1, day);
-  //   }
+          // total vendido (suma de salesData por el mes)
+          let monthlyTotal = 0;
+          // (salesData || []).forEach((sale) => {
+          //   const saleDate = parseSaleDate(sale.fecha);
+          //   if (
+          //     saleDate &&
+          //     saleDate.getMonth() === currentMonth &&
+          //     saleDate.getFullYear() === currentYear
+          //   ) {
+          //     monthlyTotal += Number(sale.montoTotal) || 0;
+          //   }
+          // });
 
-  //   // fallback para fechas viejas ISO
-  //   const parsed = new Date(dateString);
-
-  //   return Number.isNaN(parsed.getTime()) ? null : parsed;
-  // };
-
-  // useEffect(() => {
-  //   let mounted = true;
-  //   async function load() {
-  //     try {
-  //       setLoading(true);
-  //       const [dashboardData, providers, salesData, ownerTotal] =
-  //         await Promise.all([
-  //           fetchDashboardCounts(),
-  //           fetchProvidersComplete(),
-  //           fetchSales(),
-  //           fetchOwnerTotal(),
-  //         ]);
-  //       if (mounted) {
-  //         setCounts(dashboardData || { inStockCount: 0, soldCount: 0 });
-  //         setProvidersCount(providers?.length || 0);
-
-  //         // Calcular totales del mes actual
-  //         const now = new Date();
-  //         const currentMonth = now.getMonth();
-  //         const currentYear = now.getFullYear();
-
-  //         // total vendido (suma de salesData por el mes)
-  //         let monthlyTotal = 0;
-  //         (salesData || []).forEach((sale) => {
-  //           const saleDate = parseSaleDate(sale.fecha);
-  //           if (
-  //             saleDate &&
-  //             saleDate.getMonth() === currentMonth &&
-  //             saleDate.getFullYear() === currentYear
-  //           ) {
-  //             monthlyTotal += Number(sale.montoTotal) || 0;
-  //           }
-  //         });
-
-  //         setTotalSold(monthlyTotal);
-  //         // ownerTotal viene calculado en backend: suma por item de (precio venta (col D) - precio sugerido(col C)*0.6)
-  //         setTotalOwner(ownerTotal || 0);
-  //       }
-  //     } catch (err) {
-  //       console.error("Error cargando dashboard:", err);
-  //     } finally {
-  //       if (mounted) setLoading(false);
-  //     }
-  //   }
-  //   load();
-  //   return () => (mounted = false);
-  // }, [refresh]);
-  // const formatCurrency = (value) => {
-  //   return `$ ${Number(value).toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-  // };
+          setTotalSold(monthlyTotal);
+          // ownerTotal viene calculado en backend: suma por item de (precio venta (col D) - precio sugerido(col C)*0.6)
+          setTotalOwner(ownerTotal || 0);
+        }
+      } catch (err) {
+        console.error("Error cargando dashboard:", err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+    load();
+    return () => (mounted = false);
+  }, [refresh]);
+  const formatCurrency = (value) => {
+    return `$ ${Number(value).toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  };
 
   const loadSales = async () => {
     try {
@@ -186,7 +174,7 @@ export default function DashboardPage({
 
     showNotification("Proveedora agregada correctamente.");
   };
-  
+
   const handleSaleCreated = () => {
     loadInventory();
     loadSales();
@@ -251,8 +239,14 @@ export default function DashboardPage({
                 <p>Cargando...</p>
               ) : (
                 <>
-                  {/* <StatCard title="Productos en stock" value={counts.inStockCount} />
-                  <StatCard title="Productos vendidos" value={counts.soldCount} />
+                  <StatCard
+                    title="Productos en stock"
+                    value={counts.inStockCount}
+                  />
+                  <StatCard
+                    title="Productos vendidos"
+                    value={counts.soldCount}
+                  />
                   <StatCard title="Proveedoras" value={providersCount} />
                   <StatCard
                     title="Total vendido este mes"
@@ -262,7 +256,7 @@ export default function DashboardPage({
                   <StatCard
                     title="Total para la dueña"
                     value={formatCurrency(totalOwner)}
-                  /> */}
+                  />
                 </>
               )}
             </div>
@@ -290,13 +284,6 @@ export default function DashboardPage({
         inventoryItems={inventory}
         isLoadingInventory={loadingInventory}
         onSaleCreated={handleSaleCreated}
-      />
-
-      <MessageForProvidersModal
-      // isOpen={showMessagesForProvidersModal}
-      // onClose={() => setShowMessagesForProvidersModal(false)}
-      // sales={sales}
-      // providers={providers}
       />
     </div>
   );

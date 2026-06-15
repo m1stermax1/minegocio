@@ -4,7 +4,7 @@ import { addProvider } from "../services/api.js";
 import { getProfile } from "../services/users.js";
 
 function ProvidersFormModal({ isOpen, onClose, onProviderAdded }) {
-  const [orgId, seOrgId] = useState("");
+  const [orgId, setOrgId] = useState("");
   const [nombre, setNombre] = useState("");
   const [apellido, setApellido] = useState("");
   const [telefono, setTelefono] = useState("");
@@ -16,16 +16,17 @@ function ProvidersFormModal({ isOpen, onClose, onProviderAdded }) {
     e.preventDefault();
     setError("");
 
+    console.log("hago click en guardar");
     // if (!nombre.trim() || !apellido.trim() || !telefono.trim()) {
     //   setError('Nombre, apellido y teléfono son obligatorios');
     //   return;
     // }
     const getOrgId = await getProfile();
     console.log(getOrgId[0].organization_id);
-    seOrgId(getOrgId[0].organization_id);
+    setOrgId(getOrgId[0].organization_id);
     setLoading(true);
     try {
-      await addProvider(orgId, nombre, apellido, telefono, bankalias);
+      // await addProvider(orgId, nombre, apellido, telefono, bankalias);
       setNombre("");
       setApellido("");
       setTelefono("");

@@ -35,12 +35,8 @@ function ProvidersPage() {
     try {
       setLoadingProviders(true);
 
-      console.log("cargando providers");
       const providersList = await fetchProviders();
-      console.log(providersList);
       setProviders(providersList.data);
-
-
     } catch (error) {
       console.error("Error cargando proveedoras:", error);
       setProviders([]);
@@ -49,14 +45,26 @@ function ProvidersPage() {
     }
   };
 
+  const loadInventory = async () => {
+    try {
+      setLoadingInventory(true);
+      const data = await fetchInventory();
+      setInventory(data?.data);
+    } catch (error) {
+      console.error("Error cargando inventario:", error);
+      setInventory([]);
+    } finally {
+      setLoadingInventory(false);
+    }
+  };
+
   useEffect(() => {
     loadProviders();
+    loadInventory();
   }, []);
 
   const handleProviderAdded = async () => {
     await loadProviders();
-
-    console.log("despues de guardar me vuelvo a cargar la lista de providers")
 
     // setProvidersRefresh((prev) => prev + 1);
     // setDashboardRefresh((prev) => prev + 1);
@@ -143,6 +151,7 @@ function ProvidersPage() {
         isOpen={showProvidersModal}
         onClose={() => setShowProvidersModal(false)}
         onProviderAdded={handleProviderAdded}
+        inventoryItems={inventory}
       />
     </div>
   );
