@@ -5,6 +5,7 @@ import {
   fetchProviders,
   fetchSales,
   fetchOwnerTotal,
+  addProvider
 } from "../services/api.js";
 import Sidebar from "../components/Sidebar.jsx";
 import SearchBar from "../components/SearchBar.jsx";
@@ -66,11 +67,9 @@ export default function DashboardPage({
   };
 
   useEffect(() => {
-    console.log("Pasa por aca?");
     let mounted = true;
     async function load() {
       try {
-        console.log("Carga?");
         setLoading(true);
         const [dashboardData, providers, salesData, ownerTotal] =
           await Promise.all([
@@ -79,33 +78,36 @@ export default function DashboardPage({
             fetchSales(),
             // fetchOwnerTotal(),
           ]);
-        
-        console.log("Pasa por aca?", dashboardData);
         if (mounted) {
+          const totalPrice = dashboardData?.profit?.reduce(
+            (sum, item) => sum + (Number(item.price) || 0),
+            0,
+          );
+          const profitForBoss = totalPrice * 0.4;
           setCounts(dashboardData || { inStockCount: 0, soldCount: 0 });
           setProvidersCount(providers?.data?.length || 0);
 
           // Calcular totales del mes actual
           const now = new Date();
-          const currentMonth = now.getMonth();
+          const currentMonth = now.getUTCMonth() + 1;
           const currentYear = now.getFullYear();
 
           // total vendido (suma de salesData por el mes)
           let monthlyTotal = 0;
-          // (salesData || []).forEach((sale) => {
-          //   const saleDate = parseSaleDate(sale.fecha);
-          //   if (
-          //     saleDate &&
-          //     saleDate.getMonth() === currentMonth &&
-          //     saleDate.getFullYear() === currentYear
-          //   ) {
-          //     monthlyTotal += Number(sale.montoTotal) || 0;
-          //   }
-          // });
+          (salesData?.data || []).forEach((sale) => {
+            const saleDate = new Date(sale.sale_date);
+            if (
+              saleDate &&
+              saleDate.getMonth() + 1 === currentMonth &&
+              saleDate.getFullYear() === currentYear
+            ) {
+              monthlyTotal += Number(sale.amount) || 0;
+            }
+          });
 
           setTotalSold(monthlyTotal);
           // ownerTotal viene calculado en backend: suma por item de (precio venta (col D) - precio sugerido(col C)*0.6)
-          setTotalOwner(ownerTotal || 0);
+          setTotalOwner(profitForBoss || 0);
         }
       } catch (err) {
         console.error("Error cargando dashboard:", err);
@@ -115,7 +117,7 @@ export default function DashboardPage({
     }
     load();
     return () => (mounted = false);
-  }, [refresh]);
+  }, [refresh, providers]);
   const formatCurrency = (value) => {
     return `$ ${Number(value).toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
   };
@@ -137,7 +139,7 @@ export default function DashboardPage({
     try {
       setLoadingInventory(true);
       const data = await fetchInventory();
-      setInventory(data);
+      setInventory(data?.data);
     } catch (error) {
       console.error("Error cargando inventario:", error);
       setInventory([]);
@@ -146,20 +148,31 @@ export default function DashboardPage({
       setLoadingInventory(false);
     }
   };
+  const loadProviders = async () => {
+    try {
+      setLoadingProviders(true);
+
+      const providersList = await fetchProviders();
+      console.error("Providers list:", providersList);
+      setProviders(providersList.data);
+    } catch (error) {
+      console.error("Error cargando proveedoras:", error);
+      setProviders([]);
+    } finally {
+      setLoadingProviders(false);
+    }
+  };
   const handleAddItem = () => {
     setShowItemsModal(true);
   };
   const handleItemAdded = () => {
     loadInventory();
-    setDashboardRefresh((prev) => prev + 1);
+    // setDashboardRefresh((prev) => prev + 1);
     showNotification("Item agregado correctamente a la lista.");
   };
   const handleAddSale = async () => {
-    console.log("llega al finally en el load inventory?");
-
     const updatedInventory = await fetchInventory();
     setInventory(updatedInventory?.data);
-    console.log("inventario actualizado?", updatedInventory);
     setLoadingInventory(false);
     if (!inventory.length) {
       await loadInventory();
@@ -254,7 +267,12 @@ export default function DashboardPage({
                     subtitle="Monto total de ventas"
                   />
                   <StatCard
-                    title="Total para la dueña"
+                    title="Total para negocio"
+                    value={formatCurrency(totalOwner)}
+                  />
+
+                      <StatCard
+                    title="Total para negocio"
                     value={formatCurrency(totalOwner)}
                   />
                 </>
@@ -268,6 +286,7 @@ export default function DashboardPage({
         isOpen={showProvidersModal}
         onClose={() => setShowProvidersModal(false)}
         onProviderAdded={handleProviderAdded}
+        inventoryItems={inventory}
       />
 
       <ItemsFormModal

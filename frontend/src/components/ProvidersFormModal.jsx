@@ -16,17 +16,20 @@ function ProvidersFormModal({ isOpen, onClose, onProviderAdded }) {
     e.preventDefault();
     setError("");
 
-    console.log("hago click en guardar");
     // if (!nombre.trim() || !apellido.trim() || !telefono.trim()) {
     //   setError('Nombre, apellido y teléfono son obligatorios');
     //   return;
     // }
-    const getOrgId = await getProfile();
-    console.log(getOrgId[0].organization_id);
-    setOrgId(getOrgId[0].organization_id);
+
     setLoading(true);
     try {
-      // await addProvider(orgId, nombre, apellido, telefono, bankalias);
+      const getOrgId = await getProfile();
+      const getOrganizationId = getOrgId[0].organization_id;
+      setOrgId(getOrganizationId);
+      console.log(getOrgId[0]?.organization_id);
+      console.log(orgId);
+      
+      await addProvider(orgId, nombre, apellido, telefono, bankalias);
       setNombre("");
       setApellido("");
       setTelefono("");

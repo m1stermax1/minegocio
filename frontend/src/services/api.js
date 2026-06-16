@@ -75,6 +75,11 @@ export async function fetchSales() {
   return response.data;
 }
 
+export async function fetchSalesItems() {
+  const response = await api.get(`/sales/sales-items`);
+  return response.data;
+}
+
 export async function fetchOwnerTotal() {
   const response = await api.get("/inventory/owner-total");
   return response.data?.totalOwner || 0;
@@ -88,7 +93,6 @@ export async function createSale(payload) {
 
 export async function createSalesItem(payload) {
   const response = await api.post("/sales/add-sale-item", payload);
-  console.log("Pasa por el craete: ", payload);
     return response.data;
 }
 

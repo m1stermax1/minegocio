@@ -12,6 +12,7 @@ router.get("/counts", async (req, res) => {
         totalItems: inventory?.data?.length,
         inStockCount: inventory?.data?.filter((item) => item?.status == 'AVAILABLE')?.length,
         soldCount: inventory?.data?.filter((item) => item?.status == 'SOLD')?.length,
+        profit: inventory?.data?.filter((item) => item?.status == 'SOLD')
     }
     res.json(nuevoInv);
   } catch (error) {

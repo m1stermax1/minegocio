@@ -29,8 +29,7 @@ export default function SalesModal({
     console.log("Lista de items: ", inventoryItems);
     const term = searchTerm.trim().toLowerCase();
     if (!term) return [];
-    return inventoryItems?.data
-      .filter((item) => {
+    return inventoryItems?.filter((item) => item?.status == 'AVAILABLE')?.filter((item) => {
         if (!item.description) {
           console.log("No se puede buscar un item sin código o descripción");
           return false;
@@ -41,9 +40,9 @@ export default function SalesModal({
           (selected) => selected.id === item.id,
         );
         if (alreadySelected) return false;
-        // const codigo = item.codigo?.toLowerCase() || "";
+        const codigo = item.barcode?.toLowerCase() || "";
         const descripcion = item.description?.toLowerCase() || "";
-        // return codigo.includes(term) || descripcion.includes(term);
+        return codigo.includes(term) || descripcion.includes(term);
         return descripcion.includes(term);
       })
       .slice(0, 10);
@@ -131,8 +130,6 @@ export default function SalesModal({
         metodoPago: paymentMethod,
       });
 
-      // const salesCreated = "";
-      
       setSelectedItems([]);
       setPaymentMethod("");
       setSearchTerm("");
@@ -146,8 +143,6 @@ export default function SalesModal({
       selectedItems?.forEach(element => {
         updateInventoryRowStatus(element?.id, element?.status);
       });
-      console.log("Available Items: ", selectedItems)
-      // console.log("Respuesta del que sale: ", queSale)
 
       return salesCreated;
     } catch (err) {

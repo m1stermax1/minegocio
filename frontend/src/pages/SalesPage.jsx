@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchSales } from "../services/api.js";
+import { fetchSales, fetchSalesItems } from "../services/api.js";
 import Sidebar from "../components/Sidebar.jsx";
 import SearchBar from "../components/SearchBar.jsx";
 import SalesModal from "../components/SalesModal.jsx";
@@ -8,9 +8,10 @@ import SalesTable from "../components/SalesTable.jsx";
 export default function SalesPage() {
   const [loading, setLoading] = useState(true);
   const [sales, setSales] = useState([]);
+  const [salesItems, setSalesItems] = useState([]);
 
   const [showSaleModal, setShowSaleModal] = useState(false);
-//   const [loadingSales, setLoadingSales] = useState(false);
+  //   const [loadingSales, setLoadingSales] = useState(false);
 
   const parseSaleDate = (dateString) => {
     if (!dateString) return null;
@@ -41,12 +42,28 @@ export default function SalesPage() {
     }
   };
 
+  const loadSalesItems = async (id) => {
+    try {
+      const data = await fetchSalesItems();
+      
+      console.log("Se ejecuta el sales items", data);
+      setSalesItems(data);
+    } catch (error) {
+      console.error("Error cargando ventas:", error);
+      setSales([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadSales();
+    loadSalesItems();
   }, []);
 
-  console.log(sales)
-  console.log(loading)
+  console.log(sales);
+  console.log(loading);
+  console.log(salesItems);
 
   return (
     <div className="min-h-screen md:grid md:grid-cols-[280px_1fr]">
@@ -65,13 +82,13 @@ export default function SalesPage() {
           </div>
 
           <section className="bg-slate-800/70 border border-slate-700 rounded-2xl p-7 min-h-[72vh] shadow-soft">
-             {loading ? (
-                <p>Cargando...</p>
-              ) : (
-                <>
-                  <SalesTable sales={sales} />
-                </>
-              )}
+            {loading ? (
+              <p>Cargando...</p>
+            ) : (
+              <>
+                <SalesTable sales={sales} salesItems={salesItems?.data} />
+              </>
+            )}
           </section>
         </div>
       </main>

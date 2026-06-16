@@ -207,7 +207,7 @@ const InventoryTable = forwardRef(function InventoryTable(
           <table className="modern-table w-full border-separate border-spacing-3">
             <thead>
               <tr>
-                <th className="text-center">Nombre</th>
+                <th className="text-start">Nombre</th>
                 <th className="text-center">Precio</th>
                 <th className="text-center">Proveedor</th>
                 <th className="text-center">Estado</th>
@@ -219,7 +219,7 @@ const InventoryTable = forwardRef(function InventoryTable(
                 <tr
                   key={`${item.id}-${index}`}
                 >
-                  <td className="text-center">
+                  <td className="text-start">
                     {formatText(item.description)}
                   </td>
 
@@ -231,9 +231,9 @@ const InventoryTable = forwardRef(function InventoryTable(
 
                   <td className="text-center">
                     <span
-                      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${item.estado?.toLowerCase() === "vendido" ? "bg-rose-800/40 text-rose-300 border border-rose-700" : "bg-emerald-800/40 text-emerald-300 border border-emerald-700"}`}
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${item.status?.toLowerCase() === "sold" ? "bg-pink-500 text-rose-300 border border-rose-700" : "bg-emerald-800/40 text-emerald-300 border border-emerald-700"}`}
                     >
-                      {item.status == 'AVAILABLE' ? 'En Stock' : ''}
+                      {item.status == 'AVAILABLE' ? 'En Stock' : 'Vendido'}
                     </span>
                   </td>
                 </tr>

@@ -1,6 +1,6 @@
 import { Fragment, useState, useMemo } from "react";
 
-export default function SalesTable({ sales = [] }) {
+export default function SalesTable({ sales = [], salesItems = [] }) {
   const [expandedSale, setExpandedSale] = useState(null);
   const [dateFilter, setDateFilter] = useState("");
   const [dateFrom, setDateFrom] = useState("");
@@ -25,7 +25,7 @@ export default function SalesTable({ sales = [] }) {
   };
 
   const filteredSales = useMemo(() => {
-
+    //tenemos que traernos los sales items filtradors por cada  sale_id
     return sales?.data?.filter((sale) => {
       const saleDate = sale?.sale_date?.split("T")[0];
 
@@ -48,7 +48,13 @@ export default function SalesTable({ sales = [] }) {
     });
   }, [sales, dateFilter, dateFrom, dateTo]);
 
-  console.log("Sales filtradas: ", filteredSales)
+  console.log("Sales ITems: ", filteredSales);
+
+  const filteredSalesById = (id) => {
+    return salesItems?.filter((item) => item?.sale_id == id);
+  };
+  console.log("Sales ITems: ", filteredSalesById("6a8b0cf8-d704-4b37-8db9-1582689990f8"));
+
 
   if (!sales?.data?.length) {
     return <div className="table-state">No se encontraron ventas.</div>;
@@ -146,7 +152,7 @@ export default function SalesTable({ sales = [] }) {
         </div>
         <button
           className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2"
-        // onClick={handleAddSale}
+          // onClick={handleAddSale}
         >
           Agregar venta
         </button>
@@ -177,7 +183,8 @@ export default function SalesTable({ sales = [] }) {
                     maximumFractionDigits: 2,
                   })}
                 </td>
-                <td className="text-center">{sale.items?.length || 0}</td>
+                {/* //aca tambien */}
+                <td className="text-center">{filteredSalesById(sale?.id)?.length || 'nada'}</td>
                 <td className="flex justify-center">
                   <button
                     type="button"
@@ -197,25 +204,24 @@ export default function SalesTable({ sales = [] }) {
                           <tr>
                             <th>Código</th>
                             <th>Descripción</th>
-                            <th>Proveedor</th>
+                            {/* <th>Proveedor</th> */}
                             <th>Precio</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {sale?.data?.products?.map((item, itemIndex) => (
+                          {/* //esto tiene que ser reemplazada por el sales item de cada sale id */}
+                          {filteredSalesById(sale?.id)?.map((item, itemIndex) => (
                             <tr key={`${index}-${itemIndex}`}>
+                              <td className="text-center">{item.id || "-"}</td>
                               <td className="text-center">
-                                {item.id || "-"}
+                                {item.description || "-"}
                               </td>
-                              <td className="text-center">
-                                {item.descripcion || "-"}
-                              </td>
-                              <td className="text-center">
+                              {/* <td className="text-center">
                                 {item.proveedora || "-"}
-                              </td>
+                              </td> */}
                               <td className="text-center">
                                 $
-                                {Number(item.precio || 0).toLocaleString(
+                                {Number(item.unit_price || 0).toLocaleString(
                                   "es-AR",
                                   {
                                     minimumFractionDigits: 0,

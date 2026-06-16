@@ -89,8 +89,8 @@ function ItemsFormModal({ isOpen, onClose, onItemsAdded, defaultProviderId, prov
     if (!selectedProvider) return setError('Selecciona una proveedora');
     if (!items?.length) return setError('Agrega al menos un item');
 
-
     setLoading(true);
+
     try {
       const itemsToAdd = items.map((item) => ({ nombre: item.nombre, precio: item.precio.toString(), proveedora: selectedProvider?.id, orgId: selectedProvider?.organization_id, providerName: selectedProvider?.first_name }));
 
@@ -105,7 +105,7 @@ function ItemsFormModal({ isOpen, onClose, onItemsAdded, defaultProviderId, prov
       onClose();
     } catch (err) {
       console.error('Error agregando items:', err);
-      setError(err.response?.data?.error || 'Error al agregar los items');
+      setError(err || 'Error al agregar los items');
     } finally {
       setLoading(false);
     }

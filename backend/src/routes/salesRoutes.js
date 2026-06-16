@@ -1,6 +1,6 @@
 import express from "express";
 import { supabase } from "../services/supabaseService.js";
-import { getSales } from "../controllers/sales/sales.controller.js";
+import { getSales, getSalesItems } from "../controllers/sales/sales.controller.js";
 
 const router = express.Router();
 
@@ -11,6 +11,16 @@ router.get("/", async (req, res) => {
   } catch (error) {
     console.error("Error al cargar inventario:", error);
     res.status(500).json({ error: "No se pudo cargar el inventario" });
+  }
+});
+
+router.get(`/sales-items`, async (req, res) => {
+  try {
+    const salesItemsList = await getSalesItems();
+    res.json(salesItemsList);
+  } catch (error) {
+    console.error("Error al cargar items vendidos:", error);
+    res.status(500).json({ error: "No se pudo cargar los items vendidos" });
   }
 });
 
@@ -48,7 +58,7 @@ router.post("/add-sale-item", async (req, res) => {
   try {
     const payload = req.body;
 
-    const salesItems = req.body?.items?.map((item) => ({sale_id: req.body?.saleId, product_id: item?.id, quantity: 1, unit_price: item?.price}))
+    const salesItems = req.body?.items?.map((item) => ({sale_id: req.body?.saleId, product_id: item?.id, quantity: 1, unit_price: item?.price, description: item?.description}))
 
     console.log("llegue: ", salesItems)
 
