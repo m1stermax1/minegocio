@@ -31,8 +31,6 @@ export const getSalesItems = async () => {
       .from("sale_items")
       .select("*");
 
-      console.log("Llego al getSales")
-
     if (error) {
       return {
         success: false,

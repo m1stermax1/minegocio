@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createSale, createSalesItem } from "../services/api.js";
 import { getProfile } from "../services/users.js";
-import { fetchInventory, updateInventoryRowStatus} from "../services/api.js";
+import { fetchInventory, updateInventoryRowStatus } from "../services/api.js";
 
 const formatPrice = (value) => {
   const number = Number(value);
@@ -26,25 +26,24 @@ export default function SalesModal({
   const [notification, setNotification] = useState("");
 
   const availableItems = useMemo(() => {
-    console.log("Lista de items: ", inventoryItems);
     const term = searchTerm.trim().toLowerCase();
     if (!term) return [];
     return inventoryItems?.filter((item) => item?.status == 'AVAILABLE')?.filter((item) => {
-        if (!item.description) {
-          console.log("No se puede buscar un item sin código o descripción");
-          return false;
-        }
-        const isSold = (item.status || "").toUpperCase() === "SOLD";
-        if (isSold) return false;
-        const alreadySelected = selectedItems.some(
-          (selected) => selected.id === item.id,
-        );
-        if (alreadySelected) return false;
-        const codigo = item.barcode?.toLowerCase() || "";
-        const descripcion = item.description?.toLowerCase() || "";
-        return codigo.includes(term) || descripcion.includes(term);
-        return descripcion.includes(term);
-      })
+      if (!item.description) {
+        console.log("No se puede buscar un item sin código o descripción");
+        return false;
+      }
+      const isSold = (item.status || "").toUpperCase() === "SOLD";
+      if (isSold) return false;
+      const alreadySelected = selectedItems.some(
+        (selected) => selected.id === item.id,
+      );
+      if (alreadySelected) return false;
+      const codigo = item.barcode?.toLowerCase() || "";
+      const descripcion = item.description?.toLowerCase() || "";
+      return codigo.includes(term) || descripcion.includes(term);
+      return descripcion.includes(term);
+    })
       .slice(0, 10);
   }, [inventoryItems, searchTerm, selectedItems]);
 
@@ -52,6 +51,7 @@ export default function SalesModal({
     const value = Number(item.price) || 0;
     return sum + value;
   }, 0);
+
 
   const efectivoTotal = totalAmount * 0.9;
   const transferenciaTotal = totalAmount * 0.95;
@@ -65,6 +65,7 @@ export default function SalesModal({
           ? tarjetaTotal
           : totalAmount;
 
+
   const handleAddItem = (item) => {
     setError("");
     setSelectedItems((prev) => {
@@ -75,6 +76,8 @@ export default function SalesModal({
     });
     setSearchTerm("");
   };
+
+  console.log("Items seleccionados: ", selectedItems)
 
   const handleRemoveItem = (id) => {
     setSelectedItems((prev) => prev.filter((item) => item.id !== id));
@@ -88,7 +91,7 @@ export default function SalesModal({
 
     const item = availableItems[0];
     if (
-      item.codigo?.toLowerCase() === term &&
+      item.barcode?.toLowerCase() === term &&
       !selectedItems.some((selected) => selected.id === item.id)
     ) {
       handleAddItem(item);
@@ -98,7 +101,8 @@ export default function SalesModal({
   const normalizeBarcodeSearch = (value) => {
     return value.replace(/[’'‘]/g, "-");
   };
-
+  const totalProfit = selectedTotal - (totalAmount * 0.6);
+  console.log("Total profit: ", totalProfit)
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");
@@ -119,6 +123,7 @@ export default function SalesModal({
       const salesCreated = await createSale({
         orgId: perfil[0]?.organization_id,
         totalSale: selectedTotal,
+        profit: totalProfit,
         // items: selectedItems.map((item) => ({
         //   id: item.id,
         //   codigo: item.barcode,
@@ -139,7 +144,7 @@ export default function SalesModal({
       }
 
       onClose();
-      const createSaleItem = await createSalesItem({saleId: salesCreated?.data[0]?.id, items: selectedItems});
+      const createSaleItem = await createSalesItem({ saleId: salesCreated?.data[0]?.id, items: selectedItems });
       selectedItems?.forEach(element => {
         updateInventoryRowStatus(element?.id, element?.status);
       });

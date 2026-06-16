@@ -11,16 +11,18 @@ function ItemsFormModal({ isOpen, onClose, onItemsAdded, defaultProviderId, prov
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+
   useEffect(() => {
     if (!isOpen) return;
     if (parentProviders?.data?.length > 0) {
       setProviders(parentProviders);
+
       return;
     }
     (async () => {
       try {
         const data = await fetchProviders();
-        setProviders(data?.data || []);
+        setProviders(data || []);
       } catch (err) {
         console.error('Error cargando proveedoras:', err);
       }

@@ -25,9 +25,6 @@ function StatCard({ title, value, subtitle }) {
 }
 
 export default function DashboardPage({
-  onAddProduct,
-  onAddSale,
-  onAddProvider,
   refresh,
 }) {
   const [counts, setCounts] = useState({ inStockCount: 0, soldCount: 0 });
@@ -79,6 +76,7 @@ export default function DashboardPage({
             // fetchOwnerTotal(),
           ]);
         if (mounted) {
+          console.log("Items vendidos: ", dashboardData?.profit)
           const totalPrice = dashboardData?.profit?.reduce(
             (sum, item) => sum + (Number(item.price) || 0),
             0,
@@ -117,11 +115,23 @@ export default function DashboardPage({
     }
     load();
     return () => (mounted = false);
-  }, [refresh, providers]);
+  }, [refresh, providers, inventory]);
+
   const formatCurrency = (value) => {
     return `$ ${Number(value).toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
   };
-
+  const loadInventory = async () => {
+    try {
+      setLoadingInventory(true);
+      const data = await fetchInventory();
+      setInventory(data?.data);
+    } catch (error) {
+      console.error("Error cargando inventario:", error);
+      setInventory([]);
+    } finally {
+      setLoadingInventory(false);
+    }
+  };
   const loadSales = async () => {
     try {
       setLoadingSales(true);
@@ -134,26 +144,11 @@ export default function DashboardPage({
       setLoadingSales(false);
     }
   };
-
-  const loadInventory = async () => {
-    try {
-      setLoadingInventory(true);
-      const data = await fetchInventory();
-      setInventory(data?.data);
-    } catch (error) {
-      console.error("Error cargando inventario:", error);
-      setInventory([]);
-    } finally {
-      console.log("llega al finally en el load inventory?");
-      setLoadingInventory(false);
-    }
-  };
   const loadProviders = async () => {
     try {
       setLoadingProviders(true);
 
       const providersList = await fetchProviders();
-      console.error("Providers list:", providersList);
       setProviders(providersList.data);
     } catch (error) {
       console.error("Error cargando proveedoras:", error);
@@ -162,19 +157,15 @@ export default function DashboardPage({
       setLoadingProviders(false);
     }
   };
+
   const handleAddItem = () => {
     setShowItemsModal(true);
-  };
-  const handleItemAdded = () => {
-    loadInventory();
-    // setDashboardRefresh((prev) => prev + 1);
-    showNotification("Item agregado correctamente a la lista.");
   };
   const handleAddSale = async () => {
     const updatedInventory = await fetchInventory();
     setInventory(updatedInventory?.data);
     setLoadingInventory(false);
-    if (!inventory.length) {
+    if (!inventory?.length) {
       await loadInventory();
     }
     setShowSaleModal(true);
@@ -187,7 +178,11 @@ export default function DashboardPage({
 
     showNotification("Proveedora agregada correctamente.");
   };
-
+  const handleItemAdded = () => {
+    loadInventory();
+    // setDashboardRefresh((prev) => prev + 1);
+    showNotification("Item agregado correctamente a la lista.");
+  };
   const handleSaleCreated = () => {
     loadInventory();
     loadSales();
@@ -205,6 +200,7 @@ export default function DashboardPage({
   //   }, 3200);
   // };
 
+  console.log("Inventario antes de la pag", inventory)
   return (
     <div className="min-h-screen md:grid md:grid-cols-[280px_1fr]">
       <Sidebar activeView="dashboard" />
@@ -271,7 +267,7 @@ export default function DashboardPage({
                     value={formatCurrency(totalOwner)}
                   />
 
-                      <StatCard
+                  <StatCard
                     title="Total para negocio"
                     value={formatCurrency(totalOwner)}
                   />

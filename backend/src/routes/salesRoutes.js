@@ -32,6 +32,7 @@ router.post("/add", async (req, res) => {
       organization_id: req.body?.orgId,
       amount: req.body?.totalSale,
       payment_method: req.body?.metodoPago,
+      profit: req.body?.profit
     };
 
     const { data, error } = await supabase

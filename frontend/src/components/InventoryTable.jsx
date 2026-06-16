@@ -11,7 +11,6 @@ const InventoryTable = forwardRef(function InventoryTable(
   { items, loading, onItemAdded, providers = [], showSelection = true },
   ref,
 ) {
-  console.log("Items en la tabla: ", items)
   const [selectedItems, setSelectedItems] = useState([]);
   const [tableItems, setTableItems] = useState([]);
   const [showModal, setShowModal] = useState(false);
