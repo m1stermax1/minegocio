@@ -9,6 +9,7 @@ import salesRoutes from "./routes/salesRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import paymentsRoutes from "./routes/paymentsRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
+import invoicesRoutes from "./routes/invoicesRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -39,6 +40,7 @@ app.use("/inventory", inventoryRoutes);
 app.use("/sales", salesRoutes);
 app.use("/dashboard", dashboardRoutes);
 app.use("/payments", paymentsRoutes);
+app.use("/invoices", invoicesRoutes);
 
 
 

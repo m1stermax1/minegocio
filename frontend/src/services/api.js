@@ -94,9 +94,7 @@ export async function createSalesItem(payload) {
 }
 
 export async function fetchInvoices() {
-  const response = await api.get("/inventory/facturas", {
-    params: { _t: Date.now() },
-  });
+  const response = await api.get("/invoices");
   return response.data;
 }
 
@@ -139,5 +137,10 @@ export async function createPaymentItems(payload) {
   const response = await api.post("/payments/add-item", payload);
   return response.data;
 }
+
+export async function createInvoices(payload) {
+  const response = await api.post("/invoices/add", payload);
+  return response.data;
+};
 
 export default api;

@@ -10,6 +10,7 @@ function ItemsFormModal({ isOpen, onClose, onItemsAdded, defaultProviderId, prov
   const [newItemPrice, setNewItemPrice] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [sheetUrl, setSheetUrl] = useState('');
 
 
   useEffect(() => {
@@ -40,10 +41,10 @@ function ItemsFormModal({ isOpen, onClose, onItemsAdded, defaultProviderId, prov
   }, [isOpen]);
 
   const handleAddItem = () => {
-    if (!newItemName.trim() || !newItemPrice.toString().trim()) {
-      setError('Nombre y precio son obligatorios');
-      return;
-    }
+    // if (!newItemName.trim() || !newItemPrice.toString().trim()) {
+    //   setError('Nombre y precio son obligatorios');
+    //   return;
+    // }
 
     const priceNum = parseFloat(newItemPrice.toString().replace(/,/g, '.'));
     if (Number.isNaN(priceNum)) {
@@ -85,26 +86,46 @@ function ItemsFormModal({ isOpen, onClose, onItemsAdded, defaultProviderId, prov
   };
 
   const handleSubmit = async (e) => {
+
     e.preventDefault();
     setError('');
     setSelectedProvider(selectedProvider?.id);
-    if (!selectedProvider) return setError('Selecciona una proveedora');
-    if (!items?.length) return setError('Agrega al menos un item');
+    // if (!selectedProvider) return setError('Selecciona una proveedora');
+    // if (!items?.length) return setError('Agrega al menos un item');
 
-    setLoading(true);
+    // setLoading(true);
+    console.log("click");
+
 
     try {
       const itemsToAdd = items.map((item) => ({ nombre: item.nombre, precio: item.precio.toString(), proveedora: selectedProvider?.id, orgId: selectedProvider?.organization_id, providerName: selectedProvider?.first_name }));
 
-      await addInventoryItem(itemsToAdd);
+      // await addInventoryItem(itemsToAdd);
+
+      //Agregamos productos desde un sheets de google publico
+      const SHEET_ID = "1rhto6v0wefqDlnlgJ1U-ALv3VXSQNQmmquY7Z5PykYE";
+      const SHEET_NAME = "LOCAL MAXI";
+      const response = await fetch(
+        `https://opensheet.elk.sh/${SHEET_ID}/${SHEET_NAME}`
+      );
+      const data = await response.json();
+      const products = data.map((row) => ({
+        nombre: row.Nombre,
+        precio: Number(row.Precio * 1000),
+        proveedora: selectedProvider?.id,
+        orgId: selectedProvider?.organization_id,
+        providerName: selectedProvider?.first_name
+      }));
+      console.log(products);
+
       setItems([]);
       setNewItemName('');
       setNewItemPrice('');
       setSelectedProvider("");
-      onItemsAdded?.();
-      const whatsappLink = generateWhatsAppLink();
-      window.open(whatsappLink, '_blank');
-      onClose();
+      // onItemsAdded?.();
+      // const whatsappLink = generateWhatsAppLink();
+      // window.open(whatsappLink, '_blank');
+      // onClose();
     } catch (err) {
       console.error('Error agregando items:', err);
       setError(err || 'Error al agregar los items');
@@ -147,6 +168,11 @@ function ItemsFormModal({ isOpen, onClose, onItemsAdded, defaultProviderId, prov
 
               <div className="grid gap-3 mb-3">
                 <div>
+                  <label className="text-sm text-slate-200">Desde un excel pùblico</label>
+                  <input type="text" className="w-full rounded-lg bg-slate-900/60 border border-slate-700 px-3 py-2 text-slate-100" value={sheetUrl} onChange={(e) => setSheetsUrl(e.target.value)} placeholder="https://docs.google.com/spreadsheets/d/1rhto6v0wefqDlnlgJ1U-ALv3VXSQNQmmquY7Z5PykYE/edit?gid=0#gid=0" disabled={loading} />
+                </div>
+
+                <div>
                   <label className="text-sm text-slate-200">Nombre del Producto</label>
                   <input type="text" className="w-full rounded-lg bg-slate-900/60 border border-slate-700 px-3 py-2 text-slate-100" value={newItemName} onChange={(e) => setNewItemName(e.target.value)} placeholder="Ej: Remera azul" disabled={loading} />
                 </div>
@@ -184,7 +210,9 @@ function ItemsFormModal({ isOpen, onClose, onItemsAdded, defaultProviderId, prov
 
             <div className="flex gap-3 justify-end p-4 border-t border-slate-700">
               <button type="button" className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2" onClick={onClose} disabled={loading}>Cancelar</button>
-              <button type="submit" className="bg-accent text-slate-900 font-semibold rounded-lg px-4 py-2" disabled={loading || !items.length || !selectedProvider}>{loading ? 'Enviando...' : '✓ Guardar y Enviar por WhatsApp'}</button>
+              <button type="submit" className="bg-accent text-slate-900 font-semibold rounded-lg px-4 py-2"
+              // disabled={loading || !items.length || !selectedProvider}
+              >{loading ? 'Enviando...' : '✓ Guardar y Enviar por WhatsApp'}</button>
             </div>
           </div>
         </form>

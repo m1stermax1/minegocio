@@ -21,7 +21,7 @@ export default function PaymentsTable({
 
   const paymentsByProvider = useMemo(() => {
     const groupedByProvider = {};
-    
+
     console.log(payments)
 
     payments.forEach((item) => {
@@ -42,7 +42,7 @@ export default function PaymentsTable({
         (p) =>
           p.nombre?.toLowerCase() === provName?.toLowerCase() ||
           `${p.nombre || ""} ${p.apellido || ""}`.trim().toLowerCase() ===
-            provName?.toLowerCase(),
+          provName?.toLowerCase(),
       );
     } catch (err) {
       console.error("Error fetching complete providers:", err);
@@ -52,9 +52,8 @@ export default function PaymentsTable({
 
   const calculateProviderTotal = (items) => {
     return items.reduce((sum, item) => {
-      const precioSugerido = Number(item.precioSugerido || item.precio) || 0;
-      const precioProveedora = precioSugerido * 0.6;
-      return sum + precioProveedora;
+      const precio = Number(item.total_amount) || 0;
+      return sum + precio;
     }, 0);
   };
 
@@ -148,7 +147,7 @@ Muchas gracias.`;
           <tbody>
             {providerNames.map((provName) => {
               const items = paymentsByProvider[provName];
-  console.log(items)
+              console.log(items);
               const totalProvider = calculateProviderTotal(items);
               const allPaid = items.every(
                 (item) => (item.estado || "").toLowerCase() === "pagado",
@@ -177,13 +176,12 @@ Muchas gracias.`;
                     </td>
                     <td className="text-center">
                       <span
-                        className={`inline-flex justify-center items-center px-3 py-1 rounded-full text-sm font-semibold ${
-                          allPaid
-                            ? "bg-emerald-800/40 text-emerald-300 border border-emerald-700"
-                            : anyContacted
-                              ? "bg-blue-800/40 text-blue-200 border border-blue-700"
-                              : "bg-amber-900/40 text-amber-200 border border-amber-700"
-                        }`}
+                        className={`inline-flex justify-center items-center px-3 py-1 rounded-full text-sm font-semibold ${allPaid
+                          ? "bg-emerald-800/40 text-emerald-300 border border-emerald-700"
+                          : anyContacted
+                            ? "bg-blue-800/40 text-blue-200 border border-blue-700"
+                            : "bg-amber-900/40 text-amber-200 border border-amber-700"
+                          }`}
                       >
                         {statusLabel}
                       </span>
@@ -238,10 +236,8 @@ Muchas gracias.`;
                             </thead>
                             <tbody>
                               {items.map((item, itemIndex) => {
-                                const precioSugerido =
-                                  Number(item.precioSugerido || item.precio) ||
+                                const precioProveedora = Number(item.total_amount) ||
                                   0;
-                                const precioProveedora = precioSugerido * 0.6;
 
                                 return (
                                   <tr
@@ -249,10 +245,10 @@ Muchas gracias.`;
                                     className="odd:bg-slate-900/20"
                                   >
                                     <td className="text-center">
-                                      {item.codigo || "-"}
+                                      {item.barcode || "-"}
                                     </td>
                                     <td className="text-center">
-                                      {item.descripcion || "-"}
+                                      {item.description || "-"}
                                     </td>
                                     <td className="text-right">
                                       $

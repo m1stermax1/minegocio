@@ -24,12 +24,15 @@ router.get("/", async (req, res) => {
 
 router.post("/add", async (req, res) => {
   try {
-    const { orgId, total_amout, profit, providerId } = req.body;
+    const { orgId, total_amout, profit, providerId, inventory_id, description, barcode } = req.body;
     console.log("Body: ", req.body);
 
     const { data, error } = await supabase
       .from("payments")
       .insert({
+         inventory_id: inventory_id, 
+         barcode: barcode,
+         description: description,
           organization_id: orgId,
           provider_id: providerId,
           total_amount: total_amout,

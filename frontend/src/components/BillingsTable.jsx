@@ -27,36 +27,29 @@ export default function BillingsTable() {
   const [loading, setLoading] = useState(false);
   const [invoices, setInvoices] = useState([]);
   const [error, setError] = useState("");
+  console.log("Lista en la tabla", invoices)
   const loadInvoices = async () => {
-    setLoading(true);
-    setError("");
     try {
-      const data = await fetchInvoices();
-      setInvoices(Array.isArray(data) ? data : []);
+      const list = await fetchInvoices();
+      setInvoices(list?.data)
     } catch (err) {
-      console.error("Error cargando facturas:", err);
-      setError(
-        err.response?.data?.error || "No se pudieron cargar las facturas.",
-      );
-    } finally {
-      setLoading(false);
+      console.log(err)
     }
-  };
+  }
 
   useEffect(() => {
-    loadInvoices();
-  }, []);
+    loadInvoices()
+  }, [])
+
+  console.log("Lista:", invoices)
   return (
     <>
       <table className="w-full min-w-[860px] border-separate border-spacing-3">
         <thead>
           <tr>
             <th className="text-center">Fecha</th>
-            <th className="text-center">Producto</th>
             <th className="text-center">Monto</th>
-            <th className="text-center">Método</th>
             <th className="text-center">Estado</th>
-            <th className="text-center">Factura</th>
             <th className="text-center">Acción</th>
           </tr>
         </thead>
@@ -67,23 +60,16 @@ export default function BillingsTable() {
               className="odd:bg-slate-900/30 even:bg-slate-900/20"
             >
               <td className="text-center text-sm">
-                {formatDate(invoice.fecha)}
+                {formatDate(invoice.created_at)}
               </td>
-              <td className="text-center">{invoice.producto || "-"}</td>
-              <td className="text-center">{formatPrice(invoice.montoTotal)}</td>
-              <td className="text-center">{invoice.metodoPago || "-"}</td>
-              <td className="text-center">
-                {invoice.estadoFactura || "pendiente"}
-              </td>
-              <td className="text-center">{invoice.comprobante || "-"}</td>
-              <td className="text-center">
+              <td className="text-center">{formatPrice(invoice.price)}</td>
+              {/* <td className="text-center">
                 <button
                   type="button"
                   className={`rounded-lg px-3 py-2 text-sm ${invoice.estadoFactura === "facturada" ? "bg-slate-700 text-slate-300 cursor-not-allowed" : "bg-accent text-slate-900"}`}
-                  onClick={() => handleIssueInvoice(invoice.facturaId)}
+                  onClick={() => handleIssueInvoice(invoice.id)}
                   disabled={
-                    invoice.estadoFactura === "facturada" ||
-                    issuingId === invoice.facturaId
+                    invoice.estadoFactura === "facturada"
                   }
                 >
                   {invoice.estadoFactura === "facturada"
@@ -92,7 +78,7 @@ export default function BillingsTable() {
                       ? "Facturando..."
                       : "Facturar"}
                 </button>
-              </td>
+              </td> */}
             </tr>
           ))}
         </tbody>

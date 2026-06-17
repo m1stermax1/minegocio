@@ -60,7 +60,7 @@ export default function PaymentsPage({}) {
                 Panel
               </p>
 
-              <h1 className="text-3xl md:text-4xl m-0">Payments</h1>
+              <h1 className="text-3xl md:text-4xl m-0">Pagos</h1>
             </div>
           </div>
 

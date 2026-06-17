@@ -30,6 +30,7 @@ export default function BillingsPage() {
   const [issuingId, setIssuingId] = useState(null);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [invoices, setInvoices] = useState("");
 
   const handleIssueInvoice = async (facturaId) => {
     setIssuingId(facturaId);
@@ -49,6 +50,9 @@ export default function BillingsPage() {
     }
   };
 
+
+
+  console.log(invoices)
   // if (loading) {
   //   return <div className="table-state">Cargando facturas...</div>;
   // }
@@ -128,7 +132,7 @@ export default function BillingsPage() {
                 Panel
               </p>
 
-              <h1 className="text-3xl md:text-4xl m-0">Billings</h1>
+              <h1 className="text-3xl md:text-4xl m-0">Facturas</h1>
             </div>
           </div>
 

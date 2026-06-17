@@ -50,7 +50,7 @@ function Sidebar({ activeView, onViewChange }) {
           type="button"
         >
           <FiBox className="w-5 h-5" />
-          <span>Proveedoras</span>
+          <span>Proveedores</span>
         </Link>
         <Link to={{ pathname: "/sales" }}
           className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === "ventas" ? "bg-slate-700" : "hover:bg-slate-700"}`}
@@ -72,7 +72,7 @@ function Sidebar({ activeView, onViewChange }) {
           type="button"
         >
           <FiCreditCard className="w-5 h-5" />
-          <span>Facturación</span>
+          <span>Facturas</span>
         </Link>
         <button
           className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === "facturacion" ? "bg-slate-700" : "hover:bg-slate-700"}`}

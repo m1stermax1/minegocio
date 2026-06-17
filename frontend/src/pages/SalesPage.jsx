@@ -77,7 +77,7 @@ export default function SalesPage() {
                 Panel
               </p>
 
-              <h1 className="text-3xl md:text-4xl m-0">Sales</h1>
+              <h1 className="text-3xl md:text-4xl m-0">Ventas</h1>
             </div>
           </div>
 

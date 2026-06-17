@@ -212,7 +212,7 @@ function InventoryPage() {
               Panel
             </p>
 
-            <h1 className="text-3xl md:text-4xl m-0">Inventory</h1>
+            <h1 className="text-3xl md:text-4xl m-0">Inventario</h1>
           </div>
         </div>
 

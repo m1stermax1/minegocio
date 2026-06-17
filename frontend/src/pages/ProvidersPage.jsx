@@ -118,7 +118,7 @@ function ProvidersPage() {
               Panel
             </p>
 
-            <h1 className="text-3xl md:text-4xl m-0">Providers</h1>
+            <h1 className="text-3xl md:text-4xl m-0">Proveedores</h1>
           </div>
         </div>
 

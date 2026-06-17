@@ -4,6 +4,7 @@ import {
   createSalesItem,
   createPayments,
   createPaymentItems,
+  createInvoices,
   fetchProviders,
 } from "../services/api.js";
 import { getProfile } from "../services/users.js";
@@ -31,6 +32,7 @@ export default function SalesModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [notification, setNotification] = useState("");
+  const [providersList, setProvidersList] = useState([]);
 
   const availableItems = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
@@ -126,29 +128,29 @@ export default function SalesModal({
     try {
       const perfil = await getProfile();
       console.log(perfil);
-      // const salesCreated = await createSale({
-      //   orgId: perfil[0]?.organization_id,
-      //   totalSale: selectedTotal,
-      //   profit: totalProfit,
-      //   // items: selectedItems.map((item) => ({
-      //   //   id: item.id,
-      //   //   codigo: item.barcode,
-      //   //   descripcion: item.description,
-      //   //   precio: item.price,
-      //   //   proveedora: item.provider_id,
-      //   //   orgId: item.organization_id,
-      //   // })),
-      //   metodoPago: paymentMethod,
-      // });
-      const salesCreated = "";
-      // const createSaleItem = await createSalesItem({
-      //   saleId: salesCreated?.data[0]?.id,
-      //   items: selectedItems,
-      // });
-      // console.log("ITemss seleccionados", selectedItems);
-      // selectedItems?.forEach((element) => {
-      //   updateInventoryRowStatus(element?.id, element?.status);
-      // });
+      const salesCreated = await createSale({
+        orgId: perfil[0]?.organization_id,
+        totalSale: selectedTotal,
+        profit: totalProfit,
+        // items: selectedItems.map((item) => ({
+        //   id: item.id,
+        //   codigo: item.barcode,
+        //   descripcion: item.description,
+        //   precio: item.price,
+        //   proveedora: item.provider_id,
+        //   orgId: item.organization_id,
+        // })),
+        metodoPago: paymentMethod,
+      });
+      // const salesCreated = "";
+      const createSaleItem = await createSalesItem({
+        saleId: salesCreated?.data[0]?.id,
+        items: selectedItems,
+      });
+      console.log("ITemss seleccionados", selectedItems);
+      selectedItems?.forEach((element) => {
+        updateInventoryRowStatus(element?.id, element?.status);
+      });
 
       for (const element of selectedItems) {
         await createPayments({
@@ -157,6 +159,14 @@ export default function SalesModal({
           orgId: perfil[0]?.organization_id,
           total_amout: element.price * 0.6,
           providerId: element?.provider_id,
+          barcode: element.barcode
+        });
+      }
+      console.log("Metodo de pago", paymentMethod);
+      if (paymentMethod == 'transferencia') {
+        await createInvoices({
+          orgId: perfil[0]?.organization_id,
+          total_amout: selectedTotal,
         });
       }
 
