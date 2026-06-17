@@ -1,20 +1,19 @@
 import express from "express";
-import { getProviders } from "../controllers/providers/providers.controller.js";
-import { getUsers } from "../controllers/users/users.controller.js";
+import { getPayments } from "../controllers/payments/payments.controller.js";
 import { supabase } from "../services/supabaseService.js";
 
 const router = express.Router();
 
 router.get("/", async (req, res) => {
   try {
-    const providers = await getProviders();
+    const payments = await getPayments();
 
     res.json({
       success: true,
-      data: providers || [],
+      data: payments || [],
     });
   } catch (error) {
-    console.error("Error al cargar proveedoras:", error);
+    console.error("Error al cargar payments:", error);
 
     res.status(500).json({
       success: false,
@@ -25,21 +24,17 @@ router.get("/", async (req, res) => {
 
 router.post("/add", async (req, res) => {
   try {
-    const { getOrganizationId, nombre, apellido, telefono, bankalias } = req.body;
+    const { orgId, total_amout, profit, providerId } = req.body;
     console.log("Body: ", req.body);
 
     const { data, error } = await supabase
-      .from("providers")
-      .insert([
-        {
-          organization_id: getOrganizationId,
-          first_name: nombre,
-          last_name: apellido,
-          phone: telefono,
-          bankalias: bankalias,
-          created_at: new Date().toISOString(),
-        },
-      ])
+      .from("payments")
+      .insert({
+          organization_id: orgId,
+          provider_id: providerId,
+          total_amount: total_amout,
+          payment_date: new Date().toISOString(),
+        })
       .select();
 
     if (error) {

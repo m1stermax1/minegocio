@@ -202,7 +202,7 @@ export default function SalesTable({ sales = [], salesItems = [] }) {
                       <table className="w-full min-w-[720px] border-separate border-spacing-0">
                         <thead>
                           <tr>
-                            <th>Código</th>
+                            <th className="text-start">Código</th>
                             <th>Descripción</th>
                             {/* <th>Proveedor</th> */}
                             <th>Precio</th>
@@ -212,7 +212,7 @@ export default function SalesTable({ sales = [], salesItems = [] }) {
                           {/* //esto tiene que ser reemplazada por el sales item de cada sale id */}
                           {filteredSalesById(sale?.id)?.map((item, itemIndex) => (
                             <tr key={`${index}-${itemIndex}`}>
-                              <td className="text-center">{item.id || "-"}</td>
+                              <td className="text-start">{item.id || "-"}</td>
                               <td className="text-center">
                                 {item.description || "-"}
                               </td>

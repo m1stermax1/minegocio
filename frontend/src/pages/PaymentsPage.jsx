@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   fetchProvidersComplete,
-   fetchProviderPayments,
+   fetchPayments
 } from "../services/api.js";
 import Sidebar from "../components/Sidebar.jsx";
 import SearchBar from "../components/SearchBar.jsx";
@@ -18,7 +18,7 @@ export default function PaymentsPage({}) {
   const [pendingProviderPayments, setPendingProviderPayments] = useState([]);
    const [loadingProviders, setLoadingProviders] = useState(false);
 
-    const loadProviders = async () => {
+  const loadProviders = async () => {
     try {
       setLoadingProviders(true);
       const data = await fetchProvidersComplete();
@@ -34,8 +34,8 @@ export default function PaymentsPage({}) {
   const loadPendingProviderPayments = async () => {
     try {
       setLoadingPayments(true);
-      const data = await fetchProviderPayments();
-      setPendingProviderPayments(data);
+      const data = await fetchPayments();
+      setPendingProviderPayments(data?.data);
     } catch (error) {
       console.error("Error cargando pagos pendientes de proveedoras:", error);
       setPendingProviderPayments([]);

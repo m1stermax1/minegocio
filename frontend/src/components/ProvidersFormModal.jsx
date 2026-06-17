@@ -3,8 +3,7 @@ import { addProvider } from "../services/api.js";
 // import supabase from "../services/supabase.js";
 import { getProfile } from "../services/users.js";
 
-function ProvidersFormModal({ isOpen, onClose, onProviderAdded }) {
-  const [orgId, setOrgId] = useState("");
+function ProvidersFormModal({ isOpen, onClose, onProviderAdded, inventoryItems }) {
   const [nombre, setNombre] = useState("");
   const [apellido, setApellido] = useState("");
   const [telefono, setTelefono] = useState("");
@@ -25,11 +24,8 @@ function ProvidersFormModal({ isOpen, onClose, onProviderAdded }) {
     try {
       const getOrgId = await getProfile();
       const getOrganizationId = getOrgId[0].organization_id;
-      setOrgId(getOrganizationId);
-      console.log(getOrgId[0]?.organization_id);
-      console.log(orgId);
       
-      await addProvider(orgId, nombre, apellido, telefono, bankalias);
+      await addProvider(getOrganizationId, nombre, apellido, telefono, bankalias);
       setNombre("");
       setApellido("");
       setTelefono("");

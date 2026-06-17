@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   sendWhatsAppMessage,
   createMercadoPagoTransfer,
+  fetchPayments
 } from "../services/api.js";
 
 export default function PaymentModal({
@@ -18,6 +19,11 @@ export default function PaymentModal({
     return null;
   }
 
+  useEffect(()=>{
+
+  }, [])
+
+ 
   const proveedora = payment.proveedora;
   const itemsText = payment.items
     .map((item) => `${item.descripcion || item.nombre}`)

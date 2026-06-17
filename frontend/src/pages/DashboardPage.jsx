@@ -5,7 +5,6 @@ import {
   fetchProviders,
   fetchSales,
   fetchOwnerTotal,
-  addProvider
 } from "../services/api.js";
 import Sidebar from "../components/Sidebar.jsx";
 import SearchBar from "../components/SearchBar.jsx";
@@ -24,14 +23,13 @@ function StatCard({ title, value, subtitle }) {
   );
 }
 
-export default function DashboardPage({
-  refresh,
-}) {
+export default function DashboardPage({ refresh }) {
   const [counts, setCounts] = useState({ inStockCount: 0, soldCount: 0 });
   const [providersCount, setProvidersCount] = useState(0);
   const [totalSold, setTotalSold] = useState(0);
   const [totalOwner, setTotalOwner] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [totalProfitToday, setTotalProfitToday] = useState("");
 
   const [dashboardRefresh, setDashboardRefresh] = useState(0);
 
@@ -76,17 +74,32 @@ export default function DashboardPage({
             // fetchOwnerTotal(),
           ]);
         if (mounted) {
-          console.log("Items vendidos: ", dashboardData?.profit)
-          const totalPrice = dashboardData?.profit?.reduce(
-            (sum, item) => sum + (Number(item.price) || 0),
+          const totalPrice = salesData?.data?.reduce(
+            (sum, item) => sum + (Number(item.profit) || 0),
             0,
           );
-          const profitForBoss = totalPrice * 0.4;
+
+          const profitForBoss = totalPrice;
           setCounts(dashboardData || { inStockCount: 0, soldCount: 0 });
           setProvidersCount(providers?.data?.length || 0);
 
           // Calcular totales del mes actual
           const now = new Date();
+          const todaySales = salesData?.data?.filter((sale) => {
+            const saleDate = new Date(sale.sale_date);
+
+            return (
+              saleDate.getFullYear() === now.getFullYear() &&
+              saleDate.getMonth() === now.getMonth() &&
+              saleDate.getDate() === now.getDate()
+            );
+          });
+          const totalProfitOfToday = todaySales?.reduce(
+            (sum, item) => sum + (Number(item.profit) || 0),
+            0,
+          );
+          setTotalProfitToday(totalProfitOfToday);
+
           const currentMonth = now.getUTCMonth() + 1;
           const currentYear = now.getFullYear();
 
@@ -105,6 +118,7 @@ export default function DashboardPage({
 
           setTotalSold(monthlyTotal);
           // ownerTotal viene calculado en backend: suma por item de (precio venta (col D) - precio sugerido(col C)*0.6)
+          console.log("Business Profit", profitForBoss);
           setTotalOwner(profitForBoss || 0);
         }
       } catch (err) {
@@ -200,7 +214,7 @@ export default function DashboardPage({
   //   }, 3200);
   // };
 
-  console.log("Inventario antes de la pag", inventory)
+  console.log("Inventario antes de la pag", inventory);
   return (
     <div className="min-h-screen md:grid md:grid-cols-[280px_1fr]">
       <Sidebar activeView="dashboard" />
@@ -260,16 +274,15 @@ export default function DashboardPage({
                   <StatCard
                     title="Total vendido este mes"
                     value={formatCurrency(totalSold)}
-                    subtitle="Monto total de ventas"
                   />
-                  <StatCard
+                  {/* <StatCard
                     title="Total para negocio"
                     value={formatCurrency(totalOwner)}
-                  />
+                  /> */}
 
-                  <StatCard
-                    title="Total para negocio"
-                    value={formatCurrency(totalOwner)}
+                     <StatCard
+                    title="Total Hoy"
+                    value={formatCurrency(totalProfitToday)}
                   />
                 </>
               )}

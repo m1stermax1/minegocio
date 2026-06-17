@@ -32,7 +32,7 @@ export async function fetchProviderPayments() {
 }
 
 export async function addProvider(
-  orgId,
+  getOrganizationId,
   nombre,
   apellido,
   telefono,
@@ -40,7 +40,7 @@ export async function addProvider(
 ) {
   console.log("pase por el add provider");
   const response = await api.post("/providers/add", {
-    orgId,
+    getOrganizationId,
     nombre,
     apellido,
     telefono,
@@ -50,12 +50,9 @@ export async function addProvider(
   return response.data;
 }
 
-export async function updateInventoryRowStatus(
-  id,
-  estado,
-) {
+export async function updateInventoryRowStatus(id, estado) {
   const response = await api.patch(`/inventory/${id}/status`, {
-    status: estado == 'AVAILABLE' ? "SOLD" : "AVAILABLE",
+    status: estado == "AVAILABLE" ? "SOLD" : "AVAILABLE",
   });
   return response.data;
 }
@@ -93,7 +90,7 @@ export async function createSale(payload) {
 
 export async function createSalesItem(payload) {
   const response = await api.post("/sales/add-sale-item", payload);
-    return response.data;
+  return response.data;
 }
 
 export async function fetchInvoices() {
@@ -125,6 +122,21 @@ export async function updatePaymentStatus(codigos, status) {
     codigos,
     status,
   });
+  return response.data;
+}
+
+export async function fetchPayments() {
+  const response = await api.get("/payments");
+  return response.data;
+}
+
+export async function createPayments(payload) {
+  const response = await api.post("/payments/add", payload);
+  return response.data;
+}
+
+export async function createPaymentItems(payload) {
+  const response = await api.post("/payments/add-item", payload);
   return response.data;
 }
 

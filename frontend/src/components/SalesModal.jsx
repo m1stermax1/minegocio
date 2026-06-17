@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { createSale, createSalesItem } from "../services/api.js";
+import {
+  createSale,
+  createSalesItem,
+  createPayments,
+  createPaymentItems,
+  fetchProviders,
+} from "../services/api.js";
 import { getProfile } from "../services/users.js";
 import { fetchInventory, updateInventoryRowStatus } from "../services/api.js";
 
@@ -18,6 +24,7 @@ export default function SalesModal({
   onSaleCreated,
   isLoadingInventory,
 }) {
+  const [totalAmountGlobal, setTotalAmountGlobal] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedItems, setSelectedItems] = useState([]);
   const [paymentMethod, setPaymentMethod] = useState("");
@@ -28,22 +35,24 @@ export default function SalesModal({
   const availableItems = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
     if (!term) return [];
-    return inventoryItems?.filter((item) => item?.status == 'AVAILABLE')?.filter((item) => {
-      if (!item.description) {
-        console.log("No se puede buscar un item sin código o descripción");
-        return false;
-      }
-      const isSold = (item.status || "").toUpperCase() === "SOLD";
-      if (isSold) return false;
-      const alreadySelected = selectedItems.some(
-        (selected) => selected.id === item.id,
-      );
-      if (alreadySelected) return false;
-      const codigo = item.barcode?.toLowerCase() || "";
-      const descripcion = item.description?.toLowerCase() || "";
-      return codigo.includes(term) || descripcion.includes(term);
-      return descripcion.includes(term);
-    })
+    return inventoryItems
+      ?.filter((item) => item?.status == "AVAILABLE")
+      ?.filter((item) => {
+        if (!item.description) {
+          console.log("No se puede buscar un item sin código o descripción");
+          return false;
+        }
+        const isSold = (item.status || "").toUpperCase() === "SOLD";
+        if (isSold) return false;
+        const alreadySelected = selectedItems.some(
+          (selected) => selected.id === item.id,
+        );
+        if (alreadySelected) return false;
+        const codigo = item.barcode?.toLowerCase() || "";
+        const descripcion = item.description?.toLowerCase() || "";
+        return codigo.includes(term) || descripcion.includes(term);
+        return descripcion.includes(term);
+      })
       .slice(0, 10);
   }, [inventoryItems, searchTerm, selectedItems]);
 
@@ -51,7 +60,6 @@ export default function SalesModal({
     const value = Number(item.price) || 0;
     return sum + value;
   }, 0);
-
 
   const efectivoTotal = totalAmount * 0.9;
   const transferenciaTotal = totalAmount * 0.95;
@@ -65,7 +73,6 @@ export default function SalesModal({
           ? tarjetaTotal
           : totalAmount;
 
-
   const handleAddItem = (item) => {
     setError("");
     setSelectedItems((prev) => {
@@ -76,8 +83,6 @@ export default function SalesModal({
     });
     setSearchTerm("");
   };
-
-  console.log("Items seleccionados: ", selectedItems)
 
   const handleRemoveItem = (id) => {
     setSelectedItems((prev) => prev.filter((item) => item.id !== id));
@@ -101,8 +106,8 @@ export default function SalesModal({
   const normalizeBarcodeSearch = (value) => {
     return value.replace(/[’'‘]/g, "-");
   };
-  const totalProfit = selectedTotal - (totalAmount * 0.6);
-  console.log("Total profit: ", totalProfit)
+  const totalProfit = selectedTotal - totalAmount * 0.6;
+  console.log("Total profit: ", totalProfit);
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");
@@ -120,20 +125,40 @@ export default function SalesModal({
     setLoading(true);
     try {
       const perfil = await getProfile();
-      const salesCreated = await createSale({
-        orgId: perfil[0]?.organization_id,
-        totalSale: selectedTotal,
-        profit: totalProfit,
-        // items: selectedItems.map((item) => ({
-        //   id: item.id,
-        //   codigo: item.barcode,
-        //   descripcion: item.description,
-        //   precio: item.price,
-        //   proveedora: item.provider_id,
-        //   orgId: item.organization_id,
-        // })),
-        metodoPago: paymentMethod,
-      });
+      console.log(perfil);
+      // const salesCreated = await createSale({
+      //   orgId: perfil[0]?.organization_id,
+      //   totalSale: selectedTotal,
+      //   profit: totalProfit,
+      //   // items: selectedItems.map((item) => ({
+      //   //   id: item.id,
+      //   //   codigo: item.barcode,
+      //   //   descripcion: item.description,
+      //   //   precio: item.price,
+      //   //   proveedora: item.provider_id,
+      //   //   orgId: item.organization_id,
+      //   // })),
+      //   metodoPago: paymentMethod,
+      // });
+      const salesCreated = "";
+      // const createSaleItem = await createSalesItem({
+      //   saleId: salesCreated?.data[0]?.id,
+      //   items: selectedItems,
+      // });
+      // console.log("ITemss seleccionados", selectedItems);
+      // selectedItems?.forEach((element) => {
+      //   updateInventoryRowStatus(element?.id, element?.status);
+      // });
+
+      for (const element of selectedItems) {
+        await createPayments({
+          inventory_id: element?.id,
+          description: element?.description,
+          orgId: perfil[0]?.organization_id,
+          total_amout: element.price * 0.6,
+          providerId: element?.provider_id,
+        });
+      }
 
       setSelectedItems([]);
       setPaymentMethod("");
@@ -144,17 +169,12 @@ export default function SalesModal({
       }
 
       onClose();
-      const createSaleItem = await createSalesItem({ saleId: salesCreated?.data[0]?.id, items: selectedItems });
-      selectedItems?.forEach(element => {
-        updateInventoryRowStatus(element?.id, element?.status);
-      });
 
       return salesCreated;
     } catch (err) {
       console.error("Error cargando venta:", err);
       setError(err.response?.data?.error || "No se pudo guardar la venta.");
     } finally {
-
       setLoading(false);
     }
   };
@@ -332,10 +352,6 @@ export default function SalesModal({
                   <div className="text-sm text-accent flex justify-between">
                     <span>Transferencia (5% off)</span>
                     <span>{formatPrice(transferenciaTotal)}</span>
-                  </div>
-                  <div className="text-sm text-slate-300 flex justify-between">
-                    <span>Débito / Crédito (5.59% off)</span>
-                    <span>{formatPrice(tarjetaTotal)}</span>
                   </div>
                 </div>
 

@@ -21,9 +21,11 @@ export default function PaymentsTable({
 
   const paymentsByProvider = useMemo(() => {
     const groupedByProvider = {};
+    
+    console.log(payments)
 
     payments.forEach((item) => {
-      const provName = item.proveedora || "Sin proveedora";
+      const provName = item.provider_id || "Sin proveedora";
       if (!groupedByProvider[provName]) {
         groupedByProvider[provName] = [];
       }
@@ -120,6 +122,8 @@ Muchas gracias.`;
 
   const providerNames = Object.keys(paymentsByProvider);
 
+  console.log(providerNames)
+
   if (providerNames.length === 0) {
     return (
       <div className="table-state">
@@ -144,6 +148,7 @@ Muchas gracias.`;
           <tbody>
             {providerNames.map((provName) => {
               const items = paymentsByProvider[provName];
+  console.log(items)
               const totalProvider = calculateProviderTotal(items);
               const allPaid = items.every(
                 (item) => (item.estado || "").toLowerCase() === "pagado",
