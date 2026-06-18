@@ -180,7 +180,7 @@ router.post("/add", async (req, res) => {
     preparedItems.push({ nombre, precio: precioNumero, proveedora, orgId, providerName, barcode: codigo });
 
     // imprimir etiqueta
-    await generateBarcodeAndPrint(codigo);
+    // await generateBarcodeAndPrint(codigo);
     console.log("ESPERANDO 5 SEGUNDOS");
 
     await new Promise(resolve => setTimeout(resolve, 2000));
