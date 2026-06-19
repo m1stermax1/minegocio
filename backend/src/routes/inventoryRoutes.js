@@ -36,6 +36,7 @@ import {
 import twilio from "twilio";
 import { getInventory, addItemToInventory } from "../controllers/inventory/inventory.controller.js";
 import { supabase } from "../services/supabaseService.js";
+import authMiddleware from "./authMiddleware.js"; 
 
 const router = express.Router();
 
@@ -135,10 +136,11 @@ async function generateBarcodeAndPrint(code) {
   };
 }
 
-router.get("/", async (req, res) => {
+router.get("/",authMiddleware, async (req, res) => {
   try {
-    const inventory = await getInventory();
-    res.json(inventory);
+    const organizationId = req.user?.organization_id
+    const inventory = await getInventory(organizationId);
+    res.json(inventory?.data);
   } catch (error) {
     console.error("Error al cargar inventario:", error);
     res.status(500).json({ error: "No se pudo cargar el inventario" });

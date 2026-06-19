@@ -1,12 +1,14 @@
 import express from "express";
 import { getInvoices } from "../controllers/invoices/invoices.controller.js";
 import { supabase } from "../services/supabaseService.js";
+import authMiddleware from "./authMiddleware.js";
 
 const router = express.Router();
 
-router.get("/", async (req, res) => {
+router.get("/",authMiddleware, async (req, res) => {
     try {
-        const invoices = await getInvoices();
+        const organizationId = req.user?.organization_id
+        const invoices = await getInvoices(organizationId);
 
         res.json({
             success: true,

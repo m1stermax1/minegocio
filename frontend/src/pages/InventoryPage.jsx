@@ -17,7 +17,6 @@ import MessageForProvidersModal from "../components/messagesForProvidersModal.js
 import {
   fetchInventory,
   fetchProviders,
-  fetchProvidersComplete,
   fetchSales,
   fetchProviderPayments,
 } from "../services/api.js";
@@ -199,7 +198,6 @@ function InventoryPage() {
   //     (item) => item.pago?.toLowerCase() === "pagado",
   //   );
   // }, [filteredProviders]);
-
 
   return (
     <div className="min-h-screen md:grid md:grid-cols-[280px_1fr]">

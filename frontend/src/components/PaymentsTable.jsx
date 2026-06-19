@@ -1,7 +1,7 @@
 import { Fragment, useState, useMemo } from "react";
 import PaymentModal from "./PaymentModal.jsx";
 
-import { updatePaymentStatus } from "../services/api.js";
+import { updatePaymentStatus, fetchProviders } from "../services/api.js";
 
 export default function PaymentsTable({
   payments = [],
@@ -37,7 +37,7 @@ export default function PaymentsTable({
 
   const getProviderInfo = async (provName) => {
     try {
-      const data = await fetchProvidersComplete();
+      const data = await fetchProviders();
       return data.find(
         (p) =>
           p.nombre?.toLowerCase() === provName?.toLowerCase() ||

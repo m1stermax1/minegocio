@@ -1,26 +1,27 @@
 import axios from "axios";
+import { getProfile, getSessionUser } from "./users";
+import { supabase } from "./supabase";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:3001",
-  headers: {
-    "Content-Type": "application/json",
-  },
+});
+
+api.interceptors.request.use(async (config) => {
+  const perfil = await getSessionUser();
+  if (perfil?.access_token) {
+    config.headers.Authorization = `Bearer ${perfil.access_token}`;
+  }
+  return config;
 });
 
 export async function fetchInventory() {
   const response = await api.get("/inventory");
-  return response.data;
+  // const inventory = response.data?.filter((item) => item?.organization_id == perfil[0]?.organization_id)
+  return response;
 }
 
 export async function fetchProviders() {
   const response = await api.get("/providers");
-  return response.data;
-}
-
-export async function fetchProvidersComplete() {
-  const response = await api.get("/inventory/providers-list", {
-    params: { _t: Date.now() },
-  });
   return response.data;
 }
 
@@ -30,6 +31,11 @@ export async function fetchProviderPayments() {
   });
   return response.data;
 }
+
+export async function fetchProfiles() {
+  const response = await api.get("/profiles");
+  return response?.data;
+};
 
 export async function addProvider(
   getOrganizationId,

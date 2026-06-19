@@ -15,4 +15,13 @@ export async function getProfile() {
   return data;
 }
 
+export async function getSessionUser() {
+    const {
+    data: { session },
+    error: userError,
+  } = await supabase.auth.getSession();
+
+    return session;
+};
+
 export async function getOrganization() {}

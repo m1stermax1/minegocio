@@ -2,13 +2,14 @@ import express from "express";
 import { getProviders } from "../controllers/providers/providers.controller.js";
 import { getUsers } from "../controllers/users/users.controller.js";
 import { supabase } from "../services/supabaseService.js";
+import authMiddleware from "./authMiddleware.js";
 
 const router = express.Router();
 
-router.get("/", async (req, res) => {
+router.get("/", authMiddleware, async (req, res) => {
   try {
-    const providers = await getProviders();
-
+        const organizationId = req.user?.organization_id
+    const providers = await getProviders(organizationId);
     res.json({
       success: true,
       data: providers || [],

@@ -10,7 +10,6 @@ import ProvidersFormModal from "../components/ProvidersFormModal.jsx";
 import {
   fetchInventory,
   fetchProviders,
-  fetchProvidersComplete,
 } from "../services/api.js";
 
 function ProvidersPage() {

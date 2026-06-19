@@ -1,12 +1,14 @@
 import express from "express";
 import { supabase } from "../services/supabaseService.js";
 import { getSales, getSalesItems } from "../controllers/sales/sales.controller.js";
+import authMiddleware from "./authMiddleware.js";
 
 const router = express.Router();
 
-router.get("/", async (req, res) => {
+router.get("/",authMiddleware, async (req, res) => {
   try {
-    const inventory = await getSales();
+        const organizationId = req.user?.organization_id
+    const inventory = await getSales(organizationId);
     res.json(inventory);
   } catch (error) {
     console.error("Error al cargar inventario:", error);

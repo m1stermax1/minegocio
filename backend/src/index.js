@@ -10,6 +10,7 @@ import dashboardRoutes from "./routes/dashboardRoutes.js";
 import paymentsRoutes from "./routes/paymentsRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import invoicesRoutes from "./routes/invoicesRoutes.js";
+import profilesRoutes from "./routes/profilesRoutes.js"
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -27,6 +28,7 @@ app.use(
       "http://localhost:5173",
       "https://minegocio-gold.vercel.app",
     ],
+    credentials: true
   }),
 );
 
@@ -41,6 +43,7 @@ app.use("/sales", salesRoutes);
 app.use("/dashboard", dashboardRoutes);
 app.use("/payments", paymentsRoutes);
 app.use("/invoices", invoicesRoutes);
+app.use("/profiles", profilesRoutes)
 
 
 

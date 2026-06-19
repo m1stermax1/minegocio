@@ -12,6 +12,7 @@ import ProvidersFormModal from "../components/ProvidersFormModal.jsx";
 import ItemsFormModal from "../components/ItemsFormModal.jsx";
 import SalesModal from "../components/SalesModal.jsx";
 import MessageForProvidersModal from "../components/messagesForProvidersModal.jsx";
+import { getProfile } from "../services/users.js";
 
 function StatCard({ title, value, subtitle }) {
   return (
@@ -65,6 +66,7 @@ export default function DashboardPage({ refresh }) {
     let mounted = true;
     async function load() {
       try {
+
         setLoading(true);
         const [dashboardData, providers, salesData, ownerTotal] =
           await Promise.all([
@@ -75,10 +77,11 @@ export default function DashboardPage({ refresh }) {
           ]);
         if (mounted) {
           const totalPrice = salesData?.data?.reduce(
-            (sum, item) => sum + (Number(item.profit) || 0),
+            (sum, item) => sum + (Number(item?.profit) || 0),
             0,
           );
 
+          console.log("Dashboard Data:", dashboardData)
           const profitForBoss = totalPrice;
           setCounts(dashboardData || { inStockCount: 0, soldCount: 0 });
           setProvidersCount(providers?.data?.length || 0);
@@ -86,7 +89,7 @@ export default function DashboardPage({ refresh }) {
           // Calcular totales del mes actual
           const now = new Date();
           const todaySales = salesData?.data?.filter((sale) => {
-            const saleDate = new Date(sale.sale_date);
+            const saleDate = new Date(sale?.sale_date);
 
             return (
               saleDate.getFullYear() === now.getFullYear() &&
@@ -95,7 +98,7 @@ export default function DashboardPage({ refresh }) {
             );
           });
           const totalProfitOfToday = todaySales?.reduce(
-            (sum, item) => sum + (Number(item.profit) || 0),
+            (sum, item) => sum + (Number(item?.profit) || 0),
             0,
           );
           setTotalProfitToday(totalProfitOfToday);
@@ -132,7 +135,7 @@ export default function DashboardPage({ refresh }) {
   }, [refresh, providers, inventory]);
 
   const formatCurrency = (value) => {
-    return `$ ${Number(value).toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+    return `$ ${Number(value || 0)?.toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
   };
   const loadInventory = async () => {
     try {
@@ -214,7 +217,6 @@ export default function DashboardPage({ refresh }) {
   //   }, 3200);
   // };
 
-  console.log("Inventario antes de la pag", inventory);
   return (
     <div className="min-h-screen md:grid md:grid-cols-[280px_1fr]">
       <Sidebar activeView="dashboard" />

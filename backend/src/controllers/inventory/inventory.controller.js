@@ -1,11 +1,11 @@
 import { supabase } from "../../services/supabaseService.js";
+import { getSessionUser } from "../session/session.controller.js";
 
-export const getInventory = async () => {
+export const getInventory = async (organizationId) => {
   try {
     const { data, error } = await supabase
       .from("inventory")
-      .select("*");
-
+      .select("*").eq("organization_id", organizationId);
     if (error) {
       return {
         success: false,
@@ -29,7 +29,7 @@ export const addItemToInventory = async (preparedItems) => {
   try {
     console.log("Llegamos al addItemToInventory");
 
-    const payload = preparedItems?.map((item) => ({ organization_id: item?.orgId, provider_id: item?.proveedora, description: item?.nombre, price: item?.precio, status: 'AVAILABLE', providerName: item?.providerName, barcode: item?.barcode}));
+    const payload = preparedItems?.map((item) => ({ organization_id: item?.orgId, provider_id: item?.proveedora, description: item?.nombre, price: item?.precio, status: 'AVAILABLE', providerName: item?.providerName, barcode: item?.barcode }));
 
     const { data, error } = await supabase
       .from('inventory')

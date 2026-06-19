@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import {
-  fetchProvidersComplete,
+  fetchProviders,
    fetchPayments
 } from "../services/api.js";
 import Sidebar from "../components/Sidebar.jsx";
@@ -21,7 +21,7 @@ export default function PaymentsPage({}) {
   const loadProviders = async () => {
     try {
       setLoadingProviders(true);
-      const data = await fetchProvidersComplete();
+      const data = await fetchProviders();
       setProviders(data);
     } catch (error) {
       console.error("Error cargando proveedoras:", error);

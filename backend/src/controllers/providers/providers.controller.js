@@ -1,9 +1,10 @@
 import { supabase } from "../../services/supabaseService.js";
 
-export async function getProviders() {
+
+export async function getProviders(organizationId) {
     const { data, error } = await supabase
         .from("providers")
-        .select("*");
+        .select("*").eq("organization_id", organizationId);
 
     if (error) {
         throw error;

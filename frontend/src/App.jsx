@@ -29,21 +29,6 @@ function App() {
           .eq("id", datauser.id).single();
         return data;
       };
-      console.log(
-        profileData().then((result) => {
-          console.log(result);
-        }),
-      );
-
-      console.log(
-        supabase.auth.getSession().then(({ data, error }) => {
-          if (error) {
-            console.error(error);
-            return;
-          }
-          console.log(data.session);
-        }),
-      );
     });
 
     // Escuchar login/logout

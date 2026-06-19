@@ -1,10 +1,10 @@
 import { supabase } from "../../services/supabaseService.js";
 
-export const getSales = async () => {
+export const getSales = async (organizationId) => {
   try {
     const { data, error } = await supabase
       .from("sales")
-      .select("*");
+      .select("*").eq("organization_id", organizationId);
 
     if (error) {
       return {

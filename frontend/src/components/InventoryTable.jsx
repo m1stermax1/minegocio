@@ -3,7 +3,6 @@ import { FaCheck } from "react-icons/fa";
 import {
   fetchProviders,
   addInventoryItem,
-  fetchProvidersComplete,
   sendWhatsAppMessage,
 } from "../services/api.js";
 

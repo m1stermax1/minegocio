@@ -1,8 +1,12 @@
 import { supabase } from "../services/supabase.js";
+import axios from "axios";
+import { getSessionUser } from "./users";
+
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:3001",
+});
 
 export async function registerUser({ name, email, password, businessName }) {
-  console.log(name);
-
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -38,16 +42,12 @@ export async function loginUser({ email, password }) {
     email,
     password,
   });
-
-  console.log("LOGIN DATA:", data);
-  console.log("LOGIN ERROR:", error);
-
   if (error) throw error;
-
-
   return data;
 }
 
 export async function logoutUser() {
   await supabase.auth.signOut();
 }
+
+

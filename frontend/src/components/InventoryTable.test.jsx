@@ -7,7 +7,6 @@ import InventoryTable from './InventoryTable.jsx';
 vi.mock('../services/api.js', () => ({
   updateInventoryRowStatus: vi.fn(),
   addInventoryItem: vi.fn(),
-  fetchProvidersComplete: vi.fn().mockResolvedValue([]),
 }));
 
 import { updateInventoryRowStatus, addInventoryItem } from '../services/api.js';
