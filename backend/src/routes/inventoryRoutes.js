@@ -2,7 +2,7 @@ import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
-import bwipjs from "bwip-js"; 
+import bwipjs from "bwip-js";
 import sharp from "sharp";
 import crypto from "crypto";
 import { exec } from "child_process";
@@ -20,9 +20,7 @@ import {
   getOwnerTotalForMonth,
   getPendingPayments,
 } from "../services/sheetsService.js";
-import {
-  issueFacturaC,
-} from "../services/afipService.js";
+import { issueFacturaC } from "../services/afipService.js";
 import {
   sendWhatsAppMessage,
   formatPhoneNumber,
@@ -34,9 +32,13 @@ import {
   isValidCBU,
 } from "../services/mercadoPagoService.js";
 import twilio from "twilio";
-import { getInventory, addItemToInventory } from "../controllers/inventory/inventory.controller.js";
+import {
+  getInventory,
+  addItemToInventory,
+  changeItemStatus
+} from "../controllers/inventory/inventory.controller.js";
 import { supabase } from "../services/supabaseService.js";
-import authMiddleware from "./authMiddleware.js"; 
+import authMiddleware from "./authMiddleware.js";
 
 const router = express.Router();
 
@@ -53,10 +55,7 @@ fs.mkdirSync(TEMP_DIR, { recursive: true });
 async function generateBarcodeAndPrint(code) {
   const safeCode = code.replace(/[^A-Za-z0-9_-]/g, "_");
 
-  const filePath = path.join(
-    TEMP_DIR,
-    `${safeCode}-${Date.now()}.png`
-  );
+  const filePath = path.join(TEMP_DIR, `${safeCode}-${Date.now()}.png`);
 
   // Generar barcode chico y nítido
   const barcodeBuffer = await bwipjs.toBuffer({
@@ -123,12 +122,11 @@ async function generateBarcodeAndPrint(code) {
         }
 
         resolve();
-      }
+      },
     );
   });
 
   fs.unlinkSync(filePath);
-
 
   return {
     success: true,
@@ -136,9 +134,9 @@ async function generateBarcodeAndPrint(code) {
   };
 }
 
-router.get("/",authMiddleware, async (req, res) => {
+router.get("/", authMiddleware, async (req, res) => {
   try {
-    const organizationId = req.user?.organization_id
+    const organizationId = req.user?.organization_id;
     const inventory = await getInventory(organizationId);
     res.json(inventory?.data);
   } catch (error) {
@@ -150,6 +148,8 @@ router.get("/",authMiddleware, async (req, res) => {
 router.post("/add", async (req, res) => {
   const items = Array.isArray(req.body) ? req.body : [req.body];
 
+  console.log("Lista de items", items);
+
   if (!items.length) {
     return res
       .status(400)
@@ -159,19 +159,18 @@ router.post("/add", async (req, res) => {
   const preparedItems = [];
   for (const item of items) {
     const codigo = `INV${crypto.randomUUID().split("-")[0].toUpperCase()}`;
-    const nombre = item.nombre?.toString().trim();
-    const precio = item.precio?.toString().trim();
-    const proveedora = item.proveedora?.toString().trim();
-    const orgId = item.orgId;
+    const nombre = item?.nombre?.toString().trim();
+    const precio = item?.precio?.toString().trim();
+    const proveedora = item?.proveedora?.toString().trim();
+    const profile = item?.profile_id?.toString().trim();
+    const orgId = item?.orgId;
     const providerName = item?.providerName;
 
-    if (!nombre || !precio || !proveedora) {
-      return res
-        .status(400)
-        .json({
-          error:
-            "Campos inválidos. nombre, precio y proveedora son obligatorios.",
-        });
+    if (!nombre || !precio) {
+      return res.status(400).json({
+        error:
+          "Campos inválidos. nombre, precio y proveedora son obligatorios.",
+      });
     }
 
     const precioNumero = Number(precio.replace(/,/g, "."));
@@ -179,16 +178,22 @@ router.post("/add", async (req, res) => {
       return res.status(400).json({ error: "Precio inválido" });
     }
 
-    preparedItems.push({ nombre, precio: precioNumero, proveedora, orgId, providerName, barcode: codigo });
+    preparedItems.push({
+      nombre,
+      precio: precioNumero,
+      proveedora,
+      orgId,
+      providerName,
+      barcode: codigo,
+      profile,
+    });
 
     // imprimir etiqueta
     // await generateBarcodeAndPrint(codigo);
     console.log("ESPERANDO 5 SEGUNDOS");
 
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
   }
-
-
 
   try {
     const result = await addItemToInventory(preparedItems);
@@ -207,31 +212,6 @@ router.post("/add", async (req, res) => {
   }
 });
 
-// router.put("/:id/status", async (req, res) => {
-//   const rowIndex = Number(req.params.id);
-//   const { estado, metodoPago, precioVentaManual } = req.body;
-
-//   if (Number.isNaN(rowIndex) || rowIndex < 0) {
-//     return res.status(400).json({ error: "ID de fila inválido" });
-//   }
-
-//   if (!estado || !["vendido", "en stock"].includes(estado.toLowerCase())) {
-//     return res.status(400).json({ error: "Estado inválido" });
-//   }
-
-//   try {
-//     await setInventoryRowStatus(
-//       rowIndex,
-//       estado,
-//       metodoPago,
-//       precioVentaManual,
-//     );
-//     res.json({ success: true });
-//   } catch (error) {
-//     console.error("Error actualizando estado en Sheets:", error);
-//     res.status(500).json({ error: "No se pudo actualizar el estado" });
-//   }
-// });
 router.patch("/:id/status", async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;

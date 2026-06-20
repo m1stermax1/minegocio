@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
+import { getProfile } from "../services/users.js";
 import {
+  fetchInventory,
+  updateInventoryRowStatus,
   createSale,
   createSalesItem,
   createPayments,
   createPaymentItems,
   createInvoices,
   fetchProviders,
+  changeInventoryItem,
 } from "../services/api.js";
-import { getProfile } from "../services/users.js";
-import { fetchInventory, updateInventoryRowStatus } from "../services/api.js";
 
 const formatPrice = (value) => {
   const number = Number(value);
@@ -59,7 +61,7 @@ export default function SalesModal({
   }, [inventoryItems, searchTerm, selectedItems]);
 
   const totalAmount = selectedItems.reduce((sum, item) => {
-    const value = Number(item.price) || 0;
+    const value = Number(item?.profile ? item.price : item.price * 0.6) || 0;
     return sum + value;
   }, 0);
 
@@ -108,8 +110,10 @@ export default function SalesModal({
   const normalizeBarcodeSearch = (value) => {
     return value.replace(/[’'‘]/g, "-");
   };
-  const totalProfit = selectedTotal - totalAmount * 0.6;
-  console.log("Total profit: ", totalProfit);
+
+  // const totalProfit = selectedTotal - totalAmount * 0.6;
+
+  // console.log("Total profit: ", totalProfit);
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");
@@ -131,7 +135,7 @@ export default function SalesModal({
       const salesCreated = await createSale({
         orgId: perfil[0]?.organization_id,
         totalSale: selectedTotal,
-        profit: totalProfit,
+        profit: totalAmount,
         // items: selectedItems.map((item) => ({
         //   id: item.id,
         //   codigo: item.barcode,
@@ -147,23 +151,26 @@ export default function SalesModal({
         saleId: salesCreated?.data[0]?.id,
         items: selectedItems,
       });
-      console.log("ITemss seleccionados", selectedItems);
       selectedItems?.forEach((element) => {
         updateInventoryRowStatus(element?.id, element?.status);
       });
 
       for (const element of selectedItems) {
-        await createPayments({
-          inventory_id: element?.id,
-          description: element?.description,
-          orgId: perfil[0]?.organization_id,
-          total_amout: element.price * 0.6,
-          providerId: element?.provider_id,
-          barcode: element.barcode
-        });
+        if (!element?.profile_id) {
+          await createPayments({
+            inventory_id: element?.id,
+            description: element?.description,
+            orgId: perfil[0]?.organization_id,
+            total_amout: element.price * 0.6,
+            providerId: element?.provider_id,
+            // profile: element?.profile_id,
+            barcode: element.barcode,
+          });
+        }
+
+        // await changeInventoryItem(element?.id)
       }
-      console.log("Metodo de pago", paymentMethod);
-      if (paymentMethod == 'transferencia') {
+      if (paymentMethod == "transferencia") {
         await createInvoices({
           orgId: perfil[0]?.organization_id,
           total_amout: selectedTotal,

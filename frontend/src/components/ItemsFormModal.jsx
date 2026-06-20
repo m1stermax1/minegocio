@@ -1,5 +1,9 @@
 import { useState, useEffect } from "react";
-import { addInventoryItem, fetchProviders, fetchProfiles } from "../services/api.js";
+import {
+  addInventoryItem,
+  fetchProviders,
+  fetchProfiles,
+} from "../services/api.js";
 
 function ItemsFormModal({
   isOpen,
@@ -30,10 +34,12 @@ function ItemsFormModal({
       try {
         const data = await fetchProviders();
         setProviders(data || []);
-        const profiles = await fetchProfiles()
-        const filterProfileByOwner = profiles?.filter((profile) => profile?.role == 'ADMIN' || profile.role == 'OWNER')[0]
-        console.log("Perfiles", filterProfileByOwner)
-        setSelectedProvider(filterProfileByOwner)
+        const profiles = await fetchProfiles();
+        const filterProfileByOwner = profiles?.filter(
+          (profile) => profile?.role == "ADMIN" || profile.role == "OWNER",
+        )[0];
+        console.log("Perfiles", filterProfileByOwner);
+        setSelectedProvider(filterProfileByOwner);
       } catch (err) {
         console.error("Error cargando proveedoras:", err);
       }
@@ -112,7 +118,7 @@ function ItemsFormModal({
         const itemsToAdd = items.map((item) => ({
           nombre: item.nombre,
           precio: item.precio.toString(),
-          proveedora: selectedProvider?.id,
+          ...parseProvider,
           orgId: selectedProvider?.organization_id,
           providerName: selectedProvider?.first_name,
         }));
@@ -125,16 +131,32 @@ function ItemsFormModal({
           `https://opensheet.elk.sh/${SHEET_ID}/${SHEET_NAME}`,
         );
         const data = await response.json();
-        const products = data.map((row) => ({
-          nombre: row.Nombre,
-          precio: Number(row.Precio * 1000),
-          proveedora: selectedProvider?.id,
-          orgId: selectedProvider?.organization_id,
-          providerName: selectedProvider?.first_name ||selectedProvider?.name,
-        }));
 
-        console.log("Productos:", products);
-        await addInventoryItem(products);
+        if (
+          selectedProvider.role == "ADMIN" ||
+          selectedProvider.role == "OWNER"
+        ) {
+          const products = data.map((row) => ({
+            nombre: row.Nombre,
+            precio: Number(row.Precio * 1000),
+            profile_id: selectedProvider?.id,
+            orgId: selectedProvider?.organization_id,
+            providerName:
+              selectedProvider?.first_name || selectedProvider?.name,
+          }));
+
+          await addInventoryItem(products);
+        } else {
+          const products = data.map((row) => ({
+            nombre: row.Nombre,
+            precio: Number(row.Precio * 1000),
+            proveedora: selectedProvider?.id,
+            orgId: selectedProvider?.organization_id,
+            providerName:
+              selectedProvider?.first_name || selectedProvider?.name,
+          }));
+          await addInventoryItem(products);
+        }
       }
 
       setItems([]);
@@ -158,11 +180,13 @@ function ItemsFormModal({
   const total = items.reduce((s, it) => s + it.precio, 0);
 
   const listProfiles = async () => {
-
     return;
-  }
+  };
 
-  console.log("Dueña de producto o proveedora seleccionada: ", selectedProvider)
+  console.log(
+    "Dueña de producto o proveedora seleccionada: ",
+    selectedProvider,
+  );
 
   return (
     <div className="fixed inset-0 backdrop-blur flex items-center justify-center p-5 z-50">
@@ -322,7 +346,7 @@ function ItemsFormModal({
               <button
                 type="submit"
                 className="bg-accent text-slate-900 font-semibold rounded-lg px-4 py-2"
-              // disabled={loading || !items.length || !selectedProvider}
+                // disabled={loading || !items.length || !selectedProvider}
               >
                 {loading ? "Enviando..." : "✓ Guardar y Enviar por WhatsApp"}
               </button>

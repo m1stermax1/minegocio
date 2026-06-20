@@ -5,9 +5,9 @@ import authMiddleware from "./authMiddleware.js";
 
 const router = express.Router();
 
-router.get("/",authMiddleware, async (req, res) => {
+router.get("/", authMiddleware, async (req, res) => {
   try {
-        const organizationId = req.user?.organization_id
+    const organizationId = req.user?.organization_id;
     const payments = await getPayments(organizationId);
 
     res.json({
@@ -26,29 +26,40 @@ router.get("/",authMiddleware, async (req, res) => {
 
 router.post("/add", async (req, res) => {
   try {
-    const { orgId, total_amout, profit, providerId, inventory_id, description, barcode } = req.body;
+    const {
+      orgId,
+      total_amout,
+      profit,
+      providerId,
+      inventory_id,
+      description,
+      barcode,
+      profile,
+    } = req.body;
     console.log("Body: ", req.body);
 
     const { data, error } = await supabase
       .from("payments")
       .insert({
-         inventory_id: inventory_id, 
-         barcode: barcode,
-         description: description,
-          organization_id: orgId,
-          provider_id: providerId,
-          total_amount: total_amout,
-          payment_date: new Date().toISOString(),
-        })
+        inventory_id: inventory_id,
+        barcode: barcode,
+        description: description,
+        organization_id: orgId,
+        provider_id: providerId,
+        total_amount: total_amout,
+        payment_date: new Date().toISOString(),
+        profile_id: profile,
+      })
       .select();
 
     if (error) {
       throw error;
     }
 
+
+
     return res.status(201).json({
       success: true,
-      provider: "test",
     });
   } catch (error) {
     console.error(error);

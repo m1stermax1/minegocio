@@ -149,4 +149,10 @@ export async function createInvoices(payload) {
   return response.data;
 };
 
+export async function changeInventoryItem(payload) {
+  console.log("Payload", payload)
+  const response = await api.post(`/inventory/${payload?.inventory_id}`);
+  return response.data;
+};
+
 export default api;
