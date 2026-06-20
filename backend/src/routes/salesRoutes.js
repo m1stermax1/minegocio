@@ -64,6 +64,8 @@ router.post("/add-sale-item", async (req, res) => {
   try {
     const payload = req.body;
 
+    const totalSaleAmount = req.body?.totalSaleAmount;
+
     const salesItems = req.body?.items?.map((item) => ({
       sale_id: req.body?.saleId,
       product_id: item?.id,

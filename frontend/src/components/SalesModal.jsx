@@ -150,6 +150,7 @@ export default function SalesModal({
       const createSaleItem = await createSalesItem({
         saleId: salesCreated?.data[0]?.id,
         items: selectedItems,
+        totalSaleAmount: selectedTotal,
       });
       selectedItems?.forEach((element) => {
         updateInventoryRowStatus(element?.id, element?.status);

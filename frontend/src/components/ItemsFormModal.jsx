@@ -115,15 +115,31 @@ function ItemsFormModal({
 
     try {
       if (!sheetUrl) {
-        const itemsToAdd = items.map((item) => ({
-          nombre: item.nombre,
-          precio: item.precio.toString(),
-          ...parseProvider,
-          orgId: selectedProvider?.organization_id,
-          providerName: selectedProvider?.first_name,
-        }));
+        if (
+          selectedProvider?.role == "ADMIN" ||
+          selectedProvider?.role == "OWNER"
+        ) {
+          const itemsToAdd = items.map((item) => ({
+            nombre: item.nombre,
+            precio: item.precio.toString(),
+            profile_id: selectedProvider?.id,
+            orgId: selectedProvider?.organization_id,
+            providerName: selectedProvider?.first_name,
+          }));
 
-        await addInventoryItem(itemsToAdd);
+          await addInventoryItem(itemsToAdd);
+        } else {
+          const itemsToAdd = items.map((item) => ({
+            nombre: item.nombre,
+            precio: item.precio.toString(),
+            proveedora: selectedProvider?.id,
+            orgId: selectedProvider?.organization_id,
+            providerName: selectedProvider?.first_name,
+          }));
+
+          await addInventoryItem(itemsToAdd);
+        }
+
       } else {
         const SHEET_ID = sheetUrl?.match(/\/d\/([^/]+)/)?.[1];
         const SHEET_NAME = "LOCAL MAXI";
@@ -133,8 +149,8 @@ function ItemsFormModal({
         const data = await response.json();
 
         if (
-          selectedProvider.role == "ADMIN" ||
-          selectedProvider.role == "OWNER"
+          selectedProvider?.role == "ADMIN" ||
+          selectedProvider?.role == "OWNER"
         ) {
           const products = data.map((row) => ({
             nombre: row.Nombre,
@@ -346,7 +362,7 @@ function ItemsFormModal({
               <button
                 type="submit"
                 className="bg-accent text-slate-900 font-semibold rounded-lg px-4 py-2"
-                // disabled={loading || !items.length || !selectedProvider}
+              // disabled={loading || !items.length || !selectedProvider}
               >
                 {loading ? "Enviando..." : "✓ Guardar y Enviar por WhatsApp"}
               </button>
