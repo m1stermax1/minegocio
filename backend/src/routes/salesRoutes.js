@@ -21,7 +21,8 @@ router.get("/", authMiddleware, async (req, res) => {
 
 router.get(`/sales-items`, async (req, res) => {
   try {
-    const salesItemsList = await getSalesItems();
+        const organizationId = req.user?.organization_id;
+    const salesItemsList = await getSalesItems(organizationId);
     res.json(salesItemsList);
   } catch (error) {
     console.error("Error al cargar items vendidos:", error);
@@ -37,7 +38,6 @@ router.post("/add", async (req, res) => {
       organization_id: req.body?.orgId,
       amount: req.body?.totalSale,
       payment_method: req.body?.metodoPago,
-      profit: req.body?.profit,
     };
 
     const { data, error } = await supabase
@@ -64,24 +64,21 @@ router.post("/add-sale-item", async (req, res) => {
   try {
     const payload = req.body;
 
-    const totalSaleAmount = req.body?.totalSaleAmount;
-
     const salesItems = req.body?.items?.map((item) => ({
+      organization_id: req.body.orgId,
       sale_id: req.body?.saleId,
       product_id: item?.id,
       quantity: 1,
-      unit_price: item?.profile_id ? item?.price : item?.price * 0.6,
+      unit_price: item?.price,
+      profit: item?.profile_id ? (item?.paymentMethod == 'efectivo' ? item?.price - item?.price * 0.1 : item?.paymentMethod == 'transferencia' ? item?.price - item?.price * 0.05 : '') : (item?.paymentMethod == 'efectivo' ? item?.price - item?.price * 0.1 : item?.paymentMethod == 'transferencia' ? item?.price - item?.price * 0.05 : '') - (item?.price * 0.6),
       description: item?.description,
+      payment_method: item?.paymentMethod
     }));
-
-    console.log("llegue: ", salesItems);
 
     const { data, error } = await supabase
       .from("sale_items")
       .insert(salesItems)
       .select();
-
-    console.log("llegue: ", salesItems);
 
     if (error) {
       throw error;

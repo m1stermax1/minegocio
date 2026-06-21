@@ -35,7 +35,7 @@ import twilio from "twilio";
 import {
   getInventory,
   addItemToInventory,
-  changeItemStatus
+  changeItemStatus,
 } from "../controllers/inventory/inventory.controller.js";
 import { supabase } from "../services/supabaseService.js";
 import authMiddleware from "./authMiddleware.js";
@@ -195,6 +195,7 @@ router.post("/add", async (req, res) => {
     await new Promise((resolve) => setTimeout(resolve, 2000));
   }
 
+  console.log("Prepared ITems: ", preparedItems);
   try {
     const result = await addItemToInventory(preparedItems);
 
@@ -216,7 +217,7 @@ router.patch("/:id/status", async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
-  console.log("Llego aca?", req.body)
+  console.log("Llego aca?", req.body);
 
   const { data, error } = await supabase
     .from("inventory")

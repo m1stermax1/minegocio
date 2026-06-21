@@ -5,6 +5,7 @@ import {
   fetchProviders,
   fetchSales,
   fetchOwnerTotal,
+  fetchSalesItems,
 } from "../services/api.js";
 import Sidebar from "../components/Sidebar.jsx";
 import SearchBar from "../components/SearchBar.jsx";
@@ -31,6 +32,8 @@ export default function DashboardPage({ refresh }) {
   const [totalOwner, setTotalOwner] = useState(0);
   const [loading, setLoading] = useState(true);
   const [totalProfitToday, setTotalProfitToday] = useState("");
+  const [salesItems, setSalesItems] = useState([]);
+  const [profitBusiness, setProfitBusiness] = useState([]);
 
   const [dashboardRefresh, setDashboardRefresh] = useState(0);
 
@@ -66,13 +69,13 @@ export default function DashboardPage({ refresh }) {
     let mounted = true;
     async function load() {
       try {
-
         setLoading(true);
-        const [dashboardData, providers, salesData, ownerTotal] =
+        const [dashboardData, providers, salesData, saleItems] =
           await Promise.all([
             fetchDashboardCounts(),
             fetchProviders(),
             fetchSales(),
+            fetchSalesItems(),
             // fetchOwnerTotal(),
           ]);
         if (mounted) {
@@ -81,8 +84,16 @@ export default function DashboardPage({ refresh }) {
             0,
           );
 
-          console.log("Dashboard Data:", dashboardData)
-          const profitForBoss = totalPrice;
+          const profitForBoss = salesItems?.reduce(
+            (sum, item) => sum + (Number(item?.profit) || 0),
+            0,
+          );
+          setSalesItems(saleItems?.data);
+          setProfitBusiness(profitForBoss);
+
+          console.log("Dashboard Data:", dashboardData);
+          console.log("Sales Items:", salesItems);
+          console.log("Total profilt:", totalPrice);
           setCounts(dashboardData || { inStockCount: 0, soldCount: 0 });
           setProvidersCount(providers?.data?.length || 0);
 
@@ -98,7 +109,7 @@ export default function DashboardPage({ refresh }) {
             );
           });
           const totalProfitOfToday = todaySales?.reduce(
-            (sum, item) => sum + (Number(item?.profit) || 0),
+            (sum, item) => sum + (Number(item?.amount) || 0),
             0,
           );
           setTotalProfitToday(totalProfitOfToday);
@@ -282,9 +293,14 @@ export default function DashboardPage({ refresh }) {
                     value={formatCurrency(totalOwner)}
                   /> */}
 
-                     <StatCard
+                  <StatCard
                     title="Total Hoy"
                     value={formatCurrency(totalProfitToday)}
+                  />
+
+                  <StatCard
+                    title="Total Para mi Hoy"
+                    value={formatCurrency(profitBusiness)}
                   />
                 </>
               )}

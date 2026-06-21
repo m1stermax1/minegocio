@@ -25,11 +25,11 @@ export const getSales = async (organizationId) => {
   }
 };
 
-export const getSalesItems = async () => {
+export const getSalesItems = async (organizationId) => {
   try {
     const { data, error } = await supabase
       .from("sale_items")
-      .select("*");
+      .select("*").eq("organization_id", organizationId);
 
     if (error) {
       return {

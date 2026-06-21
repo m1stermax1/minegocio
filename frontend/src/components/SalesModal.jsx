@@ -61,7 +61,10 @@ export default function SalesModal({
   }, [inventoryItems, searchTerm, selectedItems]);
 
   const totalAmount = selectedItems.reduce((sum, item) => {
-    const value = Number(item?.profile ? item.price : item.price * 0.6) || 0;
+    console.log("item price", item);
+    const value =
+      Number(item?.profile == null ? item.price : item.price * 0.6) || 0;
+    console.log("item price", value);
     return sum + value;
   }, 0);
 
@@ -111,9 +114,6 @@ export default function SalesModal({
     return value.replace(/[’'‘]/g, "-");
   };
 
-  // const totalProfit = selectedTotal - totalAmount * 0.6;
-
-  // console.log("Total profit: ", totalProfit);
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");
@@ -127,15 +127,14 @@ export default function SalesModal({
       setError("Selecciona un método de pago.");
       return;
     }
-
     setLoading(true);
     try {
+      // cuando hago click en agregar venta
       const perfil = await getProfile();
-      console.log(perfil);
+      // creo la venta
       const salesCreated = await createSale({
         orgId: perfil[0]?.organization_id,
         totalSale: selectedTotal,
-        profit: totalAmount,
         // items: selectedItems.map((item) => ({
         //   id: item.id,
         //   codigo: item.barcode,
@@ -147,15 +146,25 @@ export default function SalesModal({
         metodoPago: paymentMethod,
       });
       // const salesCreated = "";
+      // luego creo el sales item
+      // tengo que guardar el sales id, los items?, el valor total del item y lo que queda para delfi
+      const updatedItems = selectedItems.map((item) => ({
+        ...item,
+        paymentMethod,
+      }));
       const createSaleItem = await createSalesItem({
+        orgId: perfil[0]?.organization_id,
         saleId: salesCreated?.data[0]?.id,
-        items: selectedItems,
+        items: updatedItems,
         totalSaleAmount: selectedTotal,
+        paymethod: paymentMethod,
       });
+      // cambio el status de cada item
       selectedItems?.forEach((element) => {
         updateInventoryRowStatus(element?.id, element?.status);
       });
 
+      // por cada elemento creo un payments
       for (const element of selectedItems) {
         if (!element?.profile_id) {
           await createPayments({
@@ -171,6 +180,7 @@ export default function SalesModal({
 
         // await changeInventoryItem(element?.id)
       }
+
       if (paymentMethod == "transferencia") {
         await createInvoices({
           orgId: perfil[0]?.organization_id,
