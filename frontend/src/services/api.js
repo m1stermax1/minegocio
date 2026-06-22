@@ -20,6 +20,36 @@ export async function fetchInventory() {
   return response;
 }
 
+//para traer productos de tienda nube
+// export async function fetchTienaNubeInventory() {
+
+//   const tiendanuebeProducts = await axios.get(
+//     "https://lilaferiaamericana.mitiendanube.com/productos",
+//   );
+
+//   const $ = cheerio.load(data);
+
+//   const tiendaNube = [];
+
+//   $(".js-item-product").each((_, element) => {
+//     tiendaNube.push({
+//       title: $(element)
+//         .find(".item-name")
+//         .text()
+//         .trim(),
+//       price: $(element)
+//         .find(".price-current")
+//         .text()
+//         .trim(),
+//       image: $(element)
+//         .find("img")
+//         .attr("src"),
+//     });
+//   });
+
+//   return tiendaNube
+// };
+
 export async function fetchProviders() {
   const response = await api.get("/providers");
   return response.data;

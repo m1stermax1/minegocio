@@ -27,6 +27,7 @@ app.use(
     origin: [
       "http://localhost:5173",
       "https://minegocio-gold.vercel.app",
+      "https://lilaferiaamericana.mitiendanube.com"
     ],
     credentials: true
   }),

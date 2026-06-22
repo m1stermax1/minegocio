@@ -40,12 +40,17 @@ import {
 import { supabase } from "../services/supabaseService.js";
 import authMiddleware from "./authMiddleware.js";
 
+
+
 const router = express.Router();
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const twilioPhoneNumber = process.env.TWILIO_WHATSAPP_NUMBER;
 const client = twilio(accountSid, authToken);
+
+const STORE_ID = process.env.TIENDANUBE_STORE_ID;
+const ACCESS_TOKEN = process.env.TIENDANUBE_ACCESS_TOKEN;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -138,6 +143,7 @@ router.get("/", authMiddleware, async (req, res) => {
   try {
     const organizationId = req.user?.organization_id;
     const inventory = await getInventory(organizationId);
+
     res.json(inventory?.data);
   } catch (error) {
     console.error("Error al cargar inventario:", error);
@@ -192,7 +198,7 @@ router.post("/add", async (req, res) => {
     // await generateBarcodeAndPrint(codigo);
     console.log("ESPERANDO 5 SEGUNDOS");
 
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    // await new Promise((resolve) => setTimeout(resolve, 2000));
   }
 
   console.log("Prepared ITems: ", preparedItems);

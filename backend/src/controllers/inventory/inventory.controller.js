@@ -26,6 +26,7 @@ export const getInventory = async (organizationId) => {
   }
 };
 
+
 export const addItemToInventory = async (preparedItems) => {
   try {
     console.log("Llegamos al addItemToInventory");

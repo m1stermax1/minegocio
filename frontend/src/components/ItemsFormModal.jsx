@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import {
+import { 
   addInventoryItem,
   fetchProviders,
   fetchProfiles,

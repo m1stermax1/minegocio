@@ -199,7 +199,7 @@ function InventoryPage() {
   //   );
   // }, [filteredProviders]);
 
-  return (
+  return ( 
     <div className="min-h-screen md:grid md:grid-cols-[280px_1fr]">
       <Sidebar />
 
