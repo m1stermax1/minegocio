@@ -1,32 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
 
 import Sidebar from "../components/Sidebar.jsx";
 import SearchBar from "../components/SearchBar.jsx";
 import InventoryTable from "../components/InventoryTable.jsx";
-import ProvidersTable from "../components/ProvidersTable.jsx";
-import DashboardPage from "./DashboardPage.jsx";
-import SalesModal from "../components/SalesModal.jsx";
-import SalesTable from "../components/SalesTable.jsx";
-import PaymentsTable from "../components/PaymentsTable.jsx";
-// import FacturacionPage from "./FacturacionPage.jsx";
-import ProvidersFormModal from "../components/ProvidersFormModal.jsx";
 import ItemsFormModal from "../components/ItemsFormModal.jsx";
-import MessageForProvidersModal from "../components/messagesForProvidersModal.jsx";
 
 import {
   fetchInventory,
   fetchProviders,
-  fetchSales,
-  fetchProviderPayments,
 } from "../services/api.js";
 
 function InventoryPage() {
   const inventoryTableRef = useRef(null);
   const [inventory, setInventory] = useState([]);
   const [providers, setProviders] = useState([]);
-  const [sales, setSales] = useState([]);
-  const [pendingProviderPayments, setPendingProviderPayments] = useState([]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [notification, setNotification] = useState("");
@@ -35,14 +22,8 @@ function InventoryPage() {
 
   const [loadingInventory, setLoadingInventory] = useState(true);
   const [loadingProviders, setLoadingProviders] = useState(false);
-  const [loadingSales, setLoadingSales] = useState(false);
-  const [loadingPayments, setLoadingPayments] = useState(false);
 
   const [showItemsModal, setShowItemsModal] = useState(false);
-  const [showSaleModal, setShowSaleModal] = useState(false);
-  const [showProvidersModal, setShowProvidersModal] = useState(false);
-  const [showMessagesForProvidersModal, setShowMessagesForProvidersModal] =
-    useState(false);
 
   const showNotification = (message) => {
     setNotification(message);
@@ -56,7 +37,7 @@ function InventoryPage() {
     try {
       setLoadingInventory(true);
       const data = await fetchInventory();
-      setInventory(data);
+      setInventory(data?.data);
     } catch (error) {
       console.error("Error cargando inventario:", error);
       setInventory([]);
@@ -79,32 +60,6 @@ function InventoryPage() {
     }
   };
 
-  const loadSales = async () => {
-    try {
-      setLoadingSales(true);
-      const data = await fetchSales();
-      setSales(data);
-    } catch (error) {
-      console.error("Error cargando ventas:", error);
-      setSales([]);
-    } finally {
-      setLoadingSales(false);
-    }
-  };
-
-  const loadPendingProviderPayments = async () => {
-    try {
-      setLoadingPayments(true);
-      const data = await fetchProviderPayments();
-      setPendingProviderPayments(data);
-    } catch (error) {
-      console.error("Error cargando pagos pendientes de proveedoras:", error);
-      setPendingProviderPayments([]);
-    } finally {
-      setLoadingPayments(false);
-    }
-  };
-
   useEffect(() => {
     loadProviders();
     loadInventory();
@@ -114,52 +69,20 @@ function InventoryPage() {
     setShowItemsModal(true);
   };
 
-  const handleAddSale = async () => {
-    if (!inventory.length) {
-      await loadInventory();
-    }
-
-    setShowSaleModal(true);
-  };
-
   const handleItemAdded = () => {
     loadInventory();
     setDashboardRefresh((prev) => prev + 1);
     showNotification("Item agregado correctamente a la lista.");
   };
 
-  const handleProviderAdded = async () => {
-    await loadProviders();
-
-    setProvidersRefresh((prev) => prev + 1);
-    setDashboardRefresh((prev) => prev + 1);
-
-    showNotification("Proveedora agregada correctamente.");
-  };
-
-  const handleSaleCreated = () => {
-    loadInventory();
-    loadSales();
-
-    setDashboardRefresh((prev) => prev + 1);
-
-    showNotification("Venta cargada correctamente.");
-  };
-
-  const handlePendingProvidersPayments = async () => {
-    await loadPendingProviderPayments();
-    setShowMessagesForProvidersModal(true);
-  };
-
-
   const filteredInventory = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
     if (!query) {
-      return inventory?.data;
+      return inventory;
     }
 
-    return inventory?.data?.filter(({ barcode, description }) => {
+    return inventory?.filter(({ barcode, description }) => {
       return (
         barcode?.toLowerCase().includes(query) ||
         description?.toLowerCase().includes(query)

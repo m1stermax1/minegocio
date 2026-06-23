@@ -39,6 +39,8 @@ export function useDashboard(refresh) {
         salesItems,
       } = await getDashboardData();
 
+      console.log("Sales Items", salesItems)
+
       setStats({
         inStockCount: dashboardData?.inStockCount || 0,
         soldCount: dashboardData?.soldCount || 0,

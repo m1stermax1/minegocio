@@ -19,9 +19,10 @@ router.get("/", authMiddleware, async (req, res) => {
   }
 });
 
-router.get(`/sales-items`, async (req, res) => {
+router.get("/sales-items", authMiddleware, async (req, res) => {
   try {
-        const organizationId = req.user?.organization_id;
+    console.log("User", req.user)
+    const organizationId = req.user?.organization_id;
     const salesItemsList = await getSalesItems(organizationId);
     res.json(salesItemsList);
   } catch (error) {

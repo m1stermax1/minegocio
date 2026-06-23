@@ -15,7 +15,7 @@ api.interceptors.request.use(async (config) => {
 });
 
 export async function fetchInventory() {
-  const response = await api.get("/inventory");
+  const response = await api.get("/inventory?page=1&limit=10");
   // const inventory = response.data?.filter((item) => item?.organization_id == perfil[0]?.organization_id)
   return response;
 }
@@ -109,7 +109,7 @@ export async function fetchSales() {
 }
 
 export async function fetchSalesItems() {
-  const response = await api.get(`/sales/sales-items`);
+  const response = await api.get("/sales/sales-items");
   return response.data;
 }
 

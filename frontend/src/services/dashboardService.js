@@ -2,7 +2,7 @@ import {
   fetchDashboardCounts,
   fetchProviders,
   fetchSales,
-  fetchSalesItems,
+  fetchSalesItems, 
   fetchInventory,
 } from "./api";
 
@@ -14,6 +14,8 @@ export async function getDashboardData() {
       fetchSales(),
       fetchSalesItems(),
     ]);
+
+  console.log("Sales Items en getDashboardData", salesItems)
 
   return {
     dashboardData,

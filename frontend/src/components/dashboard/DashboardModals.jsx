@@ -5,7 +5,7 @@ import SalesModal from "../SalesModal";
 export default function DashboardModals({
   inventory,
   providers,
-
+ 
   showProvidersModal,
   setShowProvidersModal,
 

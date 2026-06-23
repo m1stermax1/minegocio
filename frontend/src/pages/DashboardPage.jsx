@@ -28,7 +28,7 @@ export default function DashboardPage({
   const [showSaleModal, setShowSaleModal] =
     useState(false);
 
-  const [
+  const [ 
     showProvidersModal,
     setShowProvidersModal,
   ] = useState(false);
@@ -76,7 +76,10 @@ export default function DashboardPage({
         showSaleModal={showSaleModal}
         setShowSaleModal={setShowSaleModal}
         onProviderAdded={loadDashboard}
-        onItemAdded={loadInventory}
+        onItemAdded={() => {
+          loadInventory();
+          loadDashboard();
+        }} 
         onSaleCreated={() => {
           loadInventory();
           loadDashboard();

@@ -144,6 +144,8 @@ router.get("/", authMiddleware, async (req, res) => {
     const organizationId = req.user?.organization_id;
     const inventory = await getInventory(organizationId);
 
+    console.log("Parametros", req.params)
+
     res.json(inventory?.data);
   } catch (error) {
     console.error("Error al cargar inventario:", error);
