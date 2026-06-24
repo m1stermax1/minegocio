@@ -1,22 +1,30 @@
 import { supabase } from "../../services/supabaseService.js";
 import { getSessionUser } from "../session/session.controller.js";
 
-export const getInventory = async (organizationId) => {
+export const getInventory = async (
+  organizationId,
+  page = 1,
+  limit = 10,
+  selectedProvider,
+) => {
   try {
-    const { data, error } = await supabase
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+    const { data, error, count } = await supabase
       .from("inventory")
-      .select("*")
-      .eq("organization_id", organizationId);
-    if (error) {
-      return {
-        success: false,
-        error: error.message,
-      };
-    }
+      .select("*", { count: "exact", head: false })
+      .eq("organization_id", organizationId, "provider_id", selectedProvider).range(from, to);
 
+    // if (selectedProvider) {
+    //   query = query.eq();
+    // }
+    // const { data, error, count } = await query
+
+    console.log("Paso?", Math.ceil(count / limit));
     return {
       success: true,
       data,
+      totalItems: count,
     };
   } catch (err) {
     return {
@@ -25,7 +33,6 @@ export const getInventory = async (organizationId) => {
     };
   }
 };
-
 
 export const addItemToInventory = async (preparedItems) => {
   try {

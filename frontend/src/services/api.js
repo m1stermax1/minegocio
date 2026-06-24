@@ -14,8 +14,8 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
-export async function fetchInventory() {
-  const response = await api.get("/inventory?page=1&limit=10");
+export async function fetchInventory(page, limit, selectedProdiver) {
+  const response = await api.get(`/inventory?page=${page}&limit=${limit}&provider_id=${selectedProdiver}`);
   // const inventory = response.data?.filter((item) => item?.organization_id == perfil[0]?.organization_id)
   return response;
 }
@@ -122,6 +122,11 @@ export async function createSale(payload) {
   const response = await api.post("/sales/add", payload);
   console.log("Respuesta del createSale: ", response.data);
   return response.data;
+}
+
+export async function printBarcode(barcode) {
+  const response = await api.get(`/inventory/print-barcode?barcode=${barcode}`);
+  return response;
 }
 
 export async function createSalesItem(payload) {

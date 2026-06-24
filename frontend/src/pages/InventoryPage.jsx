@@ -4,11 +4,9 @@ import Sidebar from "../components/Sidebar.jsx";
 import SearchBar from "../components/SearchBar.jsx";
 import InventoryTable from "../components/InventoryTable.jsx";
 import ItemsFormModal from "../components/ItemsFormModal.jsx";
+import PaginationComponent from "../components/PaginationComponent.jsx";
 
-import {
-  fetchInventory,
-  fetchProviders,
-} from "../services/api.js";
+import { fetchInventory, fetchProviders } from "../services/api.js";
 
 function InventoryPage() {
   const inventoryTableRef = useRef(null);
@@ -25,6 +23,11 @@ function InventoryPage() {
 
   const [showItemsModal, setShowItemsModal] = useState(false);
 
+  const LIMIT = 5;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const [selectedProvider, setSelectedProvider] = useState("");
+
   const showNotification = (message) => {
     setNotification(message);
 
@@ -33,10 +36,12 @@ function InventoryPage() {
     }, 3200);
   };
 
-  const loadInventory = async () => {
+  const loadInventory = async (page, limit, selectedProvider) => {
     try {
       setLoadingInventory(true);
-      const data = await fetchInventory();
+      console.log("pagina inv", limit);
+      const data = await fetchInventory(page, limit, selectedProvider);
+      console.log("Items", data?.data);
       setInventory(data?.data);
     } catch (error) {
       console.error("Error cargando inventario:", error);
@@ -50,8 +55,8 @@ function InventoryPage() {
     try {
       setLoadingProviders(true);
       const data = await fetchProviders();
-      console.log("Cargo las proveedoras" ,data);
-      setProviders(data); 
+      console.log("Cargo las proveedoras", data);
+      setProviders(data);
     } catch (error) {
       console.error("Error cargando proveedoras:", error);
       setProviders([]);
@@ -62,8 +67,12 @@ function InventoryPage() {
 
   useEffect(() => {
     loadProviders();
-    loadInventory();
-  }, []);
+    loadInventory(currentPage, LIMIT, selectedProvider);
+  }, [currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   const handleAddItem = () => {
     setShowItemsModal(true);
@@ -76,53 +85,33 @@ function InventoryPage() {
   };
 
   const filteredInventory = useMemo(() => {
+    let result = inventory?.data ?? [];
+
     const query = searchQuery.trim().toLowerCase();
 
-    if (!query) {
-      return inventory;
+    if (query) {
+      result = result.filter(
+        ({ barcode, description }) =>
+          barcode?.toLowerCase().includes(query) ||
+          description?.toLowerCase().includes(query),
+      );
     }
 
-    return inventory?.filter(({ barcode, description }) => {
-      return (
-        barcode?.toLowerCase().includes(query) ||
-        description?.toLowerCase().includes(query)
-      );
-    });
-  }, [inventory, searchQuery]);
+    if (selectedProvider) {
+      result = result.filter((item) => item.provider_id === selectedProvider);
+    }
 
-  // const filteredProviders = useMemo(() => {
-  //   const query = searchQuery.trim().toLowerCase();
+    return result;
+  }, [inventory, searchQuery, selectedProvider]);
 
-  //   if (!query) {
-  //     return providers;
-  //   }
+  const totalPages = Math.ceil(inventory?.totalItems / LIMIT);
 
-  //   return providers.filter((provider) => {
-  //     const nombre =
-  //       `${provider.nombre || ""} ${provider.apellido || ""}`.toLowerCase();
+  const onChangePage = (page) => {
+    console.log("Change page", page);
+    setCurrentPage(page);
+  };
 
-  //     return (
-  //       nombre.includes(query) ||
-  //       provider.telefono?.toLowerCase().includes(query) ||
-  //       provider.alias?.toLowerCase().includes(query) ||
-  //       provider.cbu?.toLowerCase().includes(query)
-  //     );
-  //   });
-  // }, [providers, searchQuery]);
-
-  // const filteredSales = useMemo(() => {
-  //   return filteredInventory.filter(
-  //     (item) => item.estado?.toLowerCase() === "vendido",
-  //   );
-  // }, [filteredInventory]);
-
-  // const filteredPayments = useMemo(() => {
-  //   return filteredProviders.filter(
-  //     (item) => item.pago?.toLowerCase() === "pagado",
-  //   );
-  // }, [filteredProviders]);
-
-  return ( 
+  return (
     <div className="min-h-screen md:grid md:grid-cols-[280px_1fr]">
       <Sidebar />
 
@@ -138,8 +127,21 @@ function InventoryPage() {
         </div>
 
         <section className="bg-slate-800/70 border border-slate-700 rounded-2xl p-7 min-h-[72vh] shadow-soft">
-          <div className="grid grid-cols-[1fr_max-content] gap-4 items-center mb-6">
+          <div className="grid grid-cols-[1fr_220px_max-content] gap-4 items-center mb-6">
             <SearchBar query={searchQuery} onChange={setSearchQuery} />
+            <select
+              value={selectedProvider}
+              onChange={(e) => setSelectedProvider(e.target.value)}
+              className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2"
+            >
+              <option value="">Todas las proveedoras</option>
+
+              {providers?.data?.map((provider) => (
+                <option key={provider.id} value={provider.id}>
+                  {provider.first_name}
+                </option>
+              ))}
+            </select>
             <button
               className="bg-accent text-slate-900 font-semibold rounded-lg px-4 py-2"
               onClick={handleAddItem}
@@ -151,6 +153,11 @@ function InventoryPage() {
           {notification && (
             <div className="toast-notification">{notification}</div>
           )}
+          <PaginationComponent
+            totalPages={totalPages}
+            currentPage={currentPage}
+            onChangePage={onChangePage}
+          />
           <InventoryTable
             ref={inventoryTableRef}
             items={filteredInventory}
@@ -160,7 +167,7 @@ function InventoryPage() {
           />
         </section>
       </main>
- 
+
       <ItemsFormModal
         isOpen={showItemsModal}
         onClose={() => setShowItemsModal(false)}

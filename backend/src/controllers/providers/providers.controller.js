@@ -18,8 +18,6 @@ export async function addNewProvider(nombre, apellido, telefono, bankalias = '')
 
   const values = [[nombre, apellido, telefono, bankalias]];
 
-  console.log("llegue al controler")
-
   try {
     // await sheets.spreadsheets.values.append({
     //   spreadsheetId,

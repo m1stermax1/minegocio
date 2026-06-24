@@ -4,6 +4,7 @@ import {
   fetchProviders,
   addInventoryItem,
   sendWhatsAppMessage,
+  printBarcode,
 } from "../services/api.js";
 
 const InventoryTable = forwardRef(function InventoryTable(
@@ -155,23 +156,8 @@ const InventoryTable = forwardRef(function InventoryTable(
     }
   };
 
-  const openProviderDropdown = (index) => {
-    setProviderDropdown((prev) => prev.map((v, i) => (i === index ? true : v)));
-  };
-
-  const closeProviderDropdown = (index) => {
-    setTimeout(() => {
-      setProviderDropdown((prev) =>
-        prev.map((v, i) => (i === index ? false : v)),
-      );
-    }, 150);
-  };
-
-  const selectProvider = (index, nombre) => {
-    handleItemChange(index, "proveedora", nombre);
-    setProviderDropdown((prev) =>
-      prev.map((v, i) => (i === index ? false : v)),
-    );
+  const handleBarcodeImpresion = async (barcode) => {
+    await printBarcode(barcode);
   };
 
   return (
@@ -209,30 +195,35 @@ const InventoryTable = forwardRef(function InventoryTable(
                 <th className="text-center">Precio</th>
                 <th className="text-center">Proveedor</th>
                 <th className="text-center">Estado</th>
+                <th className="text-center">Acciones</th>
               </tr>
             </thead>
 
             <tbody>
               {tableItems.map((item, index) => (
-                <tr
-                  key={`${item.id}-${index}`}
-                >
-                  <td className="text-start">
-                    {formatText(item.description)}
-                  </td>
+                <tr key={`${item.id}-${index}`}>
+                  <td className="text-start">{formatText(item.description)}</td>
 
                   <td className="text-center">
                     {formatInventoryPrice(item.price)}
                   </td>
 
-                  <td className="text-center">{formatText(item.providerName)}</td>
+                  <td className="text-center">
+                    {formatText(item.providerName)}
+                  </td>
 
                   <td className="text-center">
                     <span
                       className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${item.status?.toLowerCase() === "sold" ? "bg-pink-500 text-rose-300 border border-rose-700" : "bg-emerald-800/40 text-emerald-300 border border-emerald-700"}`}
                     >
-                      {item.status == 'AVAILABLE' ? 'En Stock' : 'Vendido'}
+                      {item.status == "AVAILABLE" ? "En Stock" : "Vendido"}
                     </span>
+                  </td>
+
+                  <td className="text-center">
+                    <button onClick={handleBarcodeImpresion(item.barcode)}>
+                      Imprimir Etiqueta
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -240,187 +231,6 @@ const InventoryTable = forwardRef(function InventoryTable(
           </table>
         </>
       )}
-
-      {/* {showModal && (
-        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur flex items-center justify-center p-5 z-50" role="dialog" aria-modal="true">
-          <div className="w-full max-w-2xl bg-slate-800 border border-slate-700 rounded-2xl flex flex-col max-h-[calc(100vh-40px)] overflow-hidden shadow-2xl">
-            <div className="flex items-start justify-between gap-4 p-6 border-b border-slate-700">
-              <div>
-                <p className="text-accent uppercase tracking-widest text-xs mb-1">Nuevo item</p>
-                <h2 className="text-xl font-semibold">Agregar inventario</h2>
-              </div>
-              <button
-                type="button"
-                className="text-slate-400 text-xl p-1 rounded-full hover:text-slate-100"
-                onClick={closeModal}
-                aria-label="Cerrar modal"
-              >
-                ×
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="grid gap-4 p-5 overflow-y-auto">
-              {pendingItems.map((item, index) => (
-                <div key={index} className="bg-slate-900/40 border border-slate-700 rounded-lg p-4 mb-4 grid gap-4">
-                  <div className="flex justify-between items-center gap-4 pb-2 border-b border-slate-700 mb-1">
-                    <strong>Item {index + 1}</strong>
-                    <button
-                      type="button"
-                      className="bg-rose-900/30 text-rose-300 border border-rose-700 rounded-md px-3 py-1"
-                      onClick={() => removePendingItemRow(index)}
-                      disabled={pendingItems.length === 1}
-                    >
-                      ✕ Eliminar
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <label htmlFor={`nombre-${index}`} className="text-sm font-medium text-slate-200">Nombre del producto</label>
-                      <input
-                        id={`nombre-${index}`}
-                        className="w-full rounded-lg bg-slate-900/60 border border-slate-700 px-3 py-2 text-slate-100 focus:ring-2 focus:ring-accent/30 focus:border-accent"
-                        type="text"
-                        value={item.nombre}
-                        onChange={(event) => handleItemChange(index, 'nombre', event.target.value)}
-                        placeholder="Ej. Tornillo 3/8"
-                        autoComplete="off"
-                      />
-                    </div>
-
-                    <div>
-                      <label htmlFor={`precio-${index}`} className="text-sm font-medium text-slate-200">Precio</label>
-                      <input
-                        id={`precio-${index}`}
-                        className="w-full rounded-lg bg-slate-900/60 border border-slate-700 px-3 py-2 text-slate-100 focus:ring-2 focus:ring-accent/30 focus:border-accent"
-                        type="text"
-                        value={item.precio}
-                        onChange={(event) => handleItemChange(index, 'precio', event.target.value)}
-                        placeholder="Ej. 2300"
-                        autoComplete="off"
-                      />
-                    </div>
-
-                    <div>
-                      <label htmlFor={`proveedora-${index}`} className="text-sm font-medium text-slate-200">Proveedora</label>
-                      <div className="relative">
-                        <input
-                          id={`proveedora-${index}`}
-                          className="w-full rounded-lg bg-slate-900/60 border border-slate-700 px-3 py-2 text-slate-100 focus:ring-2 focus:ring-accent/30 focus:border-accent"
-                          type="text"
-                          value={item.proveedora}
-                          onChange={(event) => handleItemChange(index, 'proveedora', event.target.value)}
-                          onFocus={() => openProviderDropdown(index)}
-                          placeholder="Selecciona o escribe una proveedora"
-                          autoComplete="off"
-                        />
-                        <button
-                          type="button"
-                          className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400"
-                          onClick={() => handleItemChange(index, 'proveedora', '')}
-                          aria-label="Limpiar proveedora"
-                        >
-                          ×
-                        </button>
-
-                        {providerDropdown[index] && (
-                          <ul className="absolute z-60 left-0 right-0 mt-2 bg-slate-800 border border-slate-700 rounded-lg max-h-56 overflow-auto shadow-lg" role="listbox">
-                            {providersComplete
-                              .filter((p) => {
-                                const fullName = `${p.nombre} ${p.apellido}`.toLowerCase();
-                                const searchTerm = (item.proveedora || '').toLowerCase();
-                                return fullName.includes(searchTerm);
-                              })
-                              .map((provider, idx) => (
-                                <li
-                                  key={idx}
-                                  role="option"
-                                  tabIndex={0}
-                                  className="px-3 py-2 cursor-pointer text-slate-100 hover:bg-slate-700 hover:text-accent"
-                                  onMouseDown={() => selectProvider(index, `${provider.nombre} ${provider.apellido}`)}
-                                >
-                                  {provider.nombre} {provider.apellido}
-                                </li>
-                              ))}
-                          </ul>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              {formError && <p className="text-rose-300 bg-rose-900/20 border border-rose-800 rounded-md p-3">{formError}</p>}
-
-              <button
-                type="button"
-                className="bg-accent/20 text-accent border border-accent rounded-md px-3 py-1"
-                onClick={addPendingItemRow}
-              >
-                + Agregar otro item
-              </button>
-
-              <div className="modal-footer">
-                <button type="button" className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2" onClick={closeModal}>
-                  Cancelar
-                </button>
-                <button type="submit" className="bg-accent text-slate-900 font-semibold rounded-lg px-4 py-2" disabled={isSaving}>
-                  {isSaving
-                    ? 'Agregando...'
-                    : `Agregar ${pendingItems.length} item${pendingItems.length > 1 ? 's' : ''}`}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {showPaymentModal && (
-        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur flex items-center justify-center p-5 z-50" role="dialog" aria-modal="true">
-          <div className="w-full max-w-md bg-slate-800 border border-slate-700 rounded-2xl flex flex-col max-h-[calc(100vh-40px)] overflow-hidden shadow-2xl">
-            <div className="flex items-start justify-between gap-4 p-6 border-b border-slate-700">
-              <div>
-                <p className="text-accent uppercase tracking-widest text-xs mb-1">Vender producto</p>
-                <h2 className="text-xl font-semibold">Selecciona método de pago</h2>
-              </div>
-              <button
-                type="button"
-                className="text-slate-400 text-xl p-1 rounded-full hover:text-slate-100"
-                onClick={() => setShowPaymentModal(false)}
-                aria-label="Cerrar modal"
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="p-6 overflow-y-auto grid gap-6">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <button
-                  type="button"
-                  className="px-4 py-3 border-2 border-slate-700 rounded-lg bg-slate-800 text-slate-100 font-semibold hover:border-accent hover:bg-slate-700 hover:text-accent transition"
-                  onClick={() => handlePaymentConfirm('efectivo')}
-                >
-                  Efectivo
-                </button>
-                <button
-                  type="button"
-                  className="px-4 py-3 border-2 border-slate-700 rounded-lg bg-slate-800 text-slate-100 font-semibold hover:border-accent hover:bg-slate-700 hover:text-accent transition"
-                  onClick={() => handlePaymentConfirm('transferencia')}
-                >
-                  Transferencia
-                </button>
-                <button
-                  type="button"
-                  className="px-4 py-3 border-2 border-slate-700 rounded-lg bg-slate-800 text-slate-100 font-semibold hover:border-accent hover:bg-slate-700 hover:text-accent transition"
-                  onClick={() => handlePaymentConfirm('debito/credito')}
-                >
-                  Débito/Crédito
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )} */}
     </div>
   );
 });
