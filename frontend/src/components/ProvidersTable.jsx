@@ -31,8 +31,8 @@ function ProvidersTable({
     const inventoryItemsForSort = inventoryItems;
     // console.log(inventoryItemsForSort);
     const providersList = providers;
-    // console.log(providersList);
-    const groupedByProvider = inventoryItemsForSort.reduce((acc, item) => {
+    console.log(inventoryItemsForSort);
+    const groupedByProvider = inventoryItemsForSort?.data?.reduce((acc, item) => {
       const providerId = item.provider_id;
 
       if (!acc[providerId]) {

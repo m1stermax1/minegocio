@@ -64,20 +64,20 @@ body,
 }
 
 /* Force utility-based backgrounds to white tones (covers classes like bg-slate-900/40) */
-[class*="bg-"] {
+/* [class*="bg-"] {
   background-color: var(--bg-100) !important;
   background-image: none !important;
-}
+} */
 
 /* Force utility-based text colors to the requested accent */
-[class*="text-"] {
+/* [class*="text-"] {
   color: var(--accent-text) !important;
-}
+} */
 
 /* Softer borders to match light background */
-[class*="border-"] {
+/* [class*="border-"] {
   border-color: rgba(0, 0, 0, 0.06) !important;
-}
+} */
 
 /* Keep interactive focus rings subtle but using the accent hue */
 *:focus {

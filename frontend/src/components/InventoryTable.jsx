@@ -201,8 +201,16 @@ const InventoryTable = forwardRef(function InventoryTable(
 
             <tbody>
               {tableItems.map((item, index) => (
-                <tr key={`${item.id}-${index}`}>
-                  <td className="text-start">{formatText(item.description)}</td>
+                <tr
+                  // style={{
+                  //   backgroundColor:
+                  //     index % 2 === 0 ? "#d7b5e3" : "transparent",
+                  // }}
+                  key={`${item.id}-${index}`}
+                >
+                  <td className="text-start ">
+                    {formatText(item.description)}
+                  </td>
 
                   <td className="text-center">
                     {formatInventoryPrice(item.price)}
