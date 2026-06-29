@@ -4,15 +4,26 @@ import { logoutUser } from "../services/authService.js";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../services/supabase.js";
 import { Link } from "react-router-dom";
+import ThemeToggle from "./ThemeToggle.jsx";
 
-function Sidebar({ activeView, onViewChange }) {
+const NAV_ITEMS = [
+  { to: "/", label: "Dashboard", icon: AiOutlineDashboard, view: "dashboard" },
+  { to: "/inventory", label: "Inventario", icon: FiBox, view: "inventory" },
+  { to: "/providers", label: "Proveedores", icon: FiBox, view: "providers" },
+  { to: "/sales", label: "Ventas", icon: FiTrendingUp, view: "ventas" },
+  { to: "/payments", label: "Pagos", icon: FiCreditCard, view: "pagos" },
+  { to: "/billings", label: "Facturas", icon: FiCreditCard, view: "facturacion" },
+];
+
+function Sidebar({ activeView, isOpen, onClose }) {
   const navigate = useNavigate();
+
   const handleLogout = async () => {
     try {
       await logoutUser();
-      supabase.auth.onAuthStateChange((event, session) => {
+      supabase.auth.onAuthStateChange((event) => {
         if (event === "SIGNED_OUT") {
-          // limpiar estado global
+          // limpiar estado global si fuera necesario
         }
       });
       navigate("/login");
@@ -20,70 +31,53 @@ function Sidebar({ activeView, onViewChange }) {
       console.error(error);
     }
   };
-  return (
-    <aside className="bg-slate-800 p-8 flex flex-col gap-8">
-      <div className="flex items-center gap-4">
-        <AiOutlineAppstore className="w-10 h-10 text-accent" />
-        <div>
-          <span className="text-lg font-semibold">Lila Feria Americana</span>
-        </div>
-      </div>
 
-      <nav className="sidebar flex flex-col gap-2">
-        <Link
-          to={{ pathname: "/" }}
-          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === "dashboard" ? "bg-slate-700" : "hover:bg-slate-700"}`}
-        >
-          <AiOutlineDashboard className="w-5 h-5" />
-          <span>Dashboard</span>
-        </Link>
-        <Link
-        to={{ pathname: "/inventory" }}
-          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === "inventory" ? "bg-slate-700" : "hover:bg-slate-700"}`}
-          type="button"
-        >
-          <FiBox className="w-5 h-5" />
-          <span>Inventario</span>
-        </Link>
-        <Link to={{ pathname: "/providers" }}
-          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === "providers" ? "bg-slate-700" : "hover:bg-slate-700"}`}
-          type="button"
-        >
-          <FiBox className="w-5 h-5" />
-          <span>Proveedores</span>
-        </Link>
-        <Link to={{ pathname: "/sales" }}
-          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === "ventas" ? "bg-slate-700" : "hover:bg-slate-700"}`}
-          type="button"
-        >
-          <FiTrendingUp className="w-5 h-5" />
-          <span>Ventas</span>
-        </Link>
-        <Link to={{ pathname: "/payments" }}
-          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === "pagos" ? "bg-slate-700" : "hover:bg-slate-700"}`}
-          type="button"
-        
-        >
-          <FiCreditCard className="w-5 h-5" />
-          <span>Pagos</span>
-        </Link>
-        <Link to={{ pathname: "/billings" }}
-          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === "facturacion" ? "bg-slate-700" : "hover:bg-slate-700"}`}
-          type="button"
-        >
-          <FiCreditCard className="w-5 h-5" />
-          <span>Facturas</span>
-        </Link>
-        <button
-          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 transition ${activeView === "facturacion" ? "bg-slate-700" : "hover:bg-slate-700"}`}
-          type="button"
-          onClick={handleLogout}
-        >
-          <FiCreditCard className="w-5 h-5" />
-          <span>Log Out</span>
-        </button>
-      </nav>
-    </aside>
+  return (
+    <>
+      {isOpen && (
+        <div
+          className="sidebar-backdrop"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+      <aside className={`sidebar ${isOpen ? "is-open" : ""}`}>
+        <div className="sidebar-brand">
+          <AiOutlineAppstore className="sidebar-brand-icon" />
+          <span className="sidebar-brand-name">Lila Feria Americana</span>
+        </div>
+
+        <nav className="sidebar-nav">
+          {NAV_ITEMS.map(({ to, label, icon: Icon, view }) => {
+            const isActive = activeView === view;
+            return (
+              <Link
+                key={to}
+                to={{ pathname: to }}
+                className={`sidebar-link ${isActive ? "is-active" : ""}`}
+                onClick={onClose}
+              >
+                <Icon />
+                <span>{label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="sidebar-footer">
+          <ThemeToggle />
+          <button
+            type="button"
+            className="btn btn-ghost btn-block"
+            style={{ color: "var(--sidebar-fg)", justifyContent: "flex-start" }}
+            onClick={handleLogout}
+          >
+            <FiCreditCard className="w-5 h-5" />
+            <span>Log Out</span>
+          </button>
+        </div>
+      </aside>
+    </>
   );
 }
 

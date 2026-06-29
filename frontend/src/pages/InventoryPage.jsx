@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import Sidebar from "../components/Sidebar.jsx";
+import MobileHeader from "../components/MobileHeader.jsx";
 import SearchBar from "../components/SearchBar.jsx";
 import InventoryTable from "../components/InventoryTable.jsx";
 import ItemsFormModal from "../components/ItemsFormModal.jsx";
@@ -22,6 +23,7 @@ function InventoryPage() {
   const [loadingProviders, setLoadingProviders] = useState(false);
 
   const [showItemsModal, setShowItemsModal] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const LIMIT = 10;
   const [currentPage, setCurrentPage] = useState(1);
@@ -30,18 +32,13 @@ function InventoryPage() {
 
   const showNotification = (message) => {
     setNotification(message);
-
-    window.setTimeout(() => {
-      setNotification("");
-    }, 3200);
+    window.setTimeout(() => setNotification(""), 3200);
   };
 
   const loadInventory = async (page, limit, selectedProvider) => {
     try {
       setLoadingInventory(true);
-      console.log("pagina inv", limit);
       const data = await fetchInventory(page, limit, selectedProvider);
-      console.log("Items", data?.data);
       setInventory(data?.data);
     } catch (error) {
       console.error("Error cargando inventario:", error);
@@ -55,7 +52,6 @@ function InventoryPage() {
     try {
       setLoadingProviders(true);
       const data = await fetchProviders();
-      console.log("Cargo las proveedoras", data);
       setProviders(data);
     } catch (error) {
       console.error("Error cargando proveedoras:", error);
@@ -74,19 +70,15 @@ function InventoryPage() {
     setCurrentPage(1);
   }, [searchQuery]);
 
-  const handleAddItem = () => {
-    setShowItemsModal(true);
-  };
+  const handleAddItem = () => setShowItemsModal(true);
 
   const handleItemAdded = () => {
     loadInventory();
-    setDashboardRefresh((prev) => prev + 1);
     showNotification("Item agregado correctamente a la lista.");
   };
 
   const filteredInventory = useMemo(() => {
     let result = inventory?.data ?? [];
-
     const query = searchQuery.trim().toLowerCase();
 
     if (query) {
@@ -106,36 +98,39 @@ function InventoryPage() {
 
   const totalPages = Math.ceil(inventory?.totalItems / LIMIT);
 
-  const onChangePage = (page) => {
-    console.log("Change page", page);
-    setCurrentPage(page);
-  };
+  const onChangePage = (page) => setCurrentPage(page);
 
   return (
-    <div className="min-h-screen md:grid md:grid-cols-[280px_1fr]">
-      <Sidebar />
+    <div className="page">
+      <Sidebar
+        activeView="inventory"
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+      />
 
-      <main className="p-8">
-        <div className="flex items-end justify-between gap-6 mb-7">
+      <main className="page-main">
+        <MobileHeader
+          eyebrow="Panel"
+          title="Inventario"
+          onMenuClick={() => setIsSidebarOpen(true)}
+        />
+
+        <div className="page-header">
           <div>
-            <p className="text-accent uppercase tracking-widest text-xs mb-1">
-              Panel
-            </p>
-
-            <h1 className="text-3xl md:text-4xl m-0">Inventario</h1>
+            <p className="page-header-eyebrow">Panel</p>
+            <h1 className="page-title">Inventario</h1>
           </div>
         </div>
 
-        <section className=" border rounded-2xl p-7 min-h-[72vh] shadow-soft">
-          <div className="grid grid-cols-[1fr_220px_max-content] gap-4 items-center mb-6">
+        <section className="page-section">
+          <div className="inventory-filters grid grid-cols-1 md:grid-cols-[1fr_220px_max-content] gap-4 items-center mb-6">
             <SearchBar query={searchQuery} onChange={setSearchQuery} />
             <select
               value={selectedProvider}
               onChange={(e) => setSelectedProvider(e.target.value)}
-              className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2"
+              className="select"
             >
               <option value="">Todas las proveedoras</option>
-
               {providers?.data?.map((provider) => (
                 <option key={provider.id} value={provider.id}>
                   {provider.first_name}
@@ -143,16 +138,16 @@ function InventoryPage() {
               ))}
             </select>
             <button
-              className="bg-accent text-slate-900 font-semibold rounded-lg px-4 py-2"
+              type="button"
+              className="btn btn-primary"
               onClick={handleAddItem}
             >
               Agregar producto
             </button>
           </div>
 
-          {notification && (
-            <div className="toast-notification">{notification}</div>
-          )}
+          {notification && <div className="toast-notification">{notification}</div>}
+
           <PaginationComponent
             totalPages={totalPages}
             currentPage={currentPage}

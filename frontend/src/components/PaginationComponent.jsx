@@ -1,47 +1,54 @@
 import React from "react";
 
-const PaginationComponent = ({
-  totalPages,
-  currentPage,
-  onChangePage,
-}) => {
-  const pages = Array.from(
-    { length: totalPages },
-    (_, i) => i + 1
-  );
+const PaginationComponent = ({ totalPages, currentPage, onChangePage }) => {
+  const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+
+  if (totalPages <= 1) return null;
 
   return (
-    <div className="flex items-center gap-2 mb-4">
+    <nav
+      aria-label="Paginación"
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "0.5rem",
+        marginBottom: "1rem",
+        flexWrap: "wrap",
+      }}
+    >
       <button
+        type="button"
         onClick={() => onChangePage(currentPage - 1)}
         disabled={currentPage === 1}
-        className="px-3 py-1 rounded border disabled:opacity-50 disabled:cursor-not-allowed"
+        className="btn btn-secondary btn-sm"
       >
-        ← Prev
+        ← Anterior
       </button>
 
-      {pages.map((page) => (
-        <button
-          key={page}
-          onClick={() => onChangePage(page)}
-          className={`px-3 py-1 rounded border ${
-            currentPage === page
-              ? "bg-blue-500 text-white"
-              : ""
-          }`}
-        >
-          {page}
-        </button>
-      ))}
+      {pages.map((page) => {
+        const isActive = currentPage === page;
+        return (
+          <button
+            key={page}
+            type="button"
+            onClick={() => onChangePage(page)}
+            className={`btn btn-sm ${isActive ? "btn-primary" : "btn-secondary"}`}
+            aria-current={isActive ? "page" : undefined}
+          >
+            {page}
+          </button>
+        );
+      })}
 
       <button
+        type="button"
         onClick={() => onChangePage(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="px-3 py-1 rounded border disabled:opacity-50 disabled:cursor-not-allowed"
+        className="btn btn-secondary btn-sm"
       >
-        Next →
+        Siguiente →
       </button>
-    </div>
+    </nav>
   );
 };
 

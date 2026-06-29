@@ -35,6 +35,9 @@ importers:
       googleapis:
         specifier: ^131.0.0
         version: 131.0.0
+      niimprint:
+        specifier: github:AndBondStyle/niimprint
+        version: https://codeload.github.com/AndBondStyle/niimprint/tar.gz/35c41a705cbc25ded388f1d562f184bf8994080e
       sharp:
         specifier: ^0.34.5
         version: 0.34.5
@@ -967,6 +970,10 @@ packages:
   negotiator@0.6.3:
     resolution: {integrity: sha512-+EUsqGPLsM+j/zdChZjsnX51g4XrHFOIXwfnCVPGlQk/k5giakcKsuxCObBRu6DSm9opw/O6slWbJdghQM4bBg==}
     engines: {node: '>= 0.6'}
+
+  niimprint@https://codeload.github.com/AndBondStyle/niimprint/tar.gz/35c41a705cbc25ded388f1d562f184bf8994080e:
+    resolution: {gitHosted: true, integrity: sha512-pgobFSUU+c5pMZnA393EhzSb3CwyCUd/X3PLOWc0iDqLgMP8wrm2A+I8R5Djmo0odxDknlcqpLlilM4vcnydHA==, tarball: https://codeload.github.com/AndBondStyle/niimprint/tar.gz/35c41a705cbc25ded388f1d562f184bf8994080e}
+    version: 0.0.0
 
   node-fetch@2.7.0:
     resolution: {integrity: sha512-c4FRfUm/dbcWZ7U+1Wq0AwCyFL+3nt2bEw05wfxSz+DWpWsitgmSgYmy2dQdWyKC1694ELPqMs/YzUSNozLt8A==}
@@ -2167,6 +2174,8 @@ snapshots:
   nanoid@3.3.12: {}
 
   negotiator@0.6.3: {}
+
+  niimprint@https://codeload.github.com/AndBondStyle/niimprint/tar.gz/35c41a705cbc25ded388f1d562f184bf8994080e: {}
 
   node-fetch@2.7.0:
     dependencies:

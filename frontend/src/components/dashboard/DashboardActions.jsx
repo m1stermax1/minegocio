@@ -1,28 +1,13 @@
-export default function DashboardActions({
-  onAddItem,
-  onAddSale,
-  onAddProvider,
-}) {
+export default function DashboardActions({ onAddItem, onAddSale, onAddProvider }) {
   return (
-    <div className="flex gap-3 items-center pbe-8">
-      <button
-        className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2"
-        onClick={onAddItem}
-      >
+    <div className="flex gap-3 items-center mb-6 flex-wrap">
+      <button type="button" className="btn btn-primary" onClick={onAddItem}>
         Agregar producto
       </button>
-
-      <button
-        className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2"
-        onClick={onAddSale}
-      >
+      <button type="button" className="btn btn-primary" onClick={onAddSale}>
         Agregar venta
       </button>
-
-      <button
-        className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2"
-        onClick={onAddProvider}
-      >
+      <button type="button" className="btn btn-primary" onClick={onAddProvider}>
         Agregar proveedora
       </button>
     </div>

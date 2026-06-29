@@ -1,17 +1,13 @@
 import { useState } from "react";
-
-import Sidebar from "../components/Sidebar";
-
+import Sidebar from "../components/Sidebar.jsx";
+import MobileHeader from "../components/MobileHeader.jsx";
 import DashboardHeader from "../components/dashboard/DashboardHeader.jsx";
 import DashboardActions from "../components/dashboard/DashboardActions.jsx";
 import DashboardStats from "../components/dashboard/DashboardStats.jsx";
 import DashboardModals from "../components/dashboard/DashboardModals.jsx";
-
 import { useDashboard } from "../hooks/useDashboard.js";
 
-export default function DashboardPage({
-  refresh,
-}) {
+export default function DashboardPage({ refresh }) {
   const {
     loading,
     stats,
@@ -22,40 +18,37 @@ export default function DashboardPage({
     loadProviders,
   } = useDashboard(refresh);
 
-  const [showItemsModal, setShowItemsModal] =
-    useState(false);
-
-  const [showSaleModal, setShowSaleModal] =
-    useState(false);
-
-  const [ 
-    showProvidersModal,
-    setShowProvidersModal,
-  ] = useState(false);
+  const [showItemsModal, setShowItemsModal] = useState(false);
+  const [showSaleModal, setShowSaleModal] = useState(false);
+  const [showProvidersModal, setShowProvidersModal] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen md:grid md:grid-cols-[280px_1fr]">
-      <Sidebar activeView="dashboard" />
+    <div className="page">
+      <Sidebar
+        activeView="dashboard"
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+      />
 
-      <main className="p-8">
+      <main className="page-main">
+        <MobileHeader
+          eyebrow="Panel"
+          title="Dashboard"
+          onMenuClick={() => setIsSidebarOpen(true)}
+        />
+
         <DashboardHeader />
 
-        <section className="bg-slate-800/70 border border-slate-700 rounded-2xl p-7 min-h-[72vh] shadow-soft">
-
+        <section className="page-section">
           <DashboardActions
-            onAddItem={() =>
-              setShowItemsModal(true)
-            }
-            onAddSale={() =>
-              setShowSaleModal(true)
-            }
-            onAddProvider={() =>
-              setShowProvidersModal(true)
-            }
+            onAddItem={() => setShowItemsModal(true)}
+            onAddSale={() => setShowSaleModal(true)}
+            onAddProvider={() => setShowProvidersModal(true)}
           />
 
           {loading ? (
-            <p>Cargando...</p>
+            <div className="table-state">Cargando métricas...</div>
           ) : (
             <DashboardStats stats={stats} />
           )}
@@ -66,20 +59,16 @@ export default function DashboardPage({
         inventory={inventory}
         providers={providers}
         showProvidersModal={showProvidersModal}
-        setShowProvidersModal={
-          setShowProvidersModal
-        }
+        setShowProvidersModal={setShowProvidersModal}
         showItemsModal={showItemsModal}
-        setShowItemsModal={
-          setShowItemsModal
-        }
+        setShowItemsModal={setShowItemsModal}
         showSaleModal={showSaleModal}
         setShowSaleModal={setShowSaleModal}
         onProviderAdded={loadDashboard}
         onItemAdded={() => {
           loadInventory();
           loadDashboard();
-        }} 
+        }}
         onSaleCreated={() => {
           loadInventory();
           loadDashboard();

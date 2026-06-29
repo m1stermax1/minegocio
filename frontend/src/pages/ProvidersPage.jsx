@@ -1,16 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
 
 import Sidebar from "../components/Sidebar.jsx";
+import MobileHeader from "../components/MobileHeader.jsx";
 import SearchBar from "../components/SearchBar.jsx";
 import InventoryTable from "../components/InventoryTable.jsx";
 import ProvidersTable from "../components/ProvidersTable.jsx";
 import ProvidersFormModal from "../components/ProvidersFormModal.jsx";
 
-import {
-  fetchInventory,
-  fetchProviders,
-} from "../services/api.js";
+import { fetchInventory, fetchProviders } from "../services/api.js";
 
 function ProvidersPage() {
   const inventoryTableRef = useRef(null);
@@ -21,19 +18,16 @@ function ProvidersPage() {
   const [loadingInventory, setLoadingInventory] = useState(true);
   const [loadingProviders, setLoadingProviders] = useState(false);
   const [showProvidersModal, setShowProvidersModal] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const showNotification = (message) => {
     setNotification(message);
-
-    window.setTimeout(() => {
-      setNotification("");
-    }, 3200);
+    window.setTimeout(() => setNotification(""), 3200);
   };
 
   const loadProviders = async () => {
     try {
       setLoadingProviders(true);
-
       const providersList = await fetchProviders();
       setProviders(providersList.data);
     } catch (error) {
@@ -64,39 +58,28 @@ function ProvidersPage() {
 
   const handleProviderAdded = async () => {
     await loadProviders();
-
-    // setProvidersRefresh((prev) => prev + 1);
-    // setDashboardRefresh((prev) => prev + 1);
-
     showNotification("Proveedora agregada correctamente.");
+  };
+
+  const handleDataChange = async () => {
+    await loadProviders();
+    await loadInventory();
   };
 
   const filteredInventory = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-
-    if (!query) {
-      return inventory;
-    }
-
-    return inventory.filter(({ codigo, descripcion }) => {
-      return (
-        codigo?.toLowerCase().includes(query) ||
-        descripcion?.toLowerCase().includes(query)
-      );
-    });
+    if (!query) return inventory;
+    return inventory.filter(({ codigo, descripcion }) =>
+      codigo?.toLowerCase().includes(query) ||
+      descripcion?.toLowerCase().includes(query),
+    );
   }, [inventory, searchQuery]);
 
   const filteredProviders = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-
-    if (!query) {
-      return providers;
-    }
-
+    if (!query) return providers;
     return providers.filter((provider) => {
-      const nombre =
-        `${provider.nombre || ""} ${provider.apellido || ""}`.toLowerCase();
-
+      const nombre = `${provider.nombre || ""} ${provider.apellido || ""}`.toLowerCase();
       return (
         nombre.includes(query) ||
         provider.telefono?.toLowerCase().includes(query) ||
@@ -107,42 +90,47 @@ function ProvidersPage() {
   }, [providers, searchQuery]);
 
   return (
-    <div className="min-h-screen md:grid md:grid-cols-[280px_1fr]">
-      <Sidebar />
+    <div className="page">
+      <Sidebar
+        activeView="providers"
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+      />
 
-      <main className="p-8">
-        <div className="flex items-end justify-between gap-6 mb-7">
+      <main className="page-main">
+        <MobileHeader
+          eyebrow="Panel"
+          title="Proveedores"
+          onMenuClick={() => setIsSidebarOpen(true)}
+        />
+
+        <div className="page-header">
           <div>
-            <p className="text-accent uppercase tracking-widest text-xs mb-1">
-              Panel
-            </p>
-
-            <h1 className="text-3xl md:text-4xl m-0">Proveedores</h1>
+            <p className="page-header-eyebrow">Panel</p>
+            <h1 className="page-title">Proveedores</h1>
           </div>
         </div>
 
-        <section className="border rounded-2xl p-7 min-h-[72vh] shadow-soft">
-          <div className="grid grid-cols-[1fr_max-content] gap-4 items-center mb-6">
+        <section className="page-section">
+          <div className="inventory-filters grid grid-cols-1 md:grid-cols-[1fr_max-content] gap-4 items-center mb-6">
             <SearchBar />
-
             <button
-              className="bg-accent text-slate-900 font-semibold rounded-lg px-4 py-2"
+              type="button"
+              className="btn btn-primary"
               onClick={() => setShowProvidersModal(true)}
             >
               Agregar proveedora
             </button>
           </div>
 
-          {notification && (
-            <div className="toast-notification">{notification}</div>
-          )}
+          {notification && <div className="toast-notification">{notification}</div>}
 
           <ProvidersTable
             providers={providers}
             inventoryItems={filteredInventory}
             loading={loadingProviders}
-            onDataChange={loadProviders}
-          ></ProvidersTable>
+            onDataChange={handleDataChange}
+          />
         </section>
       </main>
 

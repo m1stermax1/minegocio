@@ -39,7 +39,6 @@ export function useDashboard(refresh) {
         salesItems,
       } = await getDashboardData();
 
-console.log("Dash", dashboardData)
       setStats({
         inStockCount: dashboardData?.inStockCount || 0,
         soldCount: dashboardData?.soldCount || 0,
@@ -60,7 +59,7 @@ console.log("Dash", dashboardData)
   };
 
   const loadInventory = async () => {
-    const response = await getInventory();
+    const response = await getInventory({ all: true });
     setInventory(response?.data || []);
   };
 

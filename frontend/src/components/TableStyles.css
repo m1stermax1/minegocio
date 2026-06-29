@@ -1,13 +1,15 @@
-/* Modern table styles using Tailwind @apply */
-.modern-table {
-  @apply w-full min-w-[760px] border-separate border-spacing-0 text-center bg-slate-800/30;
-}
-.modern-table th {
-  @apply px-4 py-2 bg-slate-700 text-slate-100 font-semibold;
-}
-.modern-table td {
-  @apply px-4 py-2 border-b border-slate-700;
-}
-.modern-table tbody tr:hover {
-  @apply bg-slate-700/50;
+/* Las clases utilitarias de tabla viven ahora en styles.css (.data-table).
+   Este archivo queda como re-export para compatibilidad con componentes viejos
+   que aún importen 'TableStyles.css'. */
+
+@layer components {
+  .modern-table {
+    @apply data-table;
+  }
+  .modern-table th {
+    @apply bg-[var(--bg-surface-2)];
+  }
+  .modern-table tbody tr:hover td {
+    @apply bg-[var(--bg-surface-2)];
+  }
 }

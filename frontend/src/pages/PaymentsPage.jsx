@@ -1,22 +1,15 @@
 import { useEffect, useState } from "react";
-import {
-  fetchProviders,
-   fetchPayments
-} from "../services/api.js";
+import { fetchProviders, fetchPayments } from "../services/api.js";
 import Sidebar from "../components/Sidebar.jsx";
-import SearchBar from "../components/SearchBar.jsx";
-
+import MobileHeader from "../components/MobileHeader.jsx";
 import PaymentsTable from "../components/PaymentsTable.jsx";
 
-import ProvidersFormModal from "../components/ProvidersFormModal.jsx";
-import MessageForProvidersModal from "../components/messagesForProvidersModal.jsx";
-
-export default function PaymentsPage({}) {
-  const [loading, setLoading] = useState(true);
+export default function PaymentsPage() {
   const [loadingPayments, setLoadingPayments] = useState(false);
   const [providers, setProviders] = useState([]);
   const [pendingProviderPayments, setPendingProviderPayments] = useState([]);
-   const [loadingProviders, setLoadingProviders] = useState(false);
+  const [loadingProviders, setLoadingProviders] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const loadProviders = async () => {
     try {
@@ -46,33 +39,39 @@ export default function PaymentsPage({}) {
 
   useEffect(() => {
     loadPendingProviderPayments();
+    loadProviders();
   }, []);
 
   return (
-    <div className="min-h-screen md:grid md:grid-cols-[280px_1fr]">
-      <Sidebar activeView="dashboard" />
+    <div className="page">
+      <Sidebar
+        activeView="pagos"
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+      />
 
-      <main className="p-8">
-        <div>
-          <div className="flex items-end justify-between gap-6 mb-7">
-            <div>
-              <p className="text-accent uppercase tracking-widest text-xs mb-1">
-                Panel
-              </p>
+      <main className="page-main">
+        <MobileHeader
+          eyebrow="Panel"
+          title="Pagos"
+          onMenuClick={() => setIsSidebarOpen(true)}
+        />
 
-              <h1 className="text-3xl md:text-4xl m-0">Pagos</h1>
-            </div>
+        <div className="page-header">
+          <div>
+            <p className="page-header-eyebrow">Panel</p>
+            <h1 className="page-title">Pagos</h1>
           </div>
-
-          <section className="bg-slate-800/70 border border-slate-700 rounded-2xl p-7 min-h-[72vh] shadow-soft">
-            <PaymentsTable
-              payments={pendingProviderPayments}
-              providers={providers}
-              loading={loadingPayments || loadingProviders}
-              onPaymentsUpdated={loadPendingProviderPayments}
-            />
-          </section>
         </div>
+
+        <section className="page-section">
+          <PaymentsTable
+            payments={pendingProviderPayments}
+            providers={providers}
+            loading={loadingPayments || loadingProviders}
+            onPaymentsUpdated={loadPendingProviderPayments}
+          />
+        </section>
       </main>
     </div>
   );

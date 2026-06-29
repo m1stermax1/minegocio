@@ -1,32 +1,20 @@
-name: Local Config
-version: 1.0.0
-schema: v1
 models:
-  - name: Llama 3.1 8B
+  - name: Qwen 2.5 Coder 14B
     provider: ollama
-    model: llama3.1:8b
+    model: qwen2.5-coder:14b
     roles:
       - chat
       - edit
       - apply
-  - name: Qwen2.5-Coder 1.5B
+
+  - name: Qwen 2.5 Coder 7B
     provider: ollama
-    model: qwen2.5-coder:1.5b-base
+    model: qwen2.5-coder:7b
     roles:
       - autocomplete
+
   - name: Nomic Embed
     provider: ollama
-    model: nomic-embed-text:latest
+    model: nomic-embed-text
     roles:
       - embed
-  - name: Qwen 2.5 Coder 7b
-    provider: ollama
-    model: qwen-coder2.5-7b
-  - name: qwen2.5-coder
-    provider: ollama
-    model: qwen2.5-coder
-    capabilities:
-      - tool_use
-  - name: Autodetect
-    provider: ollama
-    model: AUTODETECT

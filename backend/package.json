@@ -19,6 +19,7 @@
     "dotenv": "^16.6.1",
     "express": "^4.18.3",
     "googleapis": "^131.0.0",
+    "niimprint": "github:AndBondStyle/niimprint",
     "sharp": "^0.34.5",
     "twilio": "^6.0.2",
     "ws": "^8.21.0"

@@ -1,5 +1,8 @@
 import express from "express";
-import { getProviders } from "../controllers/providers/providers.controller.js";
+import {
+  getProviders,
+  deleteProviders,
+} from "../controllers/providers/providers.controller.js";
 import { getUsers } from "../controllers/users/users.controller.js";
 import { supabase } from "../services/supabaseService.js";
 import authMiddleware from "./authMiddleware.js";
@@ -54,6 +57,55 @@ router.post("/add", async (req, res) => {
   } catch (error) {
     console.error(error);
 
+    return res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+router.delete("/", authMiddleware, async (req, res) => {
+  try {
+    const organizationId = req.user?.organization_id;
+    const { ids, alsoDeleteItems = false } = req.body || {};
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: "Se requiere un array de IDs no vacío",
+      });
+    }
+
+    const result = await deleteProviders(ids, organizationId, alsoDeleteItems);
+
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
+
+    return res.json(result);
+  } catch (error) {
+    console.error("Error al eliminar proveedoras:", error);
+    return res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+router.delete("/:id", authMiddleware, async (req, res) => {
+  try {
+    const organizationId = req.user?.organization_id;
+    const { id } = req.params;
+
+    const result = await deleteProviders([id], organizationId, false);
+
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
+
+    return res.json(result);
+  } catch (error) {
+    console.error("Error al eliminar proveedora:", error);
     return res.status(500).json({
       success: false,
       error: error.message,

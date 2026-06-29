@@ -1,244 +1,912 @@
 @import "tailwindcss";
 
+/* ============================================================================
+   Design tokens — Modo claro (default)
+   ============================================================================ */
 :root {
-  --radius-xl: 1rem;
+  /* Paleta primaria — morado Lila */
+  --primary: #a878bf;
+  --primary-hover: #8c5fa6;
+  --primary-fg: #ffffff;
+  --primary-soft: rgba(168, 120, 191, 0.12);
+
+  /* Fondos */
+  --bg-base: #fbfbfd;
+  --bg-surface: #ffffff;
+  --bg-surface-2: #f6f5f8;
+  --bg-surface-hover: #efeaf3;
+
+  /* Texto */
+  --text-base: #2a1f33;
+  --text-muted: #6b5b75;
+  --text-soft: #98909e;
+
+  /* Bordes y anillos */
+  --border: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.16);
+  --ring: rgba(168, 120, 191, 0.35);
+
+  /* Sidebar — branding fijo (oscuro siempre) */
+  --sidebar-bg: #1a1320;
+  --sidebar-fg: #ffffff;
+  --sidebar-link-hover: #2a1f33;
+  --sidebar-link-active: #bf99cc;
+
+  /* Estados */
+  --success: #16a34a;
+  --success-fg: #ffffff;
+  --success-bg: rgba(22, 163, 74, 0.12);
+  --success-border: rgba(22, 163, 74, 0.32);
+
+  --warning: #d97706;
+  --warning-fg: #ffffff;
+  --warning-bg: rgba(217, 119, 6, 0.12);
+  --warning-border: rgba(217, 119, 6, 0.32);
+
+  --danger: #dc2626;
+  --danger-fg: #ffffff;
+  --danger-bg: rgba(220, 38, 38, 0.12);
+  --danger-border: rgba(220, 38, 38, 0.32);
+
+  --info: #2563eb;
+  --info-fg: #ffffff;
+  --info-bg: rgba(37, 99, 235, 0.12);
+  --info-border: rgba(37, 99, 235, 0.32);
+
+  /* Sombras */
+  --shadow-soft: 0 12px 30px rgba(2, 6, 23, 0.06);
+  --shadow-md: 0 6px 20px rgba(2, 6, 23, 0.08);
 }
 
-* {
-  box-sizing: border-box;
+/* ============================================================================
+   Modo oscuro — se activa con la clase .dark en <html>
+   ============================================================================ */
+:root.dark {
+  --primary: #bf99cc;
+  --primary-hover: #d4b3df;
+  --primary-fg: #1a1320;
+  --primary-soft: rgba(191, 153, 204, 0.16);
+
+  --bg-base: #0f172a;
+  --bg-surface: #1e293b;
+  --bg-surface-2: #283449;
+  --bg-surface-hover: #334155;
+
+  --text-base: #f1f5f9;
+  --text-muted: #94a3b8;
+  --text-soft: #64748b;
+
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --ring: rgba(191, 153, 204, 0.40);
+
+  /* Sidebar — sigue oscuro, un poco más claro que el body */
+  --sidebar-bg: #0b0f1e;
+  --sidebar-link-hover: #1e293b;
+  --sidebar-link-active: #bf99cc;
+
+  --success-bg: rgba(22, 163, 74, 0.18);
+  --warning-bg: rgba(217, 119, 6, 0.18);
+  --danger-bg: rgba(220, 38, 38, 0.18);
+  --info-bg: rgba(37, 99, 235, 0.18);
+
+  --shadow-soft: 0 12px 30px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
 
-/* Small set of custom utilities that are non-trivial to express inline */
-.shadow-soft {
-  box-shadow: 0 12px 30px rgba(2, 6, 23, 0.6);
+/* ============================================================================
+   Base
+   ============================================================================ */
+* { box-sizing: border-box; }
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-base);
+  color: var(--text-base);
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 200ms ease, color 200ms ease;
 }
 
-.toast-notification {
-  padding: 14px 18px;
-  background: rgba(34, 197, 94, 0.16);
-  border: 1px solid rgba(34, 197, 94, 0.35);
-  border-radius: 16px;
-  color: rgb(34, 197, 94);
-  margin-bottom: 20px;
+*:focus { outline-color: var(--ring); }
+*:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* ============================================================================
+   Layout — Page wrapper consistente
+   ============================================================================ */
+.page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+}
+
+.page-main {
+  padding: 2rem;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 1.75rem;
+}
+
+.page-header-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.75rem;
+  color: var(--primary);
+  margin: 0 0 0.25rem;
+  font-weight: 600;
+}
+
+.page-title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-base);
+}
+
+.page-section {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 1.75rem;
+  min-height: 72vh;
+  box-shadow: var(--shadow-soft);
+}
+
+/* ============================================================================
+   Tarjeta (.card) — bloques reutilizables
+   ============================================================================ */
+.card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  box-shadow: var(--shadow-md);
+}
+
+.card-elevated {
+  box-shadow: var(--shadow-soft);
+}
+
+/* Stat card (dashboard) */
+.stat-card {
+  background-color: var(--primary);
+  color: var(--primary-fg);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+}
+.stat-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  opacity: 0.9;
+  margin: 0;
+}
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0.25rem 0 0;
+}
+
+/* ============================================================================
+   Botones
+   ============================================================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease, box-shadow 120ms ease, transform 80ms ease;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.btn:disabled, .btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.btn:active:not(:disabled) { transform: translateY(1px); }
+
+.btn-primary {
+  background-color: var(--primary);
+  color: var(--primary-fg);
+  border-color: var(--primary);
+}
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+  border-color: var(--primary-hover);
+  box-shadow: 0 8px 20px rgba(168, 120, 191, 0.20);
+}
+
+.btn-secondary {
+  background-color: var(--bg-surface-2);
+  color: var(--text-base);
+  border-color: var(--border);
+}
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--bg-surface-hover);
+  border-color: var(--border-strong);
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: var(--text-base);
+  border-color: transparent;
+}
+.btn-ghost:hover:not(:disabled) {
+  background-color: var(--bg-surface-2);
+}
+
+.btn-danger {
+  background-color: var(--danger);
+  color: var(--danger-fg);
+  border-color: var(--danger);
+}
+.btn-danger:hover:not(:disabled) {
+  background-color: #b91c1c;
+  border-color: #b91c1c;
+}
+
+.btn-icon {
+  padding: 0.5rem;
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+/* Tamaños */
+.btn-sm { padding: 0.375rem 0.625rem; font-size: 0.8125rem; }
+.btn-lg { padding: 0.75rem 1.25rem; font-size: 1rem; }
+.btn-block { width: 100%; }
+
+/* ============================================================================
+   Inputs y labels
+   ============================================================================ */
+.label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-base);
+  margin-bottom: 0.375rem;
+}
+.label-muted {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-bottom: 0.375rem;
+}
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  background-color: var(--bg-surface);
+  color: var(--text-base);
+  border: 1px solid var(--border-strong);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+.input::placeholder, .textarea::placeholder { color: var(--text-soft); }
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--ring);
+}
+
+.input:disabled, .select:disabled, .textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: var(--bg-surface-2);
+}
+
+/* ============================================================================
+   Checkbox custom
+   ============================================================================ */
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  cursor: pointer;
+  user-select: none;
+  font-size: 0.875rem;
+  color: var(--text-base);
+}
+.checkbox input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.checkbox-box {
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 0.25rem;
+  border: 1.5px solid var(--border-strong);
+  background-color: var(--bg-surface);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+.checkbox-box::after {
+  content: "";
+  width: 0.625rem;
+  height: 0.3125rem;
+  border-left: 2px solid var(--primary-fg);
+  border-bottom: 2px solid var(--primary-fg);
+  transform: rotate(-45deg) scale(0);
+  margin-top: -2px;
+  transition: transform 120ms ease;
+}
+.checkbox input[type="checkbox"]:checked + .checkbox-box {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+.checkbox input[type="checkbox"]:checked + .checkbox-box::after {
+  transform: rotate(-45deg) scale(1);
+}
+.checkbox input[type="checkbox"]:focus-visible + .checkbox-box {
+  box-shadow: 0 0 0 3px var(--ring);
+}
+.checkbox-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+.checkbox-label-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* ============================================================================
+   Price cards (modal de venta)
+   ============================================================================ */
+.price-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.875rem 1rem;
+  border-radius: 0.625rem;
+  border: 1.5px solid var(--border);
+  background-color: var(--bg-surface);
+  transition: border-color 120ms ease, background-color 120ms ease, transform 80ms ease;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+}
+.price-card:hover { border-color: var(--border-strong); }
+
+.price-card-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin: 0;
+}
+.price-card-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-base);
+  margin: 0;
+  line-height: 1.2;
+}
+.price-card-discount {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* Modificadores por método */
+.price-card--efectivo.is-selected {
+  border-color: var(--success);
+  background-color: var(--success-bg);
+}
+.price-card--efectivo.is-selected .price-card-label,
+.price-card--efectivo.is-selected .price-card-value {
+  color: var(--success);
+}
+
+.price-card--transferencia.is-selected {
+  border-color: var(--primary);
+  background-color: var(--primary-soft);
+}
+.price-card--transferencia.is-selected .price-card-label,
+.price-card--transferencia.is-selected .price-card-value {
+  color: var(--primary);
+}
+
+.price-card--debito.is-selected {
+  border-color: var(--info);
+  background-color: var(--info-bg);
+}
+.price-card--debito.is-selected .price-card-label,
+.price-card--debito.is-selected .price-card-value {
+  color: var(--info);
+}
+
+.price-card--bruto {
+  cursor: default;
+  border-style: dashed;
+}
+.price-card--bruto:hover { border-color: var(--border); }
+
+/* Total final destacado */
+.price-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+  color: var(--primary-fg);
+  box-shadow: 0 8px 20px rgba(168, 120, 191, 0.20);
+}
+.price-total-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0;
+  opacity: 0.9;
+}
+.price-total-value {
+  font-size: 1.875rem;
+  font-weight: 800;
+  margin: 0;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+/* ============================================================================
+   Badges
+   ============================================================================ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.badge-success { background-color: var(--success-bg); color: var(--success); border-color: var(--success-border); }
+.badge-warning { background-color: var(--warning-bg); color: var(--warning); border-color: var(--warning-border); }
+.badge-danger  { background-color: var(--danger-bg);  color: var(--danger);  border-color: var(--danger-border); }
+.badge-info    { background-color: var(--info-bg);    color: var(--info);    border-color: var(--info-border); }
+.badge-neutral { background-color: var(--primary-soft); color: var(--primary); border-color: var(--border); }
+
+/* ============================================================================
+   Sidebar
+   ============================================================================ */
+.sidebar {
+  background-color: var(--sidebar-bg);
+  color: var(--sidebar-fg);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: var(--sidebar-fg);
+}
+.sidebar-brand-icon { color: var(--sidebar-link-active); width: 2.5rem; height: 2.5rem; }
+.sidebar-brand-name { font-size: 1.125rem; font-weight: 600; }
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  color: var(--sidebar-fg);
+  text-decoration: none;
+  transition: background-color 120ms ease, color 120ms ease;
+  font-size: 0.9375rem;
+}
+.sidebar-link:hover {
+  background-color: var(--sidebar-link-hover);
+  text-decoration: none;
+}
+.sidebar-link.is-active {
+  background-color: var(--sidebar-link-active);
+  color: #1a1320;
+  font-weight: 600;
+}
+.sidebar-link.is-active svg { color: #1a1320; }
+.sidebar-link svg { width: 1.25rem; height: 1.25rem; }
+
+.sidebar-footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* ============================================================================
+   Modales
+   ============================================================================ */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  z-index: 50;
+}
+
+.modal-container {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  box-shadow: 0 20px 50px rgba(2, 6, 23, 0.25);
+  overflow: hidden;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-base);
+}
+.modal-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin: 0.25rem 0 0;
+}
+
+.modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .modal-footer {
   display: flex;
-  gap: 12px;
+  gap: 0.75rem;
   justify-content: flex-end;
-  padding: 20px 32px 28px;
-  border-top: 1px solid rgba(148, 163, 184, 0.08);
-  background: rgba(15, 23, 42, 0.03);
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid var(--border);
+  background-color: var(--bg-surface-2);
 }
 
-/* keep some legacy selectors that are pure CSS */
-.search-result-item:hover {
-  background-color: rgba(255, 255, 255, 0.02);
+/* Modal size variants */
+.modal-sm { max-width: 28rem; }
+.modal-md { max-width: 36rem; }
+.modal-lg { max-width: 56rem; }
+
+/* ============================================================================
+   Tablas
+   ============================================================================ */
+.table-wrapper {
+  overflow-x: auto;
 }
 
-/* Global theme overrides: backgrounds -> white tones, text -> #bf99cc */
-:root {
-  --accent-text: #bf99cc;
-  --bg-100: #ffffff;
-  /* principal blanco */
-  --bg-50: #fbfbfd;
-  /* ligero tono */
-  --bg-200: #f6f5f8;
-  /* secundario */
+.data-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: separate;
+  border-spacing: 0;
+  text-align: center;
 }
 
-/* Additional theme variables for stronger hover colors and dashboard cards */
-:root {
-  --dashboard-card-bg: #bf99cc;
-  --btn-hover-primary: #6b21a8;
-  /* deep purple for strong contrast */
-  --btn-hover-strong: #ff5c7c;
-  /* accent coral for attention */
+.data-table thead th {
+  padding: 0.625rem 1rem;
+  background-color: var(--bg-surface-2);
+  color: var(--text-base);
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-bottom: 1px solid var(--border-strong);
 }
 
-html,
-body,
-#root {
-  background-color: var(--bg-50) !important;
-  color: var(--accent-text) !important;
+.data-table tbody td {
+  padding: 0.625rem 1rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-base);
+  font-size: 0.875rem;
 }
 
-/* Force utility-based backgrounds to white tones (covers classes like bg-slate-900/40) */
-/* [class*="bg-"] {
-  background-color: var(--bg-100) !important;
-  background-image: none !important;
-} */
-
-/* Force utility-based text colors to the requested accent */
-/* [class*="text-"] {
-  color: var(--accent-text) !important;
-} */
-
-/* Softer borders to match light background */
-/* [class*="border-"] {
-  border-color: rgba(0, 0, 0, 0.06) !important;
-} */
-
-/* Keep interactive focus rings subtle but using the accent hue */
-*:focus {
-  outline-color: rgba(191, 153, 204, 0.22) !important;
+.data-table tbody tr:hover td {
+  background-color: var(--bg-surface-2);
 }
 
-/* Buttons styled like dashboard cards */
-button,
-.btn {
-  background-color: var(--dashboard-card-bg) !important;
-  color: #ffffff !important;
-  border: 1px solid rgba(0, 0, 0, 0.06) !important;
-  padding: 0.5rem 0.75rem;
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table--inset thead th:first-child { border-top-left-radius: 0.75rem; }
+.data-table--inset thead th:last-child { border-top-right-radius: 0.75rem; }
+.data-table--inset tbody tr:last-child td:first-child { border-bottom-left-radius: 0.75rem; }
+.data-table--inset tbody tr:last-child td:last-child { border-bottom-right-radius: 0.75rem; }
+
+/* ============================================================================
+   Estados (cargando, vacío, error)
+   ============================================================================ */
+.table-state {
+  padding: 2.5rem 1rem;
+  text-align: center;
+  color: var(--text-muted);
+  background-color: var(--bg-surface-2);
+  border-radius: 0.75rem;
+  border: 1px dashed var(--border-strong);
+}
+
+.empty-state {
+  padding: 2.5rem 1rem;
+  text-align: center;
+  color: var(--text-muted);
+  border-radius: 0.75rem;
+  background-color: var(--bg-surface-2);
+}
+
+.alert {
+  padding: 0.75rem 1rem;
   border-radius: 0.5rem;
-  transition: background-color 120ms ease, box-shadow 120ms ease, transform 80ms ease;
+  border: 1px solid;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+.alert-error   { background-color: var(--danger-bg);  color: var(--danger);  border-color: var(--danger-border); }
+.alert-success { background-color: var(--success-bg); color: var(--success); border-color: var(--success-border); }
+.alert-info    { background-color: var(--info-bg);    color: var(--info);    border-color: var(--info-border); }
+.alert-warning { background-color: var(--warning-bg); color: var(--warning); border-color: var(--warning-border); }
+
+/* ============================================================================
+   Toast notifications
+   ============================================================================ */
+.toast-notification {
+  padding: 14px 18px;
+  background: var(--success-bg);
+  border: 1px solid var(--success-border);
+  border-radius: 0.75rem;
+  color: var(--success);
+  margin-bottom: 1.25rem;
 }
 
-/* Stronger hover colors for buttons to make them stand out */
-button:hover,
-.btn:hover,
-input[type="submit"]:hover,
-input[type="button"]:hover,
-.hover\:text-slate-100:hover,
-.hover\:bg-accent:hover {
-  color: #ffffff !important;
-  background-color: var(--btn-hover-primary) !important;
-  box-shadow: 0 14px 38px rgba(107, 33, 168, 0.14) !important;
-  transform: translateY(-2px) !important;
-  cursor: pointer !important;
+/* ============================================================================
+   Utilidades misceláneas (mantener compatibilidad)
+   ============================================================================ */
+.shadow-soft { box-shadow: var(--shadow-soft); }
+.shadow-md   { box-shadow: var(--shadow-md); }
+
+.search-result-item:hover { background-color: var(--bg-surface-2); }
+
+.scrollbar-hidden::-webkit-scrollbar { width: 0; height: 0; }
+.scrollbar-hidden { scrollbar-width: none; }
+
+/* ============================================================================
+   Scrollbar global suave (modales y wrappers)
+   ============================================================================ */
+.modal-body::-webkit-scrollbar,
+.table-wrapper::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.modal-body::-webkit-scrollbar-thumb,
+.table-wrapper::-webkit-scrollbar-thumb {
+  background-color: var(--border-strong);
+  border-radius: 4px;
+}
+.modal-body::-webkit-scrollbar-thumb:hover,
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+  background-color: var(--text-soft);
 }
 
-/* provide an alternative stronger hover for danger/attention buttons */
-.btn-danger:hover,
-.bg-rose-900:hover,
-.hover\:bg-rose-900:hover {
-  background-color: var(--btn-hover-strong) !important;
-  color: #ffffff !important;
+/* ============================================================================
+   Mobile header (hamburguesa)
+   ============================================================================ */
+.mobile-header {
+  display: none;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 40;
 }
 
-button:active,
-.btn:active {
-  transform: translateY(1px) !important;
+/* ============================================================================
+   Responsive — mobile (<=768px)
+   ============================================================================ */
+@media (max-width: 768px) {
+  .page {
+    grid-template-columns: 1fr;
+  }
+
+  .mobile-header {
+    display: flex;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    z-index: 60;
+    transform: translateX(-100%);
+    transition: transform 220ms ease;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+  }
+
+  .sidebar.is-open {
+    transform: translateX(0);
+  }
+
+  .sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(2px);
+    z-index: 55;
+  }
+
+  .page-main {
+    padding: 1rem;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .page-section {
+    padding: 1rem;
+    min-height: auto;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+  }
+
+  .modal-container {
+    max-height: 95vh;
+  }
+
+  /* Tablas → cards en mobile */
+  .table-wrapper {
+    overflow-x: visible;
+  }
+
+  .data-table {
+    display: block;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .data-table thead {
+    display: none;
+  }
+
+  .data-table tbody {
+    display: block;
+  }
+
+  .data-table tbody tr {
+    display: block;
+    border: 1px solid var(--border);
+    border-radius: 0.625rem;
+    margin-bottom: 0.75rem;
+    padding: 0.75rem;
+    background: var(--bg-surface);
+  }
+
+  .data-table tbody td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.4rem 0;
+    border-bottom: none;
+    text-align: right;
+    gap: 0.75rem;
+  }
+
+  .data-table tbody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    margin-right: auto;
+    color: var(--text-muted);
+    text-align: left;
+  }
+
+  .data-table tbody tr:hover td {
+    background: transparent;
+  }
+
+  /* En mobile los grids del tipo [1fr 220px max-content] colapsan */
+  .inventory-filters {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* Stat cards se mantienen en 2 columnas (ya lo hace Tailwind via sm:) */
+  /* noop */
+
+  /* Botones en toolbar delete se apilan verticalmente en mobile */
+  .modal-footer {
+    flex-direction: column-reverse;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+  }
+
+  /* SalesModal two-column layout colapsa */
+  .sales-summary-grid {
+    flex-direction: column;
+  }
+
+  .sales-summary-grid > * {
+    width: 100% !important;
+    max-width: none !important;
+  }
 }
 
-button:focus,
-.btn:focus {
-  outline: 3px solid rgba(191, 153, 204, 0.14) !important;
-  outline-offset: 2px !important;
-}
+/* ============================================================================
+   Tablet (769px a 1024px)
+   ============================================================================ */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .page {
+    grid-template-columns: 220px 1fr;
+  }
 
-/* Badges commonly use inline-flex + rounded-full */
-.inline-flex.rounded-full {
-  background-color: rgba(191, 153, 204, 0.06) !important;
-  color: var(--accent-text) !important;
-  border: 1px solid rgba(191, 153, 204, 0.12) !important;
-}
-
-.inline-flex.rounded-full:hover {
-  background-color: rgba(191, 153, 204, 0.12) !important;
-}
-
-/* Form controls */
-input,
-textarea,
-select {
-  background-color: var(--bg-100) !important;
-  color: var(--accent-text) !important;
-  border: 1px solid rgba(0, 0, 0, 0.06) !important;
-  padding: 0.5rem 0.6rem !important;
-  border-radius: 0.5rem !important;
-}
-
-input:focus,
-textarea:focus,
-select:focus {
-  box-shadow: 0 6px 20px rgba(191, 153, 204, 0.06) !important;
-  outline: none !important;
-  border-color: rgba(191, 153, 204, 0.22) !important;
-}
-
-/* Modals and panels should remain light with subtle shadow */
-.bg-slate-800,
-.bg-slate-900,
-.shadow-2xl {
-  background-color: var(--bg-100) !important;
-  box-shadow: 0 10px 30px rgba(2, 6, 23, 0.04) !important;
-}
-
-/* Dashboard cards: purple background and white text */
-.dashboard-card {
-  background-color: var(--dashboard-card-bg) !important;
-  color: #ffffff !important;
-  border-color: rgba(0, 0, 0, 0.06) !important;
-}
-
-.dashboard-card * {
-  color: #ffffff !important;
-}
-
-/* Links keep accent color and clear hover */
-a,
-a:link,
-a:visited {
-  color: var(--accent-text) !important;
-}
-
-a:hover {
-  text-decoration: underline !important;
-}
-
-.sidebar a {
-  color: #ffffff !important;
-  background-color: var(--dashboard-card-bg) !important;
-}
-
-.sidebar a:hover {
-  background-color: var(--btn-hover-primary) !important;
-  color: #ffffff !important;
-}
-
-.providersModal,
-.salesModal,
-.itemsModal, .pendingPaymentsProvidersModal {
-  border: 2px solid #bf99cc !important;
-}
-
-.providersModal>div,
-.salesModal>div,
-.itemsModal>div, .pendingPaymentsProvidersModal>div {
-  border-bottom: 1px solid #bf99cc !important;
-}
-
-.providersModal>form>div:last-child,
-.salesModal>form>div:last-child,
-.itemsModal>form>div:last-child {
-  border-top: 1px solid #bf99cc !important;
-}
-
-.providersModal>div>button,
-.salesModal>div>button,
-.itemsModal>div>button, .pendingPaymentsProvidersModal>div>button {
-  color: #ffffff !important;
-}
-
-input.w-full,
-select.w-full {
-  border: 2px solid #bf99cc !important;
-}
-
-.providersModal {
-  overflow: hidden auto;
-}
-
-.itemsModal,
-.salesModal {
-  overflow: hidden auto;
-  height: 96vh;
-}
-
-.providersModal::-webkit-scrollbar,
-.itemsModal::-webkit-scrollbar,
-.salesModal::-webkit-scrollbar {
-  width: 0;
+  .sidebar-brand-name {
+    font-size: 1rem;
+  }
 }

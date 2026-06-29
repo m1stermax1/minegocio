@@ -14,9 +14,19 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
-export async function fetchInventory(page, limit, selectedProdiver) {
-  const response = await api.get(`/inventory?page=${page}&limit=${limit}&provider_id=${selectedProdiver}`);
-  // const inventory = response.data?.filter((item) => item?.organization_id == perfil[0]?.organization_id)
+export async function fetchInventory(page, limit, selectedProdiver, all = false) {
+  const params = new URLSearchParams();
+  if (all) {
+    params.set("all", "true");
+  } else {
+    if (page != null) params.set("page", String(page));
+    if (limit != null) params.set("limit", String(limit));
+  }
+  if (selectedProdiver) params.set("provider_id", selectedProdiver);
+
+  const qs = params.toString();
+  const url = qs ? `/inventory?${qs}` : "/inventory";
+  const response = await api.get(url);
   return response;
 }
 
@@ -125,8 +135,33 @@ export async function createSale(payload) {
 }
 
 export async function printBarcode(barcode) {
-  const response = await api.get(`/inventory/print-barcode?barcode=${barcode}`);
+  console.log("Barcode", barcode)
+  const response = await api.post("/inventory/print-barcode", {barcode: barcode});
   return response;
+}
+
+export async function deleteProvider(id) {
+  const response = await api.delete(`/providers/${id}`);
+  return response.data;
+}
+
+export async function deleteProviders({ ids, alsoDeleteItems = false } = {}) {
+  const response = await api.delete("/providers", {
+    data: { ids, alsoDeleteItems },
+  });
+  return response.data;
+}
+
+export async function deleteInventoryItem(id) {
+  const response = await api.delete(`/inventory/${id}`);
+  return response.data;
+}
+
+export async function deleteInventoryItems({ ids, onlyAvailable = true } = {}) {
+  const response = await api.delete("/inventory", {
+    data: { ids, onlyAvailable },
+  });
+  return response.data;
 }
 
 export async function createSalesItem(payload) {

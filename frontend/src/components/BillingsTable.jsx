@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
-import { fetchInvoices, issueInvoice } from "../services/api.js";
+import { fetchInvoices } from "../services/api.js";
 
 const formatPrice = (value) => {
   const number = Number(value);
-  if (!Number.isFinite(number)) {
-    return "-";
-  }
+  if (!Number.isFinite(number)) return "-";
   return `$ ${number.toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 };
 
@@ -23,66 +21,42 @@ const formatDate = (dateStr) => {
   }
 };
 
-export default function BillingsTable() {
+export default function BillingsTable({ invoices = [] }) {
   const [loading, setLoading] = useState(false);
-  const [invoices, setInvoices] = useState([]);
-  const [error, setError] = useState("");
-  console.log("Lista en la tabla", invoices)
-  const loadInvoices = async () => {
-    try {
-      const list = await fetchInvoices();
-      setInvoices(list?.data)
-    } catch (err) {
-      console.log(err)
-    }
-  }
 
   useEffect(() => {
-    loadInvoices()
-  }, [])
+    // Si no se pasan invoices, los podríamos cargar aquí; el page ya lo hace.
+    setLoading(false);
+  }, [invoices]);
 
-  console.log("Lista:", invoices)
+  if (!invoices?.length) {
+    return <div className="empty-state">No se encontraron facturas registradas.</div>;
+  }
+
   return (
-    <>
-      <table className="w-full min-w-[860px] border-separate border-spacing-3">
+    <div className="table-wrapper">
+      <table className="data-table">
         <thead>
           <tr>
-            <th className="text-center">Fecha</th>
-            <th className="text-center">Monto</th>
-            <th className="text-center">Estado</th>
-            <th className="text-center">Acción</th>
+            <th>Fecha</th>
+            <th>Monto</th>
+            <th>Estado</th>
           </tr>
         </thead>
         <tbody>
           {invoices.map((invoice) => (
-            <tr
-              key={invoice.facturaId}
-              className="odd:bg-slate-900/30 even:bg-slate-900/20"
-            >
-              <td className="text-center text-sm">
-                {formatDate(invoice.created_at)}
+            <tr key={invoice.facturaId}>
+              <td>{formatDate(invoice.created_at)}</td>
+              <td>{formatPrice(invoice.price)}</td>
+              <td>
+                <span className="badge badge-neutral">
+                  {invoice.estadoFactura || "pendiente"}
+                </span>
               </td>
-              <td className="text-center">{formatPrice(invoice.price)}</td>
-              {/* <td className="text-center">
-                <button
-                  type="button"
-                  className={`rounded-lg px-3 py-2 text-sm ${invoice.estadoFactura === "facturada" ? "bg-slate-700 text-slate-300 cursor-not-allowed" : "bg-accent text-slate-900"}`}
-                  onClick={() => handleIssueInvoice(invoice.id)}
-                  disabled={
-                    invoice.estadoFactura === "facturada"
-                  }
-                >
-                  {invoice.estadoFactura === "facturada"
-                    ? "Facturada"
-                    : issuingId === invoice.facturaId
-                      ? "Facturando..."
-                      : "Facturar"}
-                </button>
-              </td> */}
             </tr>
           ))}
         </tbody>
       </table>
-    </>
+    </div>
   );
 }

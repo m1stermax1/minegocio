@@ -36,6 +36,7 @@ import {
   getInventory,
   addItemToInventory,
   changeItemStatus,
+  deleteInventoryItems,
 } from "../controllers/inventory/inventory.controller.js";
 import { supabase } from "../services/supabaseService.js";
 import authMiddleware from "./authMiddleware.js";
@@ -109,24 +110,38 @@ async function generateBarcodeAndPrint(code) {
     .toBuffer();
 
   fs.writeFileSync(filePath, finalImage);
+
+  const NIIM_MODEL = process.env.NIIM_MODEL || "d110";
+  const NIIM_CONN = process.env.NIIM_CONN || "usb";
+  const NIIM_ADDR = process.env.NIIM_ADDR || ""; // vacío = auto-detect
+  const NIIM_DENSITY = process.env.NIIM_DENSITY || "3";
+  const addrFlag = NIIM_ADDR ? `-a "${NIIM_ADDR}"` : "";
+  const cmd = [
+    "python -m niimprint",
+    `-m ${NIIM_MODEL}`,
+    `-c ${NIIM_CONN}`,
+    addrFlag,
+    `--density ${NIIM_DENSITY}`,
+    `-i "${filePath}"`,
+  ]
+    .filter(Boolean) // elimina el addrFlag vacío
+    .join(" ");
   console.log("INICIO IMPRESION:", code);
+  console.log("CMD:", cmd);
 
   await new Promise((resolve, reject) => {
-    exec(
-      `python -m niimprint -m d110 -c usb -a COM3 --density 3 -i "${filePath}"`,
-      (error, stdout, stderr) => {
-        console.log("FIN IMPRESION:", code);
-        console.log("STDOUT:", stdout);
-        console.log("STDERR:", stderr);
+    exec(cmd, (error, stdout, stderr) => {
+      console.log("FIN IMPRESION:", code);
+      console.log("STDOUT:", stdout);
+      console.log("STDERR:", stderr);
 
-        if (error) {
-          reject(stderr || error.message);
-          return;
-        }
+      if (error) {
+        reject(stderr || error.message);
+        return;
+      }
 
-        resolve();
-      },
-    );
+      resolve();
+    });
   });
 
   fs.unlinkSync(filePath);
@@ -137,13 +152,23 @@ async function generateBarcodeAndPrint(code) {
   };
 }
 
+
+
 router.get("/", authMiddleware, async (req, res) => {
   try {
     const organizationId = req.user?.organization_id;
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 20;
+    const all = req.query.all === "true" || req.query.all === "1";
+    const selectedProvider = req.query.provider_id || null;
 
-    const inventory = await getInventory(organizationId, page, limit);
+    const inventory = await getInventory(
+      organizationId,
+      page,
+      limit,
+      selectedProvider,
+      all,
+    );
 
     res.json(inventory);
   } catch (error) {
@@ -162,6 +187,7 @@ router.post("/add", async (req, res) => {
   }
 
   const preparedItems = [];
+  const generatedBarcodes = [];
   for (const item of items) {
     const codigo = `INV${crypto.randomUUID().split("-")[0].toUpperCase()}`;
     const nombre = item?.nombre?.toString().trim();
@@ -193,24 +219,17 @@ router.post("/add", async (req, res) => {
       profile,
     });
 
-    // imprimir etiqueta
-    // await generateBarcodeAndPrint(codigo);
-    console.log("ESPERANDO 5 SEGUNDOS");
-
-    // await new Promise((resolve) => setTimeout(resolve, 2000));
+    generatedBarcodes.push({ codigo });
   }
 
   try {
     const result = await addItemToInventory(preparedItems);
 
-    // const barcodeUrls = result?.data?.generatedBarcodes.map(
-    //   ({ codigo, fileName }) => ({
-    //     codigo,
-    //     url: `/barcodes/${fileName}`,
-    //   }),
-    // );
-    // console.log("Lista de codigos de barras: ", barcodeUrls);
-    res.json({ success: true, barcodes: "test" });
+    res.json({
+      success: true,
+      data: result?.data,
+      barcodes: generatedBarcodes,
+    });
   } catch (error) {
     console.error("Error agregando item en Sheets:", error);
     res.status(500).json({ error: "No se pudo agregar el item" });
@@ -237,7 +256,58 @@ router.patch("/:id/status", async (req, res) => {
 });
 
 router.post("/print-barcode", async (req, res) => {
+  const codigo = req.body?.barcode;
+  // console.log("Codigo", codigo)
   await generateBarcodeAndPrint(codigo);
+});
+
+router.delete("/", authMiddleware, async (req, res) => {
+  try {
+    const organizationId = req.user?.organization_id;
+    const { ids, onlyAvailable = true } = req.body || {};
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: "Se requiere un array de IDs no vacío",
+      });
+    }
+
+    const result = await deleteInventoryItems(ids, organizationId, onlyAvailable);
+
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
+
+    return res.json(result);
+  } catch (error) {
+    console.error("Error al eliminar items:", error);
+    return res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+router.delete("/:id", authMiddleware, async (req, res) => {
+  try {
+    const organizationId = req.user?.organization_id;
+    const { id } = req.params;
+
+    const result = await deleteInventoryItems([id], organizationId, false);
+
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
+
+    return res.json(result);
+  } catch (error) {
+    console.error("Error al eliminar item:", error);
+    return res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
 });
 
 export default router;

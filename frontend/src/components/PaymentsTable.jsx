@@ -1,6 +1,5 @@
 import { Fragment, useState, useMemo } from "react";
 import PaymentModal from "./PaymentModal.jsx";
-
 import { updatePaymentStatus, fetchProviders } from "../services/api.js";
 
 export default function PaymentsTable({
@@ -14,48 +13,21 @@ export default function PaymentsTable({
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const toggleExpanded = (proveedoraName) => {
-    setExpandedProvider((prev) =>
-      prev === proveedoraName ? null : proveedoraName,
-    );
+    setExpandedProvider((prev) => (prev === proveedoraName ? null : proveedoraName));
   };
 
   const paymentsByProvider = useMemo(() => {
     const groupedByProvider = {};
-
-    console.log(payments)
-
     payments.forEach((item) => {
       const provName = item.provider_id || "Sin proveedora";
-      if (!groupedByProvider[provName]) {
-        groupedByProvider[provName] = [];
-      }
+      if (!groupedByProvider[provName]) groupedByProvider[provName] = [];
       groupedByProvider[provName].push(item);
     });
-
     return groupedByProvider;
   }, [payments]);
 
-  const getProviderInfo = async (provName) => {
-    try {
-      const data = await fetchProviders();
-      return data.find(
-        (p) =>
-          p.nombre?.toLowerCase() === provName?.toLowerCase() ||
-          `${p.nombre || ""} ${p.apellido || ""}`.trim().toLowerCase() ===
-          provName?.toLowerCase(),
-      );
-    } catch (err) {
-      console.error("Error fetching complete providers:", err);
-      return null;
-    }
-  };
-
-  const calculateProviderTotal = (items) => {
-    return items.reduce((sum, item) => {
-      const precio = Number(item.total_amount) || 0;
-      return sum + precio;
-    }, 0);
-  };
+  const calculateProviderTotal = (items) =>
+    items.reduce((sum, item) => sum + (Number(item.total_amount) || 0), 0);
 
   const handleContactToProvider = async (provName, items) => {
     const providerData = providers.find(
@@ -72,14 +44,7 @@ export default function PaymentsTable({
       .map((item) => {
         const precioOriginal = Number(item.precioSugerido || item.precio) || 0;
         const precioProveedora = precioOriginal * 0.6;
-
-        return `• ${item.descripcion || item.codigo || "Producto"} - $${precioProveedora.toLocaleString(
-          "es-AR",
-          {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          },
-        )}`;
+        return `• ${item.descripcion || item.codigo || "Producto"} - $${precioProveedora.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
       })
       .join("\n");
 
@@ -91,17 +56,11 @@ Te comparto el detalle de productos vendidos:
 
 ${productsText}
 
-Total a pagar: $${totalProvider.toLocaleString("es-AR", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })}
+Total a pagar: $${totalProvider.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
 
 Muchas gracias.`;
 
-    const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(
-      message,
-    )}`;
-
+    const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, "_blank");
 
     try {
@@ -121,11 +80,9 @@ Muchas gracias.`;
 
   const providerNames = Object.keys(paymentsByProvider);
 
-  console.log(providerNames)
-
   if (providerNames.length === 0) {
     return (
-      <div className="table-state">
+      <div className="empty-state">
         No hay órdenes de pago en la hoja pagos maxi.
       </div>
     );
@@ -133,21 +90,20 @@ Muchas gracias.`;
 
   return (
     <>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[760px] border-separate border-spacing-3">
+      <div className="table-wrapper">
+        <table className="data-table">
           <thead>
             <tr>
-              <th className="text-center">Proveedora</th>
-              <th className="text-center">Productos vendidos</th>
-              <th className="text-center">Total a pagar</th>
-              <th className="text-center">Estado</th>
-              <th className="text-center">Acciones</th>
+              <th>Proveedora</th>
+              <th>Productos vendidos</th>
+              <th>Total a pagar</th>
+              <th>Estado</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
             {providerNames.map((provName) => {
               const items = paymentsByProvider[provName];
-              console.log(items);
               const totalProvider = calculateProviderTotal(items);
               const allPaid = items.every(
                 (item) => (item.estado || "").toLowerCase() === "pagado",
@@ -156,62 +112,48 @@ Muchas gracias.`;
                 (item) => (item.estado || "").toLowerCase() === "contactado",
               );
 
-              const statusLabel = allPaid
-                ? "Pagado"
+              const statusLabel = allPaid ? "Pagado" : anyContacted ? "Contactado" : "Pendiente";
+              const statusClass = allPaid
+                ? "badge-success"
                 : anyContacted
-                  ? "Contactado"
-                  : "Pendiente";
+                  ? "badge-info"
+                  : "badge-warning";
 
               return (
                 <Fragment key={`provider-${provName}`}>
                   <tr>
-                    <td className="text-center">{provName}</td>
-                    <td className="text-center">{items.length}</td>
-                    <td className="text-center">
+                    <td>{provName}</td>
+                    <td>{items.length}</td>
+                    <td>
                       $
                       {totalProvider.toLocaleString("es-AR", {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}
                     </td>
-                    <td className="text-center">
-                      <span
-                        className={`inline-flex justify-center items-center px-3 py-1 rounded-full text-sm font-semibold ${allPaid
-                          ? "bg-emerald-800/40 text-emerald-300 border border-emerald-700"
-                          : anyContacted
-                            ? "bg-blue-800/40 text-blue-200 border border-blue-700"
-                            : "bg-amber-900/40 text-amber-200 border border-amber-700"
-                          }`}
-                      >
-                        {statusLabel}
-                      </span>
+                    <td>
+                      <span className={`badge ${statusClass}`}>{statusLabel}</span>
                     </td>
                     <td>
                       <div className="flex flex-wrap justify-center gap-2">
                         <button
                           type="button"
-                          className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2"
+                          className="btn btn-secondary btn-sm"
                           onClick={() => toggleExpanded(provName)}
                         >
-                          {expandedProvider === provName
-                            ? "Ocultar"
-                            : "Ver detalles"}
+                          {expandedProvider === provName ? "Ocultar" : "Ver detalles"}
                         </button>
                         <button
                           type="button"
-                          className="bg-accent text-slate-900 font-semibold rounded-lg px-4 py-2"
-                          onClick={() =>
-                            handleContactToProvider(provName, items)
-                          }
+                          className="btn btn-primary btn-sm"
+                          onClick={() => handleContactToProvider(provName, items)}
                         >
                           Contactar
                         </button>
                         <button
                           type="button"
-                          className="bg-slate-700 text-slate-100 rounded-lg px-4 py-2"
-                          onClick={() =>
-                            alert("Transferir aún no está disponible.")
-                          }
+                          className="btn btn-secondary btn-sm"
+                          onClick={() => alert("Transferir aún no está disponible.")}
                         >
                           Transferir
                         </button>
@@ -222,47 +164,31 @@ Muchas gracias.`;
                   {expandedProvider === provName && (
                     <tr>
                       <td colSpan={5}>
-                        <div className="mt-3">
-                          <table className="w-full min-w-[720px] border-separate border-spacing-0">
+                        <div style={{ padding: "0.75rem 0" }}>
+                          <table className="data-table">
                             <thead>
                               <tr>
                                 <th>Código</th>
                                 <th>Descripción</th>
-                                <th className="text-right">
-                                  Valor para proveedora (60%)
-                                </th>
-                                <th className="text-center">Estado</th>
+                                <th className="text-end">Valor para proveedora (60%)</th>
+                                <th>Estado</th>
                               </tr>
                             </thead>
                             <tbody>
                               {items.map((item, itemIndex) => {
-                                const precioProveedora = Number(item.total_amount) ||
-                                  0;
-
+                                const precioProveedora = Number(item.total_amount) || 0;
                                 return (
-                                  <tr
-                                    key={`${provName}-${itemIndex}`}
-                                    className="odd:bg-slate-900/20"
-                                  >
-                                    <td className="text-center">
-                                      {item.barcode || "-"}
-                                    </td>
-                                    <td className="text-center">
-                                      {item.description || "-"}
-                                    </td>
-                                    <td className="text-right">
+                                  <tr key={`${provName}-${itemIndex}`}>
+                                    <td>{item.barcode || "-"}</td>
+                                    <td>{item.description || "-"}</td>
+                                    <td className="text-end">
                                       $
-                                      {precioProveedora.toLocaleString(
-                                        "es-AR",
-                                        {
-                                          minimumFractionDigits: 2,
-                                          maximumFractionDigits: 2,
-                                        },
-                                      )}
+                                      {precioProveedora.toLocaleString("es-AR", {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                      })}
                                     </td>
-                                    <td className="text-center">
-                                      {item.estado || "pendiente"}
-                                    </td>
+                                    <td>{item.estado || "pendiente"}</td>
                                   </tr>
                                 );
                               })}

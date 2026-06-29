@@ -15,8 +15,6 @@ export async function getDashboardData() {
       fetchSalesItems(),
     ]);
 
-  console.log("Sales Items en getDashboardData", salesItems)
-
   return {
     dashboardData,
     providers,
@@ -25,8 +23,8 @@ export async function getDashboardData() {
   };
 }
 
-export async function getInventory() {
-  return await fetchInventory();
+export async function getInventory({ all = true } = {}) {
+  return await fetchInventory(null, null, null, all);
 }
 
 export async function getProviders() {

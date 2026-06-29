@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchSales, fetchSalesItems } from "../services/api.js";
 import Sidebar from "../components/Sidebar.jsx";
-import SearchBar from "../components/SearchBar.jsx";
+import MobileHeader from "../components/MobileHeader.jsx";
 import SalesModal from "../components/SalesModal.jsx";
 import SalesTable from "../components/SalesTable.jsx";
 
@@ -9,25 +9,7 @@ export default function SalesPage() {
   const [loading, setLoading] = useState(true);
   const [sales, setSales] = useState([]);
   const [salesItems, setSalesItems] = useState([]);
-
-  const [showSaleModal, setShowSaleModal] = useState(false);
-  //   const [loadingSales, setLoadingSales] = useState(false);
-
-  const parseSaleDate = (dateString) => {
-    if (!dateString) return null;
-
-    // formato YYYY-MM-DD
-    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
-      const [year, month, day] = dateString.split("-").map(Number);
-
-      return new Date(year, month - 1, day);
-    }
-
-    // fallback para fechas viejas ISO
-    const parsed = new Date(dateString);
-
-    return Number.isNaN(parsed.getTime()) ? null : parsed;
-  };
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const loadSales = async () => {
     try {
@@ -42,15 +24,13 @@ export default function SalesPage() {
     }
   };
 
-  const loadSalesItems = async (id) => {
+  const loadSalesItems = async () => {
     try {
       const data = await fetchSalesItems();
-      
-      console.log("Se ejecuta el sales items", data);
       setSalesItems(data);
     } catch (error) {
       console.error("Error cargando ventas:", error);
-      setSales([]);
+      setSalesItems([]);
     } finally {
       setLoading(false);
     }
@@ -61,45 +41,38 @@ export default function SalesPage() {
     loadSalesItems();
   }, []);
 
-  console.log(sales);
-  console.log(loading);
-  console.log(salesItems);
-
   return (
-    <div className="min-h-screen md:grid md:grid-cols-[280px_1fr]">
-      <Sidebar activeView="sales" />
+    <div className="page">
+      <Sidebar
+        activeView="ventas"
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+      />
 
-      <main className="p-8">
-        <div>
-          <div className="flex items-end justify-between gap-6 mb-7">
-            <div>
-              <p className="text-accent uppercase tracking-widest text-xs mb-1">
-                Panel
-              </p>
+      <main className="page-main">
+        <MobileHeader
+          eyebrow="Panel"
+          title="Ventas"
+          onMenuClick={() => setIsSidebarOpen(true)}
+        />
 
-              <h1 className="text-3xl md:text-4xl m-0">Ventas</h1>
-            </div>
+        <div className="page-header">
+          <div>
+            <p className="page-header-eyebrow">Panel</p>
+            <h1 className="page-title">Ventas</h1>
           </div>
-
-          <section className="bg-slate-800/70 border border-slate-700 rounded-2xl p-7 min-h-[72vh] shadow-soft">
-            {loading ? (
-              <p>Cargando...</p>
-            ) : (
-              <>
-                <SalesTable sales={sales} salesItems={salesItems?.data} />
-              </>
-            )}
-          </section>
         </div>
+
+        <section className="page-section">
+          {loading ? (
+            <div className="table-state">Cargando ventas...</div>
+          ) : (
+            <SalesTable sales={sales} salesItems={salesItems?.data} />
+          )}
+        </section>
       </main>
 
-      <SalesModal
-      // isOpen={showSaleModal}
-      // onClose={() => setShowSaleModal(false)}
-      // // inventoryItems={inventory}
-      // // isLoadingInventory={loadingInventory}
-      // onSaleCreated={handleSaleCreated}
-      />
+      <SalesModal />
     </div>
   );
 }

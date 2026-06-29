@@ -1,22 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { getProfile } from "../services/users.js";
 import {
-  fetchInventory,
-  updateInventoryRowStatus,
   createSale,
   createSalesItem,
   createPayments,
-  createPaymentItems,
   createInvoices,
-  fetchProviders,
-  changeInventoryItem,
+  updateInventoryRowStatus,
 } from "../services/api.js";
 
 const formatPrice = (value) => {
   const number = Number(value);
-  if (!Number.isFinite(number)) {
-    return "-";
-  }
+  if (!Number.isFinite(number)) return "-";
   return `$ ${number.toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 };
 
@@ -27,14 +21,12 @@ export default function SalesModal({
   onSaleCreated,
   isLoadingInventory,
 }) {
-  const [totalAmountGlobal, setTotalAmountGlobal] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedItems, setSelectedItems] = useState([]);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [notification, setNotification] = useState("");
-  const [providersList, setProvidersList] = useState([]);
 
   const availableItems = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
@@ -42,29 +34,20 @@ export default function SalesModal({
     return inventoryItems
       ?.filter((item) => item?.status == "AVAILABLE")
       ?.filter((item) => {
-        if (!item.description) {
-          console.log("No se puede buscar un item sin código o descripción");
-          return false;
-        }
+        if (!item.description) return false;
         const isSold = (item.status || "").toUpperCase() === "SOLD";
         if (isSold) return false;
-        const alreadySelected = selectedItems.some(
-          (selected) => selected.id === item.id,
-        );
+        const alreadySelected = selectedItems.some((selected) => selected.id === item.id);
         if (alreadySelected) return false;
         const codigo = item.barcode?.toLowerCase() || "";
         const descripcion = item.description?.toLowerCase() || "";
         return codigo.includes(term) || descripcion.includes(term);
-        return descripcion.includes(term);
       })
       .slice(0, 10);
   }, [inventoryItems, searchTerm, selectedItems]);
 
   const totalAmount = selectedItems.reduce((sum, item) => {
-    console.log("item price", item);
-    const value =
-      Number(item?.profile == null ? item.price : item.price * 0.6) || 0;
-    console.log("item price", value);
+    const value = Number(item?.profile == null ? item.price : item.price * 0.6) || 0;
     return sum + value;
   }, 0);
 
@@ -83,9 +66,7 @@ export default function SalesModal({
   const handleAddItem = (item) => {
     setError("");
     setSelectedItems((prev) => {
-      if (prev.some((selected) => selected.id === item.id)) {
-        return prev;
-      }
+      if (prev.some((selected) => selected.id === item.id)) return prev;
       return [...prev, item];
     });
     setSearchTerm("");
@@ -95,12 +76,14 @@ export default function SalesModal({
     setSelectedItems((prev) => prev.filter((item) => item.id !== id));
   };
 
+  // Atajo: click en una price card también setea el método de pago
+  const handlePriceCardClick = (method) => {
+    setPaymentMethod(method);
+  };
+
   useEffect(() => {
     const term = searchTerm.trim().toLowerCase();
-    if (!term || availableItems.length !== 1) {
-      return;
-    }
-
+    if (!term || availableItems.length !== 1) return;
     const item = availableItems[0];
     if (
       item.barcode?.toLowerCase() === term &&
@@ -110,9 +93,7 @@ export default function SalesModal({
     }
   }, [searchTerm, availableItems, selectedItems]);
 
-  const normalizeBarcodeSearch = (value) => {
-    return value.replace(/[’'‘]/g, "-");
-  };
+  const normalizeBarcodeSearch = (value) => value.replace(/[''‘]/g, "-");
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -122,49 +103,36 @@ export default function SalesModal({
       setError("Agrega al menos un producto a la venta.");
       return;
     }
-
     if (!paymentMethod) {
       setError("Selecciona un método de pago.");
       return;
     }
+
     setLoading(true);
     try {
-      // cuando hago click en agregar venta
       const perfil = await getProfile();
-      // creo la venta
       const salesCreated = await createSale({
         orgId: perfil[0]?.organization_id,
         totalSale: selectedTotal,
-        // items: selectedItems.map((item) => ({
-        //   id: item.id,
-        //   codigo: item.barcode,
-        //   descripcion: item.description,
-        //   precio: item.price,
-        //   proveedora: item.provider_id,
-        //   orgId: item.organization_id,
-        // })),
         metodoPago: paymentMethod,
       });
-      // const salesCreated = "";
-      // luego creo el sales item
-      // tengo que guardar el sales id, los items?, el valor total del item y lo que queda para delfi
+
       const updatedItems = selectedItems.map((item) => ({
         ...item,
         paymentMethod,
       }));
-      const createSaleItem = await createSalesItem({
+      await createSalesItem({
         orgId: perfil[0]?.organization_id,
         saleId: salesCreated?.data[0]?.id,
         items: updatedItems,
         totalSaleAmount: selectedTotal,
         paymethod: paymentMethod,
       });
-      // cambio el status de cada item
+
       selectedItems?.forEach((element) => {
         updateInventoryRowStatus(element?.id, element?.status);
       });
 
-      // por cada elemento creo un payments
       for (const element of selectedItems) {
         if (!element?.profile_id) {
           await createPayments({
@@ -173,12 +141,9 @@ export default function SalesModal({
             orgId: perfil[0]?.organization_id,
             total_amout: element.price * 0.6,
             providerId: element?.provider_id,
-            // profile: element?.profile_id,
             barcode: element.barcode,
           });
         }
-
-        // await changeInventoryItem(element?.id)
       }
 
       if (paymentMethod == "transferencia") {
@@ -191,14 +156,8 @@ export default function SalesModal({
       setSelectedItems([]);
       setPaymentMethod("");
       setSearchTerm("");
-
-      if (onSaleCreated) {
-        onSaleCreated();
-      }
-
+      if (onSaleCreated) onSaleCreated();
       onClose();
-
-      return salesCreated;
     } catch (err) {
       console.error("Error cargando venta:", err);
       setError(err.response?.data?.error || "No se pudo guardar la venta.");
@@ -207,96 +166,84 @@ export default function SalesModal({
     }
   };
 
-  if (!isOpen) {
-    return null;
-  }
+  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 backdrop-blur flex items-center justify-center p-5 z-50">
-      <div className="salesModal w-full max-w-4xl bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden max-h-[90vh]">
-        <div className="flex items-start justify-between gap-4 p-6 border-b border-slate-700">
+    <div className="modal-backdrop">
+      <div className="modal-container modal-lg">
+        <div className="modal-header">
           <div>
-            <h2 className="text-xl font-semibold">Agregar Venta</h2>
-            <p className="text-slate-400 text-sm m-0">
+            <h2 className="modal-title">Agregar Venta</h2>
+            <p className="modal-subtitle">
               Busca productos por código o descripción y agrégalos a la venta.
             </p>
           </div>
           <button
             type="button"
-            className="text-slate-400 text-xl p-1 rounded-full hover:text-slate-100"
+            className="btn btn-ghost btn-icon"
             onClick={onClose}
-            aria-label="Cerrar modal"
+            aria-label="Cerrar"
           >
             ✕
           </button>
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div className="p-6 overflow-y-auto">
-            {error && (
-              <div className="text-rose-300 bg-rose-900/20 border border-rose-800 rounded-md p-3">
-                {error}
-              </div>
-            )}
+          <div className="modal-body">
+            {error && <div className="alert alert-error">{error}</div>}
 
-            <div className="mb-4">
-              <label
-                htmlFor="buscar-producto"
-                className="block font-semibold text-accent mb-2"
-              >
+            <div style={{ marginBottom: "1rem" }}>
+              <label htmlFor="buscar-producto" className="label" style={{ color: "var(--primary)" }}>
                 Buscar producto
               </label>
               <input
                 id="buscar-producto"
-                className="w-full px-3 py-2 rounded-lg bg-slate-900/60 border border-slate-700 text-slate-100"
+                className="input"
                 value={searchTerm}
-                onChange={(e) =>
-                  setSearchTerm(normalizeBarcodeSearch(e.target.value))
-                }
+                onChange={(e) => setSearchTerm(normalizeBarcodeSearch(e.target.value))}
                 placeholder="Escribe el código o descripción del producto..."
                 disabled={loading || isLoadingInventory}
                 autoComplete="off"
               />
             </div>
 
-            {/* Resultados de búsqueda (Solo si hay texto) */}
             {searchTerm.trim() !== "" && (
-              <div style={{ marginBottom: "24px" }}>
-                <p
-                  style={{
-                    margin: "0 0 8px",
-                    fontSize: "0.9rem",
-                    fontWeight: 600,
-                    color: "var(--accent)",
-                  }}
-                >
+              <div style={{ marginBottom: "1.5rem" }}>
+                <p className="label" style={{ color: "var(--primary)", marginBottom: "0.5rem" }}>
                   Resultados de búsqueda
                 </p>
                 {isLoadingInventory ? (
-                  <p className="text-slate-400">Cargando productos...</p>
+                  <p style={{ color: "var(--text-muted)" }}>Cargando productos...</p>
                 ) : (
-                  <div className="max-h-[200px] overflow-y-auto">
+                  <div style={{ maxHeight: 200, overflowY: "auto" }}>
                     {availableItems.length === 0 ? (
-                      <p className="m-3 text-slate-400 text-sm">
+                      <p style={{ margin: "0.75rem", color: "var(--text-muted)", fontSize: "0.875rem" }}>
                         No se encontraron productos disponibles.
                       </p>
                     ) : (
                       availableItems.map((item) => (
                         <div
                           key={item.id}
-                          className="flex justify-between items-center p-3 rounded-md hover:bg-slate-900/30"
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            padding: "0.75rem",
+                            borderRadius: "0.375rem",
+                          }}
+                          className="search-result-item"
                         >
                           <div>
                             <strong>{item.barcode || "Sin código"}</strong> —{" "}
                             {item.description || "Sin descripción"}
-                            <div className="text-sm text-slate-400 mt-1">
+                            <div style={{ fontSize: "0.875rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>
                               Proveedor: {item.providerName || "mío"} —{" "}
                               <strong>{formatPrice(item.price)}</strong>
                             </div>
                           </div>
                           <button
                             type="button"
-                            className="bg-accent text-slate-900 rounded-lg px-3 py-1 text-sm"
+                            className="btn btn-primary btn-sm"
                             onClick={() => handleAddItem(item)}
                           >
                             Agregar
@@ -309,49 +256,47 @@ export default function SalesModal({
               </div>
             )}
 
-            {/* Acomodo de UI en 2 Columnas */}
             <div
               style={{
                 display: "flex",
-                gap: "24px",
+                gap: "1.5rem",
                 flexWrap: "wrap",
-                marginTop: "8px",
+                marginTop: "0.5rem",
               }}
             >
-              {/* Columna Izquierda: Prendas agregadas */}
-              <div className="flex-1 min-w-[320px] flex flex-col gap-3">
-                <h3
-                  style={{
-                    margin: "0 0 4px",
-                    fontSize: "1.1rem",
-                    fontWeight: 700,
-                  }}
-                >
+              <div style={{ flex: 1, minWidth: 320, display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                <h3 style={{ margin: "0 0 0.25rem", fontSize: "1.1rem", fontWeight: 700 }}>
                   Prendas agregadas ({selectedItems.length})
                 </h3>
                 {selectedItems.length === 0 ? (
-                  <div className="p-8 rounded-lg text-slate-400">
+                  <div className="empty-state">
                     No se han seleccionado prendas. Busca y agrega una arriba.
                   </div>
                 ) : (
-                  <div className="flex flex-col gap-3 max-h-[350px] overflow-y-auto pr-2">
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxHeight: 350, overflowY: "auto", paddingRight: "0.5rem" }}>
                     {selectedItems.map((item) => (
                       <div
                         key={item.id}
-                        className="flex justify-between items-center p-3 bg-slate-900/30 border border-slate-700 rounded-md"
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          padding: "0.75rem",
+                          background: "var(--bg-surface-2)",
+                          border: "1px solid var(--border)",
+                          borderRadius: "0.375rem",
+                        }}
                       >
-                        <div>
-                          <span className="ml-2 font-medium">
-                            {item.description || "-"}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <strong className="text-lg">
+                        <span style={{ marginLeft: "0.5rem", fontWeight: 500 }}>
+                          {item.description || "-"}
+                        </span>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                          <strong style={{ fontSize: "1.125rem" }}>
                             {formatPrice(item.price)}
                           </strong>
                           <button
                             type="button"
-                            className="bg-rose-900/30 text-rose-300 border border-rose-700 rounded-md px-3 py-1 text-sm"
+                            className="btn btn-danger btn-sm"
                             onClick={() => handleRemoveItem(item.id)}
                           >
                             ✕ Quitar
@@ -363,78 +308,99 @@ export default function SalesModal({
                 )}
               </div>
 
-              {/* Columna Derecha: Precios y botones */}
-              <div className="w-full max-w-[360px] min-w-[280px] flex flex-col gap-4">
-                <div className="p-4 bg-slate-900/20 border border-slate-700 rounded-md">
-                  <p className="font-bold text-accent mb-2">
-                    Resumen de precios
+              {/* Resumen de precios destacado */}
+              <div style={{ width: "100%", maxWidth: 360, minWidth: 280, display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                <p className="label" style={{ color: "var(--primary)", marginBottom: 0, fontWeight: 700 }}>
+                  Resumen de precios
+                </p>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: "0.75rem",
+                    color: "var(--text-muted)",
+                  }}
+                >
+                  Tocá una opción para elegir el método de pago.
+                </p>
+
+                {/* Total bruto (referencia, no clickeable) */}
+                <div className="price-card price-card--bruto" aria-label="Total bruto">
+                  <p className="price-card-label">Total bruto</p>
+                  <p className="price-card-value">{formatPrice(totalAmount)}</p>
+                  <p className="price-card-discount">sin descuento</p>
+                </div>
+
+                {/* Efectivo */}
+                <button
+                  type="button"
+                  className={`price-card price-card--efectivo ${
+                    paymentMethod === "efectivo" ? "is-selected" : ""
+                  }`}
+                  onClick={() => handlePriceCardClick("efectivo")}
+                  aria-pressed={paymentMethod === "efectivo"}
+                >
+                  <p className="price-card-label">Efectivo</p>
+                  <p className="price-card-value">{formatPrice(efectivoTotal)}</p>
+                  <p className="price-card-discount">10% de descuento</p>
+                </button>
+
+                {/* Transferencia */}
+                <button
+                  type="button"
+                  className={`price-card price-card--transferencia ${
+                    paymentMethod === "transferencia" ? "is-selected" : ""
+                  }`}
+                  onClick={() => handlePriceCardClick("transferencia")}
+                  aria-pressed={paymentMethod === "transferencia"}
+                >
+                  <p className="price-card-label">Transferencia</p>
+                  <p className="price-card-value">{formatPrice(transferenciaTotal)}</p>
+                  <p className="price-card-discount">5% de descuento · genera factura</p>
+                </button>
+
+                {/* Débito / Crédito */}
+                <button
+                  type="button"
+                  className={`price-card price-card--debito ${
+                    paymentMethod === "debito/credito" ? "is-selected" : ""
+                  }`}
+                  onClick={() => handlePriceCardClick("debito/credito")}
+                  aria-pressed={paymentMethod === "debito/credito"}
+                >
+                  <p className="price-card-label">Débito / Crédito</p>
+                  <p className="price-card-value">{formatPrice(tarjetaTotal)}</p>
+                  <p className="price-card-discount">5,59% de recargo</p>
+                </button>
+
+                {/* Total final destacado */}
+                <div className="price-total">
+                  <p className="price-total-label">
+                    {paymentMethod
+                      ? `Total a guardar · ${paymentMethod}`
+                      : "Total a guardar"}
                   </p>
-                  <div className="text-sm text-slate-400 flex justify-between">
-                    <span>Total bruto</span>
-                    <span>{formatPrice(totalAmount)}</span>
-                  </div>
-                  <div className="text-sm text-emerald-400 flex justify-between">
-                    <span>Efectivo (10% off)</span>
-                    <span>{formatPrice(efectivoTotal)}</span>
-                  </div>
-                  <div className="text-sm text-accent flex justify-between">
-                    <span>Transferencia (5% off)</span>
-                    <span>{formatPrice(transferenciaTotal)}</span>
-                  </div>
-                </div>
-
-                <div className="p-4 bg-slate-900/20 border border-slate-700 rounded-md">
-                  <p className="font-bold text-accent mb-2">Método de pago</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      { value: "efectivo", label: "Efectivo" },
-                      { value: "transferencia", label: "Transferencia" },
-                      { value: "debito/credito", label: "Débito / Crédito" },
-                    ].map((option) => (
-                      <button
-                        key={option.value}
-                        type="button"
-                        className={
-                          paymentMethod === option.value
-                            ? "bg-accent text-slate-900 rounded-lg px-3 py-2"
-                            : "bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2"
-                        }
-                        onClick={() => setPaymentMethod(option.value)}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="p-4 bg-slate-900/10 border border-slate-700 rounded-md flex items-center justify-between">
-                  <div>
-                    <p className="m-0 font-bold text-accent">Total a guardar</p>
-                    <p className="m-0 text-2xl font-extrabold">
-                      {formatPrice(selectedTotal)}
-                    </p>
-                  </div>
+                  <p className="price-total-value">{formatPrice(selectedTotal)}</p>
                 </div>
               </div>
             </div>
+          </div>
 
-            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-700">
-              <button
-                type="button"
-                className="bg-slate-900/40 border border-slate-700 text-slate-100 rounded-lg px-3 py-2"
-                onClick={onClose}
-                disabled={loading}
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                className="bg-accent text-slate-900 font-semibold rounded-lg px-4 py-2"
-                disabled={loading || !selectedItems.length || !paymentMethod}
-              >
-                {loading ? "Guardando..." : "Cargar venta"}
-              </button>
-            </div>
+          <div className="modal-footer">
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={onClose}
+              disabled={loading}
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={loading || !selectedItems.length || !paymentMethod}
+            >
+              {loading ? "Guardando..." : "Cargar venta"}
+            </button>
           </div>
         </form>
       </div>

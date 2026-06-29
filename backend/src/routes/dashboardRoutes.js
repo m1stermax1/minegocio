@@ -8,7 +8,7 @@ const router = express.Router();
 router.get("/counts", authMiddleware, async (req, res) => {
   try {
     const organizationId = req.user?.organization_id
-    const inventory = await getInventory(organizationId);
+    const inventory = await getInventory(organizationId, 1, 10, null, true);
 
     const nuevoInv = {
       ...inventory,
