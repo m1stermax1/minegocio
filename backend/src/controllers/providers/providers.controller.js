@@ -1,16 +1,21 @@
 import { supabase } from "../../services/supabaseService.js";
 
 
-export async function getProviders(organizationId) {
-    const { data, error } = await supabase
+export async function getProviders(organizationId, page = 1, limit = 20) {
+    const from = (page - 1) * limit;
+    const to = page * limit - 1;
+
+    const { data, error, count } = await supabase
         .from("providers")
-        .select("*").eq("organization_id", organizationId);
+        .select("*", { count: "exact" })
+        .eq("organization_id", organizationId)
+        .range(from, to);
 
     if (error) {
         throw error;
     }
 
-    return data ?? [];
+    return { data: data ?? [], count: count ?? 0 };
 }
 
 export async function addNewProvider(nombre, apellido, telefono, bankalias = '') {
@@ -31,6 +36,7 @@ export async function addNewProvider(nombre, apellido, telefono, bankalias = '')
     throw new Error(`Failed to add provider: ${err.message}`);
   }
 }
+
 
 export async function deleteProviders(ids, organizationId, alsoDeleteItems = false) {
   try {
@@ -72,4 +78,3 @@ export async function deleteProviders(ids, organizationId, alsoDeleteItems = fal
     return { success: false, error: err.message };
   }
 }
-

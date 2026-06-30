@@ -8,11 +8,14 @@ const router = express.Router();
 router.get("/", authMiddleware, async (req, res) => {
   try {
     const organizationId = req.user?.organization_id;
-    const payments = await getPayments(organizationId);
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 20;
+    const result = await getPayments(organizationId, page, limit);
 
     res.json({
       success: true,
-      data: payments || [],
+      data: result.data,
+      total: result.count,
     });
   } catch (error) {
     console.error("Error al cargar payments:", error);
@@ -55,7 +58,6 @@ router.post("/add", async (req, res) => {
     if (error) {
       throw error;
     }
-
 
 
     return res.status(201).json({

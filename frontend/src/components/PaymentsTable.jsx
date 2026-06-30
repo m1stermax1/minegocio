@@ -12,16 +12,32 @@ export default function PaymentsTable({
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
-  const toggleExpanded = (proveedoraName) => {
-    setExpandedProvider((prev) => (prev === proveedoraName ? null : proveedoraName));
-  };
+  // Create a map from provider id to provider object for quick lookup
+  const providerById = useMemo(() => {
+    const map = {};
+    providers?.data?.forEach(p => {
+      map[p.id] = p;
+    });
+    return map;
+  }, [providers]);
 
+  // Create a map from provider id to formatted name (first + last) for display
+  const providerNameById = useMemo(() => {
+    const map = {};
+    providers?.data?.forEach(p => {
+      const name = `${p.first_name || ''} ${p.last_name || ''}`.trim();
+      map[p.id] = name || 'Sin nombre';
+    });
+    return map;
+  }, [providers]);
+
+  // Group payments by provider id
   const paymentsByProvider = useMemo(() => {
     const groupedByProvider = {};
     payments.forEach((item) => {
-      const provName = item.provider_id || "Sin proveedora";
-      if (!groupedByProvider[provName]) groupedByProvider[provName] = [];
-      groupedByProvider[provName].push(item);
+      const provId = item.provider_id;
+      if (!groupedByProvider[provId]) groupedByProvider[provId] = [];
+      groupedByProvider[provId].push(item);
     });
     return groupedByProvider;
   }, [payments]);
@@ -29,10 +45,8 @@ export default function PaymentsTable({
   const calculateProviderTotal = (items) =>
     items.reduce((sum, item) => sum + (Number(item.total_amount) || 0), 0);
 
-  const handleContactToProvider = async (provName, items) => {
-    const providerData = providers.find(
-      (p) => p.nombre?.toLowerCase() === provName?.toLowerCase(),
-    );
+  const handleContactToProvider = async (providerId, items) => {
+    const providerData = providerById[providerId];
     const phone = providerData?.telefono;
 
     if (!phone) {
@@ -50,15 +64,10 @@ export default function PaymentsTable({
 
     const totalProvider = calculateProviderTotal(items);
 
-    const message = `Hola ${provName}, ¿cómo estás?
+    // Get the provider name for the message
+    const provName = providerNameById[providerId] || 'Sin proveedora';
 
-Te comparto el detalle de productos vendidos:
-
-${productsText}
-
-Total a pagar: $${totalProvider.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-
-Muchas gracias.`;
+    const message = `Hola ${provName}, ¿cómo estás?\n\nTe comparto el detalle de productos vendidos:\n\n${productsText}\n\nTotal a pagar: $${totalProvider.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n\nMuchas gracias.`;
 
     const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, "_blank");
@@ -78,15 +87,16 @@ Muchas gracias.`;
     return <div className="table-state">Cargando pagos...</div>;
   }
 
-  const providerNames = Object.keys(paymentsByProvider);
+  const providerIds = Object.keys(paymentsByProvider);
 
-  if (providerNames.length === 0) {
+  if (providerIds.length === 0) {
     return (
       <div className="empty-state">
         No hay órdenes de pago en la hoja pagos maxi.
       </div>
     );
   }
+
 
   return (
     <>
@@ -102,8 +112,8 @@ Muchas gracias.`;
             </tr>
           </thead>
           <tbody>
-            {providerNames.map((provName) => {
-              const items = paymentsByProvider[provName];
+            {providerIds.map((providerId) => {
+              const items = paymentsByProvider[providerId];
               const totalProvider = calculateProviderTotal(items);
               const allPaid = items.every(
                 (item) => (item.estado || "").toLowerCase() === "pagado",
@@ -119,8 +129,10 @@ Muchas gracias.`;
                   ? "badge-info"
                   : "badge-warning";
 
+              const provName = providerNameById[providerId] || 'Sin proveedora';
+
               return (
-                <Fragment key={`provider-${provName}`}>
+                <Fragment key={`provider-${providerId}`}>
                   <tr>
                     <td>{provName}</td>
                     <td>{items.length}</td>
@@ -139,14 +151,14 @@ Muchas gracias.`;
                         <button
                           type="button"
                           className="btn btn-secondary btn-sm"
-                          onClick={() => toggleExpanded(provName)}
+                          onClick={() => setExpandedProvider(providerId)}
                         >
-                          {expandedProvider === provName ? "Ocultar" : "Ver detalles"}
+                          {expandedProvider === providerId ? "Ocultar" : "Ver detalles"}
                         </button>
                         <button
                           type="button"
                           className="btn btn-primary btn-sm"
-                          onClick={() => handleContactToProvider(provName, items)}
+                          onClick={() => handleContactToProvider(providerId, items)}
                         >
                           Contactar
                         </button>
@@ -161,7 +173,7 @@ Muchas gracias.`;
                     </td>
                   </tr>
 
-                  {expandedProvider === provName && (
+                  {expandedProvider === providerId && (
                     <tr>
                       <td colSpan={5}>
                         <div style={{ padding: "0.75rem 0" }}>
@@ -178,7 +190,7 @@ Muchas gracias.`;
                               {items.map((item, itemIndex) => {
                                 const precioProveedora = Number(item.total_amount) || 0;
                                 return (
-                                  <tr key={`${provName}-${itemIndex}`}>
+                                  <tr key={`${providerId}-${itemIndex}`}>
                                     <td>{item.barcode || "-"}</td>
                                     <td>{item.description || "-"}</td>
                                     <td className="text-end">

@@ -32,36 +32,30 @@ export async function fetchInventory(page, limit, selectedProdiver, all = false)
 
 //para traer productos de tienda nube
 // export async function fetchTienaNubeInventory() {
-
+//
 //   const tiendanuebeProducts = await axios.get(
 //     "https://lilaferiaamericana.mitiendanube.com/productos",
 //   );
-
+//
 //   const $ = cheerio.load(data);
-
+//
 //   const tiendaNube = [];
-
+//
 //   $(".js-item-product").each((_, element) => {
-//     tiendaNube.push({
-//       title: $(element)
-//         .find(".item-name")
-//         .text()
-//         .trim(),
-//       price: $(element)
-//         .find(".price-current")
-//         .text()
-//         .trim(),
-//       image: $(element)
-//         .find("img")
-//         .attr("src"),
-//     });
+//
 //   });
-
+//
 //   return tiendaNube
 // };
 
-export async function fetchProviders() {
-  const response = await api.get("/providers");
+export async function fetchProviders(page = 1, limit = 10, all = false) {
+  if (all) {
+    // Fetch a large number to get all providers (adjust as needed)
+    limit = 1000;
+    page = 1;
+  }
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  const response = await api.get(`/providers?${params}`);
   return response.data;
 }
 
@@ -113,8 +107,13 @@ export async function fetchDashboardCounts() {
   return response.data;
 }
 
-export async function fetchSales() {
-  const response = await api.get("/sales");
+export async function fetchSales(page = 1, limit = 10, all = false) {
+  if (all) {
+    limit = 1000;
+    page = 1;
+  }
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  const response = await api.get(`/sales?${params}`);
   return response.data;
 }
 
@@ -147,8 +146,7 @@ export async function deleteProvider(id) {
 
 export async function deleteProviders({ ids, alsoDeleteItems = false } = {}) {
   const response = await api.delete("/providers", {
-    data: { ids, alsoDeleteItems },
-  });
+    data: { ids, alsoDeleteItems, alsoDeleteItems },});
   return response.data;
 }
 
@@ -169,8 +167,13 @@ export async function createSalesItem(payload) {
   return response.data;
 }
 
-export async function fetchInvoices() {
-  const response = await api.get("/invoices");
+export async function fetchInvoices(page = 1, limit = 10, all = false) {
+  if (all) {
+    limit = 1000;
+    page = 1;
+  }
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  const response = await api.get(`/invoices?${params}`);
   return response.data;
 }
 
@@ -199,8 +202,13 @@ export async function updatePaymentStatus(codigos, status) {
   return response.data;
 }
 
-export async function fetchPayments() {
-  const response = await api.get("/payments");
+export async function fetchPayments(page = 1, limit = 10, all = false) {
+  if (all) {
+    limit = 1000;
+    page = 1;
+  }
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  const response = await api.get(`/payments?${params}`);
   return response.data;
 }
 

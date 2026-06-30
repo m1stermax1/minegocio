@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { fetchInvoices } from "../services/api.js";
+import { useMemo } from "react";
 
 const formatPrice = (value) => {
   const number = Number(value);
@@ -22,14 +21,12 @@ const formatDate = (dateStr) => {
 };
 
 export default function BillingsTable({ invoices = [] }) {
-  const [loading, setLoading] = useState(false);
+  // If invoices is an object with data and total (from the API), we need to adjust.
+  // However, the page now passes invoices as the data array (we set invoices = res.data).
+  // So we assume invoices is an array.
+  const invoiceList = Array.isArray(invoices) ? invoices : [];
 
-  useEffect(() => {
-    // Si no se pasan invoices, los podríamos cargar aquí; el page ya lo hace.
-    setLoading(false);
-  }, [invoices]);
-
-  if (!invoices?.length) {
+  if (invoiceList.length === 0) {
     return <div className="empty-state">No se encontraron facturas registradas.</div>;
   }
 
@@ -44,7 +41,7 @@ export default function BillingsTable({ invoices = [] }) {
           </tr>
         </thead>
         <tbody>
-          {invoices.map((invoice) => (
+          {invoiceList.map((invoice) => (
             <tr key={invoice.facturaId}>
               <td>{formatDate(invoice.created_at)}</td>
               <td>{formatPrice(invoice.price)}</td>

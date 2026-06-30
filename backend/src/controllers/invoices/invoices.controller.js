@@ -1,11 +1,32 @@
 import { supabase } from "../../services/supabaseService.js";
 
-export async function getInvoices(organizationId) {
-  const { data, error } = await supabase.from("invoices").select("*").eq("organization_id", organizationId);
+export const getInvoices = async (organizationId, page = 1, limit = 20) => {
+    const from = (page - 1) * limit;
+    const to = page * limit - 1;
 
-  if (error) {
-    throw error;
-  }
+    try {
+        const { data, error, count } = await supabase
+            .from("invoices")
+            .select("*", { count: "exact" })
+            .eq("organization_id", organizationId)
+            .range(from, to);
 
-  return data ?? [];
-}
+        if (error) {
+            return {
+                success: false,
+                error: error.message,
+            };
+        }
+
+        return {
+            success: true,
+            data,
+            count,
+        };
+    } catch (err) {
+        return {
+            success: false,
+            error: err.message,
+        };
+    }
+};

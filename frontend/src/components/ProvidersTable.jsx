@@ -4,7 +4,7 @@ import ItemsFormModal from "./ItemsFormModal.jsx";
 import ConfirmDeleteModal from "./ConfirmDeleteModal.jsx";
 import { deleteProviders, deleteProvider } from "../services/api.js";
 
-function ProvidersTable({
+export default function ProvidersTable({
   providers = [],
   inventoryItems = [],
   loading,
@@ -40,7 +40,7 @@ function ProvidersTable({
       const relatedItems = relatedItemsByProvider[fullId] || [];
       const totalPrice = relatedItems.reduce(
         (sum, item) => sum + (Number(item.price) || 0),
-        0,
+        0
       );
       const soldCount = relatedItems.filter(
         (item) => (item.status || "").toUpperCase() === "SOLD",
@@ -142,10 +142,8 @@ function ProvidersTable({
     return <div className="table-state">Cargando proveedoras...</div>;
   }
 
-  const allSelected =
-    providerRows.length > 0 && selected.size === providerRows.length;
 
-  if (!providerRows.length) {
+  if (providerRows.length === 0) {
     return (
       <div>
         <div className="table-state">No se encontraron proveedoras.</div>
@@ -164,19 +162,11 @@ function ProvidersTable({
     );
   }
 
-  const deleteActions = [
-    {
-      value: "desvincular",
-      label: "Solo borrar la(s) proveedora(s)",
-      description: `Los ${impactCount} productos asociados quedarán sin proveedora`,
-    },
-    {
-      value: "cascade",
-      label: "Borrar proveedora(s) y todos sus productos",
-      description: `Borra también los ${impactCount} productos`,
-      danger: true,
-    },
-  ];
+  // We need to compute providerNames for empty check
+  const providerNames = providerRows.map((r) => getProviderId(r.provider));
+
+  const allSelected =
+    providerRows.length > 0 && selected.size === providerRows.length;
 
   return (
     <div>
@@ -241,9 +231,12 @@ function ProvidersTable({
           </thead>
           <tbody>
             {providerRows.map((row, index) => {
-              const displayName = row.provider.first_name || "Sin nombre";
+              const provider = row.provider;
+              const displayName = `${provider.first_name || ""} ${
+                provider.last_name || ""
+              }`.trim() || "Sin nombre";
               const isExpanded = expandedProviders.has(displayName);
-              const id = getProviderId(row.provider);
+              const id = getProviderId(provider);
               const isSelected = selected.has(id);
 
               return (
@@ -262,7 +255,7 @@ function ProvidersTable({
                       />
                     </td>
                     <td data-label="Nombre">{displayName}</td>
-                    <td data-label="Teléfono">{row.provider.phone || "-"}</td>
+                    <td data-label="Teléfono">{provider.phone || "-"}</td>
                     <td data-label="Productos">{row.productsCount}</td>
                     <td data-label="Vendidas">{row.soldCount}</td>
                     <td data-label="Acciones">
@@ -295,55 +288,54 @@ function ProvidersTable({
                                 <tr>
                                   <th data-label="Código">Código</th>
                                   <th data-label="Descripción">Descripción</th>
-                                  <th data-label="Precio">Precio</th>
+                                  <th className="text-end">Valor para proveedora (60%)</th>
                                   <th data-label="Estado">Estado</th>
                                   <th data-label="Pagado">Pagado</th>
                                 </tr>
                               </thead>
                               <tbody>
-                                {row.relatedItems.map((item, itemIndex) => (
-                                  <tr
-                                    key={`${displayName}-${itemIndex}-${
-                                      item.barcode || item.description
-                                    }`}
-                                  >
-                                    <td data-label="Código">
-                                      {item.barcode || "-"}
-                                    </td>
-                                    <td data-label="Descripción">
-                                      {item.description || "-"}
-                                    </td>
-                                    <td data-label="Precio">
-                                      {formatPrice(item.price)}
-                                    </td>
-                                    <td data-label="Estado">
-                                      <span
-                                        className={`badge ${
-                                          (item.status || "").toUpperCase() === "SOLD"
-                                            ? "badge-danger"
-                                            : "badge-success"
-                                        }`}
-                                      >
-                                        {item.status === "AVAILABLE"
-                                          ? "En Stock"
-                                          : item.status === "SOLD"
-                                            ? "Vendido"
-                                            : "-"}
-                                      </span>
-                                    </td>
-                                    <td data-label="Pagado">
-                                      <span
-                                        className={`badge ${
-                                          (item.pago || "").toLowerCase() === "pagado"
-                                            ? "badge-success"
-                                            : "badge-warning"
-                                        }`}
-                                      >
-                                        {item.pago || "no"}
-                                      </span>
-                                    </td>
-                                  </tr>
-                                ))}
+                                {row.relatedItems.map((item, itemIndex) => {
+                                  const precioProveedora = Number(item.total_amount) || 0;
+                                  return (
+                                    <tr key={`${displayName}-${itemIndex}-${item.barcode || item.description}`}>
+                                      <td data-label="Código">{item.barcode || "-"}</td>
+                                      <td data-label="Descripción">{item.description || "-"}</td>
+                                      <td className="text-end">
+                                        $
+                                        {precioProveedora.toLocaleString("es-AR", {
+                                          minimumFractionDigits: 2,
+                                          maximumFractionDigits: 2,
+                                        })}
+                                      </td>
+                                      <td data-label="Estado">
+                                        <span
+                                          className={`badge ${
+                                            (item.status || "").toUpperCase() === "SOLD"
+                                              ? "badge-danger"
+                                              : "badge-success"
+                                          }`}
+                                        >
+                                          {item.status === "AVAILABLE"
+                                            ? "En Stock"
+                                            : item.status === "SOLD"
+                                              ? "Vendido"
+                                              : "-"}
+                                        </span>
+                                      </td>
+                                      <td data-label="Pagado">
+                                        <span
+                                          className={`badge ${
+                                            (item.pago || "").toLowerCase() === "pagado"
+                                              ? "badge-success"
+                                              : "badge-warning"
+                                          }`}
+                                        >
+                                          {item.pago || "no"}
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
                               </tbody>
                             </table>
                           ) : (
@@ -386,11 +378,21 @@ function ProvidersTable({
             ? `Los ${impactCount} productos asociados a las proveedoras seleccionadas también se verán afectados si elegís la opción destructiva.`
             : "Las proveedoras seleccionadas no tienen productos asociados."
         }
-        actions={deleteActions}
+        actions={[
+          {
+            value: "desvincular",
+            label: "Solo borrar la(s) proveedora(s)",
+            description: `Los ${impactCount} productos asociados quedarán sin proveedora`,
+          },
+          {
+            value: "cascade",
+            label: "Borrar proveedora(s) y todos sus productos",
+            description: `Borra también los ${impactCount} productos`,
+            danger: true,
+          },
+        ]}
         loading={deleting}
       />
     </div>
   );
 }
-
-export default ProvidersTable;

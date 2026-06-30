@@ -11,11 +11,14 @@ const router = express.Router();
 
 router.get("/", authMiddleware, async (req, res) => {
   try {
-        const organizationId = req.user?.organization_id
-    const providers = await getProviders(organizationId);
+        const organizationId = req.user?.organization_id;
+        const page = Number(req.query.page) || 1;
+        const limit = Number(req.query.limit) || 20;
+    const result = await getProviders(organizationId, page, limit);
     res.json({
       success: true,
-      data: providers || [],
+      data: result.data,
+      total: result.count,
     });
   } catch (error) {
     console.error("Error al cargar proveedoras:", error);

@@ -25,7 +25,7 @@ export default function SalesTable({ sales = [], salesItems = [] }) {
   };
 
   const filteredSales = useMemo(() => {
-    return sales?.data?.filter((sale) => {
+    return sales.filter((sale) => {
       const saleDate = sale?.sale_date?.split("T")[0];
       if (!saleDate) return true;
       if (dateFilter) return saleDate === dateFilter;
@@ -44,7 +44,7 @@ export default function SalesTable({ sales = [], salesItems = [] }) {
     setDateTo("");
   };
 
-  if (!sales?.data?.length) {
+  if (!sales.length) {
     return <div className="empty-state">No se encontraron ventas.</div>;
   }
 
@@ -103,19 +103,6 @@ export default function SalesTable({ sales = [], salesItems = [] }) {
             Limpiar filtros
           </button>
         )}
-      </div>
-
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "1rem",
-        }}
-      >
-        <p style={{ margin: 0, color: "var(--text-muted)", fontSize: "0.875rem" }}>
-          Mostrando {filteredSales?.length ?? 0} de {sales.length} ventas
-        </p>
       </div>
 
       <table className="data-table">

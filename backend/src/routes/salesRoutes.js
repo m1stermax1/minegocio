@@ -11,23 +11,34 @@ const router = express.Router();
 router.get("/", authMiddleware, async (req, res) => {
   try {
     const organizationId = req.user?.organization_id;
-    const inventory = await getSales(organizationId);
-    res.json(inventory);
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 20;
+    const result = await getSales(organizationId, page, limit);
+    res.json({
+      success: true,
+      data: result.data,
+      total: result.count,
+    });
   } catch (error) {
-    console.error("Error al cargar inventario:", error);
-    res.status(500).json({ error: "No se pudo cargar el inventario" });
+    console.error("Error al cargar ventas:", error);
+    res.status(500).json({ error: "No se pudo cargar las ventas" });
   }
 });
 
 router.get("/sales-items", authMiddleware, async (req, res) => {
   try {
-    console.log("User", req.user)
     const organizationId = req.user?.organization_id;
-    const salesItemsList = await getSalesItems(organizationId);
-    res.json(salesItemsList);
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 20;
+    const result = await getSalesItems(organizationId, page, limit);
+    res.json({
+      success: true,
+      data: result.data,
+      total: result.count,
+    });
   } catch (error) {
-    console.error("Error al cargar items vendidos:", error);
-    res.status(500).json({ error: "No se pudo cargar los items vendidos" });
+    console.error("Error al cargar items de venta:", error);
+    res.status(500).json({ error: "No se pudo cargar los items de venta" });
   }
 });
 

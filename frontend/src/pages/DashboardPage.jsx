@@ -6,6 +6,7 @@ import DashboardActions from "../components/dashboard/DashboardActions.jsx";
 import DashboardStats from "../components/dashboard/DashboardStats.jsx";
 import DashboardModals from "../components/dashboard/DashboardModals.jsx";
 import { useDashboard } from "../hooks/useDashboard.js";
+import { getProfile, getSessionUser } from "../services/users.js";
 
 export default function DashboardPage({ refresh }) {
   const {

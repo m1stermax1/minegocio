@@ -5,17 +5,20 @@ import authMiddleware from "./authMiddleware.js";
 
 const router = express.Router();
 
-router.get("/",authMiddleware, async (req, res) => {
+router.get("/", authMiddleware, async (req, res) => {
     try {
-        const organizationId = req.user?.organization_id
-        const invoices = await getInvoices(organizationId);
+        const organizationId = req.user?.organization_id;
+        const page = Number(req.query.page) || 1;
+        const limit = Number(req.query.limit) || 20;
+        const result = await getInvoices(organizationId, page, limit);
 
         res.json({
             success: true,
-            data: invoices || [],
+            data: result.data,
+            total: result.count,
         });
     } catch (error) {
-        console.error("Error al cargar payments:", error);
+        console.error("Error al cargar facturas:", error);
 
         res.status(500).json({
             success: false,

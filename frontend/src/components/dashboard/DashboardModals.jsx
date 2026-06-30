@@ -44,7 +44,7 @@ export default function DashboardModals({
         onClose={() =>
           setShowSaleModal(false)
         }
-        inventoryItems={inventory}
+        inventoryItems={inventory?.data}
         onSaleCreated={onSaleCreated}
       />
     </>

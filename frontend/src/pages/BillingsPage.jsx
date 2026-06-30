@@ -2,29 +2,35 @@ import { useEffect, useState } from "react";
 import { fetchInvoices } from "../services/api.js";
 import Sidebar from "../components/Sidebar.jsx";
 import MobileHeader from "../components/MobileHeader.jsx";
-import BillingsTable from "../components/BillingsTable.jsx";
+import BillingsTable from "./../components/BillingsTable.jsx";
+import PaginationComponent from "../components/PaginationComponent.jsx";
 
 export default function BillingsPage() {
-  const [loading, setLoading] = useState(false);
   const [invoices, setInvoices] = useState([]);
+  const [totalInvoices, setTotalInvoices] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const LIMIT = 10;
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const loadInvoices = async () => {
+  const loadInvoices = async (page) => {
     try {
       setLoading(true);
-      const list = await fetchInvoices();
-      setInvoices(list?.data ?? []);
+      const res = await fetchInvoices(page, LIMIT);
+      setInvoices(res.data ?? []);
+      setTotalInvoices(res.total ?? 0);
     } catch (err) {
       console.error("Error cargando facturas:", err);
       setInvoices([]);
+      setTotalInvoices(0);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadInvoices();
-  }, []);
+    loadInvoices(currentPage);
+  }, [currentPage]);
 
   return (
     <div className="page">
@@ -49,7 +55,7 @@ export default function BillingsPage() {
           <button
             type="button"
             className="btn btn-secondary"
-            onClick={loadInvoices}
+            onClick={() => loadInvoices(currentPage)}
             disabled={loading}
           >
             {loading ? "Actualizando..." : "Actualizar lista"}
@@ -63,6 +69,37 @@ export default function BillingsPage() {
             <BillingsTable invoices={invoices} />
           )}
         </section>
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            marginTop: "1rem",
+          }}
+        >
+          <p>
+            Mostrando{" "}
+            {totalInvoices === 0
+              ? 0
+              : (currentPage - 1) * LIMIT + 1}
+            {"-"}
+            {Math.min(
+              currentPage * LIMIT,
+              totalInvoices
+            )} de {totalInvoices} facturas
+          </p>
+        </div>
+
+        <div
+          style={{ display: "flex", justifyContent: "center", marginTop: "1rem" }}
+        >
+          <PaginationComponent
+            totalPages={Math.ceil(totalInvoices / LIMIT)}
+            currentPage={currentPage}
+            onChangePage={setCurrentPage}
+          />
+        </div>
       </main>
     </div>
   );

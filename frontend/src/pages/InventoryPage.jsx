@@ -11,7 +11,8 @@ import { fetchInventory, fetchProviders } from "../services/api.js";
 
 function InventoryPage() {
   const inventoryTableRef = useRef(null);
-  const [inventory, setInventory] = useState([]);
+  const [inventoryItems, setInventoryItems] = useState([]);
+  const [totalInventory, setTotalInventory] = useState(0);
   const [providers, setProviders] = useState([]);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -38,20 +39,24 @@ function InventoryPage() {
   const loadInventory = async (page, limit, selectedProvider) => {
     try {
       setLoadingInventory(true);
-      const data = await fetchInventory(page, limit, selectedProvider);
-      setInventory(data?.data);
+      const res = await fetchInventory(page, limit, selectedProvider);
+      setInventoryItems(res.data?.data ?? []);
+      setTotalInventory(res.total ?? 0);
     } catch (error) {
       console.error("Error cargando inventario:", error);
-      setInventory([]);
+      setInventoryItems([]);
+      setTotalInventory(0);
     } finally {
       setLoadingInventory(false);
     }
   };
 
-  const loadProviders = async () => {
+  const loadProviders = async (page, limit,) => {
     try {
       setLoadingProviders(true);
-      const data = await fetchProviders();
+      // Fetch all providers for the filter dropdown
+      const data = await fetchProviders(page, limit, true);
+      console.log("prov", providers)
       setProviders(data);
     } catch (error) {
       console.error("Error cargando proveedoras:", error);
@@ -68,17 +73,17 @@ function InventoryPage() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery]);
+  }, [searchQuery, selectedProvider]);
 
   const handleAddItem = () => setShowItemsModal(true);
 
   const handleItemAdded = () => {
-    loadInventory();
+    loadInventory(currentPage, LIMIT, selectedProvider);
     showNotification("Item agregado correctamente a la lista.");
   };
 
   const filteredInventory = useMemo(() => {
-    let result = inventory?.data ?? [];
+    let result = inventoryItems;
     const query = searchQuery.trim().toLowerCase();
 
     if (query) {
@@ -94,12 +99,9 @@ function InventoryPage() {
     }
 
     return result;
-  }, [inventory, searchQuery, selectedProvider]);
+  }, [inventoryItems, searchQuery, selectedProvider]);
 
-  const totalPages = Math.ceil(inventory?.totalItems / LIMIT);
-
-  const onChangePage = (page) => setCurrentPage(page);
-
+  console.log("Prov", providers)
   return (
     <div className="page">
       <Sidebar
@@ -148,11 +150,6 @@ function InventoryPage() {
 
           {notification && <div className="toast-notification">{notification}</div>}
 
-          <PaginationComponent
-            totalPages={totalPages}
-            currentPage={currentPage}
-            onChangePage={onChangePage}
-          />
           <InventoryTable
             ref={inventoryTableRef}
             items={filteredInventory}
@@ -161,6 +158,37 @@ function InventoryPage() {
             providers={providers}
           />
         </section>
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            marginTop: "1rem",
+          }}
+        >
+          <p>
+            Mostrando{" "}
+            {totalInventory === 0
+              ? 0
+              : (currentPage - 1) * LIMIT + 1}
+            {"-"}
+            {Math.min(
+              currentPage * LIMIT,
+              totalInventory
+            )} de {totalInventory} productos
+          </p>
+        </div>
+
+        <div
+          style={{ display: "flex", justifyContent: "center", marginTop: "1rem" }}
+        >
+          <PaginationComponent
+            totalPages={Math.ceil(totalInventory / LIMIT)}
+            currentPage={currentPage}
+            onChangePage={setCurrentPage}
+          />
+        </div>
       </main>
 
       <ItemsFormModal

@@ -30,12 +30,13 @@ export default function SalesModal({
 
   const availableItems = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
+    const safeItems = Array.isArray(inventoryItems) ? inventoryItems : [];
     if (!term) return [];
-    return inventoryItems
+    return safeItems
       ?.filter((item) => item?.status == "AVAILABLE")
       ?.filter((item) => {
-        if (!item.description) return false;
-        const isSold = (item.status || "").toUpperCase() === "SOLD";
+        if (!item?.description) return false;
+        const isSold = (item?.status || "").toUpperCase() === "SOLD";
         if (isSold) return false;
         const alreadySelected = selectedItems.some((selected) => selected.id === item.id);
         if (alreadySelected) return false;
