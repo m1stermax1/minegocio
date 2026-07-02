@@ -27,6 +27,8 @@ export default function SalesModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [notification, setNotification] = useState("");
+  const [cashAmount, setCashAmount] = useState("");
+  const [transferAmount, setTransferAmount] = useState("");
 
   const availableItems = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
@@ -38,7 +40,9 @@ export default function SalesModal({
         if (!item?.description) return false;
         const isSold = (item?.status || "").toUpperCase() === "SOLD";
         if (isSold) return false;
-        const alreadySelected = selectedItems.some((selected) => selected.id === item.id);
+        const alreadySelected = selectedItems.some(
+          (selected) => selected.id === item.id,
+        );
         if (alreadySelected) return false;
         const codigo = item.barcode?.toLowerCase() || "";
         const descripcion = item.description?.toLowerCase() || "";
@@ -48,7 +52,8 @@ export default function SalesModal({
   }, [inventoryItems, searchTerm, selectedItems]);
 
   const totalAmount = selectedItems.reduce((sum, item) => {
-    const value = Number(item?.profile == null ? item.price : item.price * 0.6) || 0;
+    const value =
+      Number(item?.profile == null ? item.price : item.price * 0.6) || 0;
     return sum + value;
   }, 0);
 
@@ -62,8 +67,17 @@ export default function SalesModal({
         ? transferenciaTotal
         : paymentMethod === "debito/credito"
           ? tarjetaTotal
-          : totalAmount;
+          : paymentMethod === "mixto"
+            ? mixedTotal
+            : totalAmount;
 
+  const cashValue = Number(cashAmount) || 0;
+
+  const discountedCash = cashValue * 0.9;
+  const remainingAmount = Math.max(totalAmount - cashValue, 0);
+  const calculatedTransfer = remainingAmount * 0.95;
+
+  const mixedTotal = discountedCash + calculatedTransfer;
   const handleAddItem = (item) => {
     setError("");
     setSelectedItems((prev) => {
@@ -194,14 +208,20 @@ export default function SalesModal({
             {error && <div className="alert alert-error">{error}</div>}
 
             <div style={{ marginBottom: "1rem" }}>
-              <label htmlFor="buscar-producto" className="label" style={{ color: "var(--primary)" }}>
+              <label
+                htmlFor="buscar-producto"
+                className="label"
+                style={{ color: "var(--primary)" }}
+              >
                 Buscar producto
               </label>
               <input
                 id="buscar-producto"
                 className="input"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(normalizeBarcodeSearch(e.target.value))}
+                onChange={(e) =>
+                  setSearchTerm(normalizeBarcodeSearch(e.target.value))
+                }
                 placeholder="Escribe el código o descripción del producto..."
                 disabled={loading || isLoadingInventory}
                 autoComplete="off"
@@ -210,15 +230,26 @@ export default function SalesModal({
 
             {searchTerm.trim() !== "" && (
               <div style={{ marginBottom: "1.5rem" }}>
-                <p className="label" style={{ color: "var(--primary)", marginBottom: "0.5rem" }}>
+                <p
+                  className="label"
+                  style={{ color: "var(--primary)", marginBottom: "0.5rem" }}
+                >
                   Resultados de búsqueda
                 </p>
                 {isLoadingInventory ? (
-                  <p style={{ color: "var(--text-muted)" }}>Cargando productos...</p>
+                  <p style={{ color: "var(--text-muted)" }}>
+                    Cargando productos...
+                  </p>
                 ) : (
                   <div style={{ maxHeight: 200, overflowY: "auto" }}>
                     {availableItems.length === 0 ? (
-                      <p style={{ margin: "0.75rem", color: "var(--text-muted)", fontSize: "0.875rem" }}>
+                      <p
+                        style={{
+                          margin: "0.75rem",
+                          color: "var(--text-muted)",
+                          fontSize: "0.875rem",
+                        }}
+                      >
                         No se encontraron productos disponibles.
                       </p>
                     ) : (
@@ -237,7 +268,13 @@ export default function SalesModal({
                           <div>
                             <strong>{item.barcode || "Sin código"}</strong> —{" "}
                             {item.description || "Sin descripción"}
-                            <div style={{ fontSize: "0.875rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>
+                            <div
+                              style={{
+                                fontSize: "0.875rem",
+                                color: "var(--text-muted)",
+                                marginTop: "0.25rem",
+                              }}
+                            >
                               Proveedor: {item.providerName || "mío"} —{" "}
                               <strong>{formatPrice(item.price)}</strong>
                             </div>
@@ -263,10 +300,25 @@ export default function SalesModal({
                 gap: "1.5rem",
                 flexWrap: "wrap",
                 marginTop: "0.5rem",
+                flexDirection: "column",
               }}
             >
-              <div style={{ flex: 1, minWidth: 320, display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                <h3 style={{ margin: "0 0 0.25rem", fontSize: "1.1rem", fontWeight: 700 }}>
+              <div
+                style={{
+                  flex: 1,
+                  minWidth: 320,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.75rem",
+                }}
+              >
+                <h3
+                  style={{
+                    margin: "0 0 0.25rem",
+                    fontSize: "1.1rem",
+                    fontWeight: 700,
+                  }}
+                >
                   Prendas agregadas ({selectedItems.length})
                 </h3>
                 {selectedItems.length === 0 ? (
@@ -274,7 +326,16 @@ export default function SalesModal({
                     No se han seleccionado prendas. Busca y agrega una arriba.
                   </div>
                 ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxHeight: 350, overflowY: "auto", paddingRight: "0.5rem" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "0.75rem",
+                      maxHeight: 350,
+                      overflowY: "auto",
+                      paddingRight: "0.5rem",
+                    }}
+                  >
                     {selectedItems.map((item) => (
                       <div
                         key={item.id}
@@ -291,7 +352,13 @@ export default function SalesModal({
                         <span style={{ marginLeft: "0.5rem", fontWeight: 500 }}>
                           {item.description || "-"}
                         </span>
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "0.75rem",
+                          }}
+                        >
                           <strong style={{ fontSize: "1.125rem" }}>
                             {formatPrice(item.price)}
                           </strong>
@@ -310,83 +377,148 @@ export default function SalesModal({
               </div>
 
               {/* Resumen de precios destacado */}
-              <div style={{ width: "100%", maxWidth: 360, minWidth: 280, display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                <p className="label" style={{ color: "var(--primary)", marginBottom: 0, fontWeight: 700 }}>
-                  Resumen de precios
-                </p>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: "0.75rem",
-                    color: "var(--text-muted)",
-                  }}
-                >
-                  Tocá una opción para elegir el método de pago.
-                </p>
-
-                {/* Total bruto (referencia, no clickeable) */}
-                <div className="price-card price-card--bruto" aria-label="Total bruto">
-                  <p className="price-card-label">Total bruto</p>
-                  <p className="price-card-value">{formatPrice(totalAmount)}</p>
-                  <p className="price-card-discount">sin descuento</p>
+              <div
+                style={{
+                  width: "100%",
+                  maxWidth: 360,
+                  minWidth: 280,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.75rem",
+                }}
+              >
+                <div>
+                  <p
+                    className="label"
+                    style={{
+                      color: "var(--primary)",
+                      marginBottom: 0,
+                      fontWeight: 700,
+                    }}
+                  >
+                    Resumen de precios
+                  </p>
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: "0.75rem",
+                      color: "var(--text-muted)",
+                    }}
+                  >
+                    Tocá una opción para elegir el método de pago.
+                  </p>
                 </div>
 
-                {/* Efectivo */}
-                <button
-                  type="button"
-                  className={`price-card price-card--efectivo ${
-                    paymentMethod === "efectivo" ? "is-selected" : ""
-                  }`}
-                  onClick={() => handlePriceCardClick("efectivo")}
-                  aria-pressed={paymentMethod === "efectivo"}
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "0.75rem",
+                  }}
                 >
-                  <p className="price-card-label">Efectivo</p>
-                  <p className="price-card-value">{formatPrice(efectivoTotal)}</p>
-                  <p className="price-card-discount">10% de descuento</p>
-                </button>
+                  {/* Total bruto (referencia, no clickeable) */}
+                  <div
+                    className="price-card price-card--bruto"
+                    aria-label="Total bruto"
+                  >
+                    <p className="price-card-label">Total bruto</p>
+                    <p className="price-card-value">
+                      {formatPrice(totalAmount)}
+                    </p>
+                    <p className="price-card-discount">sin descuento</p>
+                  </div>
 
-                {/* Transferencia */}
-                <button
-                  type="button"
-                  className={`price-card price-card--transferencia ${
-                    paymentMethod === "transferencia" ? "is-selected" : ""
-                  }`}
-                  onClick={() => handlePriceCardClick("transferencia")}
-                  aria-pressed={paymentMethod === "transferencia"}
-                >
-                  <p className="price-card-label">Transferencia</p>
-                  <p className="price-card-value">{formatPrice(transferenciaTotal)}</p>
-                  <p className="price-card-discount">5% de descuento · genera factura</p>
-                </button>
+                  {/* Efectivo */}
+                  <button
+                    type="button"
+                    className={`price-card price-card--efectivo ${
+                      paymentMethod === "efectivo" ? "is-selected" : ""
+                    }`}
+                    onClick={() => handlePriceCardClick("efectivo")}
+                    aria-pressed={paymentMethod === "efectivo"}
+                  >
+                    <p className="price-card-label">Efectivo</p>
+                    <p className="price-card-value">
+                      {formatPrice(efectivoTotal)}
+                    </p>
+                    <p className="price-card-discount">10% de descuento</p>
+                  </button>
 
-                {/* Débito / Crédito */}
-                <button
-                  type="button"
-                  className={`price-card price-card--debito ${
-                    paymentMethod === "debito/credito" ? "is-selected" : ""
-                  }`}
-                  onClick={() => handlePriceCardClick("debito/credito")}
-                  aria-pressed={paymentMethod === "debito/credito"}
-                >
-                  <p className="price-card-label">Débito / Crédito</p>
-                  <p className="price-card-value">{formatPrice(tarjetaTotal)}</p>
-                  <p className="price-card-discount">5,59% de recargo</p>
-                </button>
+                  {/* Transferencia */}
+                  <button
+                    type="button"
+                    className={`price-card price-card--transferencia ${
+                      paymentMethod === "transferencia" ? "is-selected" : ""
+                    }`}
+                    onClick={() => handlePriceCardClick("transferencia")}
+                    aria-pressed={paymentMethod === "transferencia"}
+                  >
+                    <p className="price-card-label">Transferencia</p>
+                    <p className="price-card-value">
+                      {formatPrice(transferenciaTotal)}
+                    </p>
+                    <p className="price-card-discount">
+                      5% de descuento · genera factura
+                    </p>
+                  </button>
 
-                {/* Total final destacado */}
-                <div className="price-total">
-                  <p className="price-total-label">
-                    {paymentMethod
-                      ? `Total a guardar · ${paymentMethod}`
-                      : "Total a guardar"}
-                  </p>
-                  <p className="price-total-value">{formatPrice(selectedTotal)}</p>
+                  <button
+                    type="button"
+                    className={`price-card ${
+                      paymentMethod === "mixto" ? "is-selected" : ""
+                    }`}
+                    onClick={() => handlePriceCardClick("mixto")}
+                    aria-pressed={paymentMethod === "mixto"}
+                  >
+                    <p className="price-card-label">Pago Mixto</p>
+                    <p className="price-card-value">
+                      {formatPrice(mixedTotal)}
+                    </p>
+                    <p className="price-card-discount">
+                      Efectivo 10% + Transferencia 5%
+                    </p>
+                  </button>
+
+                  {/* Débito / Crédito */}
+                  <button
+                    type="button"
+                    className={`price-card price-card--debito ${
+                      paymentMethod === "debito/credito" ? "is-selected" : ""
+                    }`}
+                    onClick={() => handlePriceCardClick("debito/credito")}
+                    aria-pressed={paymentMethod === "debito/credito"}
+                  >
+                    <p className="price-card-label">Débito / Crédito</p>
+                    <p className="price-card-value">
+                      {formatPrice(tarjetaTotal)}
+                    </p>
+                    <p className="price-card-discount">5,59% de recargo</p>
+                  </button>
+
+                  {/* Total final destacado
+                  <div className="price-total">
+                    <p className="price-total-label">
+                      {paymentMethod
+                        ? `Total a guardar · ${paymentMethod}`
+                        : "Total a guardar"}
+                    </p>
+                    <p className="price-total-value">
+                      {formatPrice(selectedTotal)}
+                    </p>
+                  </div> */}
                 </div>
               </div>
             </div>
           </div>
 
           <div className="modal-footer">
+            <div className="price-total justify-self-start">
+              <p className="price-total-label">
+                {paymentMethod
+                  ? `Total a guardar · ${paymentMethod}`
+                  : "Total a guardar"}
+              </p>
+              <p className="price-total-value">{formatPrice(selectedTotal)}</p>
+            </div>
             <button
               type="button"
               className="btn btn-secondary"

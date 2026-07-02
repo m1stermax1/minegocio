@@ -109,7 +109,6 @@ function ItemsFormModal({
     setPrintStatus("");
     if (!selectedProvider) return setError("Selecciona una proveedora");
     if (!items?.length && !sheetUrl) return setError("Agrega al menos un item");
-
     setLoading(true);
     try {
       let itemsToAdd;
@@ -476,7 +475,11 @@ function ItemsFormModal({
             >
               Cancelar
             </button>
-            <button type="submit" className="btn btn-primary" disabled={loading}>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={loading}
+            >
               {loading
                 ? printStatus === "printing"
                   ? "Imprimiendo etiquetas..."

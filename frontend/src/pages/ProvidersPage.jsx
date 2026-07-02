@@ -101,6 +101,7 @@ function ProvidersPage() {
           </div>
 
           <ProvidersTable
+            inventoryItems={inventory}
             providers={providers}
             loading={loadingProviders}
             onDataChange={handleDataChange}
@@ -116,19 +117,19 @@ function ProvidersPage() {
           >
             <p>
               Mostrando{" "}
-              {totalProviders === 0
-                ? 0
-                : (currentPage - 1) * LIMIT + 1}
+              {totalProviders === 0 ? 0 : (currentPage - 1) * LIMIT + 1}
               {"-"}
-              {Math.min(
-                currentPage * LIMIT,
-                totalProviders
-              )} de {totalProviders} proveedoras
+              {Math.min(currentPage * LIMIT, totalProviders)} de{" "}
+              {totalProviders} proveedoras
             </p>
           </div>
 
           <div
-            style={{ display: "flex", justifyContent: "center", marginTop: "1rem" }}
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              marginTop: "1rem",
+            }}
           >
             <PaginationComponent
               totalPages={Math.ceil(totalProviders / LIMIT)}

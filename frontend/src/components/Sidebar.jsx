@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../services/supabase.js";
 import { Link } from "react-router-dom";
 import ThemeToggle from "./ThemeToggle.jsx";
-import { getProfile } from "../services/users";
+import { getProfile, getOrganization } from "../services/users";
 import { useState, useEffect } from "react";
 
 const NAV_ITEMS = [
@@ -14,7 +14,12 @@ const NAV_ITEMS = [
   { to: "/providers", label: "Proveedores", icon: FiBox, view: "providers" },
   { to: "/sales", label: "Ventas", icon: FiTrendingUp, view: "ventas" },
   { to: "/payments", label: "Pagos", icon: FiCreditCard, view: "pagos" },
-  { to: "/billings", label: "Facturas", icon: FiCreditCard, view: "facturacion" },
+  {
+    to: "/billings",
+    label: "Facturas",
+    icon: FiCreditCard,
+    view: "facturacion",
+  },
 ];
 
 function Sidebar({ activeView, isOpen, onClose }) {
@@ -24,7 +29,11 @@ function Sidebar({ activeView, isOpen, onClose }) {
   const loadOrganizationName = async () => {
     try {
       const profileData = await getProfile();
-      if (!profileData || !Array.isArray(profileData) || profileData.length === 0) {
+      if (
+        !profileData ||
+        !Array.isArray(profileData) ||
+        profileData.length === 0
+      ) {
         setOrgName("Organización no encontrada");
         return;
       }
@@ -34,20 +43,9 @@ function Sidebar({ activeView, isOpen, onClose }) {
         setOrgName("Sin organización asignada");
         return;
       }
-      const { data, error } = await supabase
-        .from("organizations")
-        .select("*")
-        .eq("id", orgId)
-        .single();
+      const organization = await getOrganization(orgId);
 
-      console.log("prof", data)
-
-      if (error) {
-        console.error("Error fetching organization:", error);
-        setOrgName("Error al cargar organización");
-        return;
-      }
-      setOrgName(data?.name || "Organización sin nombre");
+      setOrgName(organization?.name || "Organización sin nombre");
     } catch (err) {
       console.error("Error loading organization name:", err);
       setOrgName("Error");
@@ -111,7 +109,8 @@ function Sidebar({ activeView, isOpen, onClose }) {
                 <span>{label}</span>
               </Link>
             );
-          })}</nav>
+          })}
+        </nav>
 
         <div className="sidebar-footer">
           <ThemeToggle />
