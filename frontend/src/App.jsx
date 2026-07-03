@@ -4,6 +4,7 @@ import ProvidersPage from "./pages/ProvidersPage.jsx";
 import SalesPage from "./pages/SalesPage.jsx";
 import PaymentsPage from "./pages/PaymentsPage.jsx";
 import BillingsPage from "./pages/BillingsPage.jsx";
+import SafePage from "./pages/SafePage.jsx";
 
 import "./styles.css";
 import Login from "./pages/Login.jsx";
@@ -73,6 +74,11 @@ function App() {
       <Route
         path="/payments"
         element={user ? <PaymentsPage /> : <Navigate to="/login" />}
+      />
+
+      <Route
+        path="/safe"
+        element={user ? <SafePage /> : <Navigate to="/login" />}
       />
 
       <Route

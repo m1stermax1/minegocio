@@ -195,7 +195,7 @@ export async function createMercadoPagoTransfer(payload) {
 }
 
 export async function updatePaymentStatus(codigos, status) {
-  const response = await api.put("/inventory/providers/payments/status", {
+  const response = await api.put("/payments/status", {
     codigos,
     status,
   });

@@ -47,33 +47,31 @@ export default function PaymentsTable({
 
   const handleContactToProvider = async (providerId, items) => {
     const providerData = providerById[providerId];
-    const phone = providerData?.telefono;
-
-    if (!phone) {
-      alert("La proveedora no tiene teléfono cargado.");
-      return;
-    }
+    const phone = providerData?.telefono || "+5491160332587";
 
     const productsText = items
       .map((item) => {
-        const precioOriginal = Number(item.precioSugerido || item.precio) || 0;
-        const precioProveedora = precioOriginal * 0.6;
-        return `• ${item.descripcion || item.codigo || "Producto"} - $${precioProveedora.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        const description = item.descripcion || item.description || item.codigo || item.barcode || "Producto";
+        const providerAmount = Number(item.total_amount) || Number(item.precioSugerido) * 0.6 || Number(item.precio) * 0.6 || 0;
+        return `• ${description} - $${providerAmount.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
       })
       .join("\n");
 
-    const totalProvider = calculateProviderTotal(items);
+    const totalProvider = items.reduce(
+      (sum, item) => sum + (Number(item.total_amount) || Number(item.precioSugerido) * 0.6 || Number(item.precio) * 0.6 || 0),
+      0,
+    );
 
-    // Get the provider name for the message
-    const provName = providerNameById[providerId] || 'Sin proveedora';
+    const provName = providerNameById[providerId] || "Sin proveedora";
 
-    const message = `Hola ${provName}, ¿cómo estás?\n\nTe comparto el detalle de productos vendidos:\n\n${productsText}\n\nTotal a pagar: $${totalProvider.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n\nMuchas gracias.`;
+    const message = `Hola ${provName}, ¿cómo estás?\n\nTe comparto el detalle de productos vendidos:\n\n${productsText}\n\nTotal de todos los productos vendidos: $${totalProvider.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n\nMuchas gracias.`;
 
-    const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    const formattedPhone = phone.toString().replace(/\D/g, "");
+    const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, "_blank");
 
     try {
-      const codigos = items.map((item) => item.codigo).filter(Boolean);
+      const codigos = items.map((item) => item.codigo || item.barcode).filter(Boolean);
       if (codigos.length > 0) {
         await updatePaymentStatus(codigos, "contactado");
         onPaymentsUpdated?.();
@@ -151,7 +149,11 @@ export default function PaymentsTable({
                         <button
                           type="button"
                           className="btn btn-secondary btn-sm"
-                          onClick={() => setExpandedProvider(providerId)}
+                          onClick={() =>
+                            setExpandedProvider((prev) =>
+                              prev === providerId ? null : providerId,
+                            )
+                          }
                         >
                           {expandedProvider === providerId ? "Ocultar" : "Ver detalles"}
                         </button>

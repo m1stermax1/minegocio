@@ -1,4 +1,4 @@
-import { AiOutlineAppstore, AiOutlineDashboard } from "react-icons/ai";
+import { AiFillBoxPlot, AiOutlineAppstore, AiOutlineDashboard } from "react-icons/ai";
 import { FiBox, FiTrendingUp, FiCreditCard } from "react-icons/fi";
 import { logoutUser } from "../services/authService.js";
 import { useNavigate } from "react-router-dom";
@@ -19,6 +19,12 @@ const NAV_ITEMS = [
     label: "Facturas",
     icon: FiCreditCard,
     view: "facturacion",
+  },
+  {
+    to: "/safe",
+    label: "Caja",
+    icon: AiFillBoxPlot,
+    view: "safe",
   },
 ];
 

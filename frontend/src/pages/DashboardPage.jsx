@@ -22,6 +22,7 @@ export default function DashboardPage({ refresh }) {
   const [showItemsModal, setShowItemsModal] = useState(false);
   const [showSaleModal, setShowSaleModal] = useState(false);
   const [showProvidersModal, setShowProvidersModal] = useState(false);
+  const [showCloseDayModal, setShowCloseDayModal] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
@@ -46,6 +47,7 @@ export default function DashboardPage({ refresh }) {
             onAddItem={() => setShowItemsModal(true)}
             onAddSale={() => setShowSaleModal(true)}
             onAddProvider={() => setShowProvidersModal(true)}
+            onCloseDay={() => setShowCloseDayModal(true)}
           />
 
           {loading ? (
@@ -59,6 +61,7 @@ export default function DashboardPage({ refresh }) {
       <DashboardModals
         inventory={inventory}
         providers={providers}
+        stats={stats}
         showProvidersModal={showProvidersModal}
         setShowProvidersModal={setShowProvidersModal}
         showItemsModal={showItemsModal}
@@ -74,6 +77,8 @@ export default function DashboardPage({ refresh }) {
           loadInventory();
           loadDashboard();
         }}
+        showCloseDayModal={showCloseDayModal}
+        setShowCloseDayModal={setShowCloseDayModal}
       />
     </div>
   );

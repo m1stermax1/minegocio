@@ -1,10 +1,12 @@
 import ProvidersFormModal from "../ProvidersFormModal";
 import ItemsFormModal from "../ItemsFormModal";
 import SalesModal from "../SalesModal";
+import CloseDayModal from "./CloseDayModal";
 
 export default function DashboardModals({
   inventory,
   providers,
+  stats,
  
   showProvidersModal,
   setShowProvidersModal,
@@ -18,6 +20,8 @@ export default function DashboardModals({
   onProviderAdded,
   onItemAdded,
   onSaleCreated,
+  showCloseDayModal,
+  setShowCloseDayModal,
 }) {
   return (
     <>
@@ -46,6 +50,16 @@ export default function DashboardModals({
         }
         inventoryItems={inventory?.data}
         onSaleCreated={onSaleCreated}
+      />
+
+      <CloseDayModal
+        isOpen={showCloseDayModal}
+        onClose={() => setShowCloseDayModal(false)}
+        stats={stats}
+        onClosed={() => {
+          // After closing day reload relevant data
+          onSaleCreated && onSaleCreated();
+        }}
       />
     </>
   );

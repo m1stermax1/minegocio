@@ -27,6 +27,51 @@ router.get("/", authMiddleware, async (req, res) => {
   }
 });
 
+router.put("/status", authMiddleware, async (req, res) => {
+  try {
+    const organizationId = req.user?.organization_id;
+    const { codigos = [], status } = req.body;
+
+    if (!Array.isArray(codigos) || codigos.length === 0) {
+      return res.status(400).json({ success: false, error: "No se proporcionaron códigos." });
+    }
+
+    const normalizedCodes = codigos.map((codigo) => codigo.toString().trim()).filter(Boolean);
+    const updates = [];
+
+    if (normalizedCodes.length > 0) {
+      const { data: dataCodigo, error: errorCodigo, count: countCodigo } = await supabase
+        .from("payments")
+        .update({ estado: status })
+        .in("codigo", normalizedCodes)
+        .eq("organization_id", organizationId)
+        .eq("estado", "pendiente")
+        .select("id", { count: "exact" });
+
+      if (errorCodigo) throw errorCodigo;
+      updates.push(countCodigo ?? 0);
+
+      const { data: dataBarcode, error: errorBarcode, count: countBarcode } = await supabase
+        .from("payments")
+        .update({ estado: status })
+        .in("barcode", normalizedCodes)
+        .eq("organization_id", organizationId)
+        .eq("estado", "pendiente")
+        .select("id", { count: "exact" });
+
+      if (errorBarcode) throw errorBarcode;
+      updates.push(countBarcode ?? 0);
+    }
+
+    const totalUpdated = updates.reduce((sum, count) => sum + count, 0);
+
+    res.json({ success: true, updated: totalUpdated });
+  } catch (error) {
+    console.error("Error actualizando estado de payments:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 router.post("/add", async (req, res) => {
   try {
     const {
