@@ -107,8 +107,8 @@ async function generateBarcodeAndPrint(code) {
   };
 }
 
-async function getSheetsClient() {
-  const spreadsheetId = process.env.SPREADSHEET_ID;
+async function getSheetsClient(spreadsheetIdOverride) {
+  const spreadsheetId = spreadsheetIdOverride || process.env.SPREADSHEET_ID;
 
   if (!spreadsheetId) {
     throw new Error("Falta SPREADSHEET_ID en .env");
@@ -118,7 +118,7 @@ async function getSheetsClient() {
     credentials: {
       type: "service_account",
       project_id: process.env.GOOGLE_PROJECT_ID,
-      private_key_id: process.env.GOOGLE_PRIVATE_KEY_ID.replace(/\\n/g, "\n"),
+      private_key_id: process.env.GOOGLE_PRIVATE_KEY_ID?.replace(/\\n/g, "\n"),
       private_key: process.env.GOOGLE_PRIVATE_KEY,
       client_email: process.env.GOOGLE_CLIENT_EMAIL,
       client_id: process.env.GOOGLE_CLIENT_ID,
@@ -131,6 +131,86 @@ async function getSheetsClient() {
     sheets: google.sheets({ version: "v4", auth: client }),
     spreadsheetId,
   };
+}
+
+function normalizeHeader(value = "") {
+  return value
+    .toString()
+    .normalize("NFKD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
+}
+
+export async function parseGoogleSheetInvoiceData(sheetUrl) {
+  if (!sheetUrl) {
+    throw new Error("Falta la URL del Google Sheet");
+  }
+
+  const spreadsheetId = sheetUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/)?.[1] ||
+    sheetUrl.match(/[?&]id=([a-zA-Z0-9-_]+)/)?.[1];
+
+  if (!spreadsheetId) {
+    throw new Error("No se pudo extraer el ID del Google Sheet");
+  }
+
+  const { sheets } = await getSheetsClient(spreadsheetId);
+  const response = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range: "A:Z",
+  });
+  
+  const rows = response?.data?.values || [];
+  if (!rows.length) return [];
+
+  const headers = rows[0].map((header) => header?.toString() ?? "");
+  const headerIndexMap = headers.reduce((acc, header, index) => {
+    acc[normalizeHeader(header)] = index;
+    return acc;
+  }, {});
+
+  const getColumnIndex = (...aliases) => {
+    for (const alias of aliases) {
+      const normalizedAlias = normalizeHeader(alias);
+      if (headerIndexMap[normalizedAlias] !== undefined) {
+        return headerIndexMap[normalizedAlias];
+      }
+    }
+    return -1;
+  };
+
+  const productIndex = getColumnIndex("producto", "nombre", "descripcion");
+  const priceIndex = getColumnIndex("precio", "preciounitario", "monto", "valor");
+  const provinceIndex = getColumnIndex("provincia", "localidad");
+  const dniIndex = getColumnIndex("dnicuit", "dni", "cuit", "dni/cuit");
+  const addressIndex = getColumnIndex("direccion", "domicilio", "direccioncliente");
+  const dateIndex = getColumnIndex("fecha", "fechaemision", "fecha de emisión");
+
+  return rows.slice(1).reduce((acc, row) => {
+    const producto = row?.[productIndex] ?? "";
+    const precioRaw = row?.[priceIndex] ?? "";
+    const precio = Number(
+      precioRaw
+        ?.toString()
+        .replace(/\./g, "")
+        .replace(/,/g, ".")
+    );
+
+    const hasData = [producto, precioRaw, row?.[provinceIndex], row?.[dniIndex], row?.[addressIndex], row?.[dateIndex]].some((value) => value !== undefined && value !== "");
+
+    if (!hasData) return acc;
+
+    acc.push({
+      producto: producto?.toString().trim() || "",
+      precio: Number.isFinite(precio) ? precio : 0,
+      provincia: row?.[provinceIndex]?.toString().trim() || "",
+      dniCuit: row?.[dniIndex]?.toString().trim() || "",
+      direccion: row?.[addressIndex]?.toString().trim() || "",
+      fecha: row?.[dateIndex]?.toString().trim() || "",
+    });
+
+    return acc;
+  }, []);
 }
 
 // export async function getInventoryData() {

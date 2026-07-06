@@ -11,6 +11,7 @@ vi.mock('../services/sheetsService.js', () => ({
   appendProviderPaymentOrders: vi.fn(),
   appendInvoiceRecord: vi.fn(),
   updateInvoiceRecordStatus: vi.fn(),
+  parseGoogleSheetInvoiceData: vi.fn(),
 }));
 
 vi.mock('../services/afipService.js', () => ({
@@ -27,6 +28,7 @@ import {
   appendProviderPaymentOrders,
   appendInvoiceRecord,
   updateInvoiceRecordStatus,
+  parseGoogleSheetInvoiceData,
 } from '../services/sheetsService.js';
 import { issueFacturaC } from '../services/afipService.js';
 
@@ -198,5 +200,28 @@ describe('inventoryRoutes', () => {
     expect(issueFacturaC).toHaveBeenCalledOnce();
     expect(updateInvoiceRecordStatus).toHaveBeenCalledOnce();
     expect(setInventoryRowStatus).toHaveBeenCalledWith(2, 'vendido', 'efectivo');
+  });
+
+  it('creates invoices from a google sheets link', async () => {
+    parseGoogleSheetInvoiceData.mockResolvedValue([
+      {
+        producto: 'Remera',
+        precio: '1500',
+        provincia: 'CABA',
+        dniCuit: '20391523224',
+        direccion: 'Av. Siempre Viva 123',
+        fecha: '2026-07-05',
+      },
+    ]);
+    issueFacturaC.mockResolvedValue({ CAE: '12345678901234' });
+
+    const response = await request(app)
+      .post('/inventory/facturas/google-sheets')
+      .send({ sheetUrl: 'https://docs.google.com/spreadsheets/d/abc123/edit' });
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(parseGoogleSheetInvoiceData).toHaveBeenCalledWith('https://docs.google.com/spreadsheets/d/abc123/edit');
+    expect(issueFacturaC).toHaveBeenCalledOnce();
   });
 });

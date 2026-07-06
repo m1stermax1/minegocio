@@ -184,6 +184,22 @@ export async function issueInvoice(facturaId) {
   return response.data;
 }
 
+export async function issueInvoicesFromGoogleSheets(sheetUrl, preview = false) {
+  const response = await api.post("/inventory/facturas/google-sheets", {
+    sheetUrl,
+    preview,
+  });
+  return response.data;
+}
+
+export async function markInvoicesAsBilled(rows = [], status = "OK") {
+  const response = await api.post("/inventory/facturas/desde-tabla", {
+    rows,
+    status,
+  });
+  return response.data;
+}
+
 export async function sendWhatsAppMessage(payload) {
   const response = await api.post("/inventory/whatsapp/send", payload);
   return response.data;
