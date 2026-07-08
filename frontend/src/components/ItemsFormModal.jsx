@@ -56,6 +56,36 @@ function ItemsFormModal({
     }
   }, [isOpen]);
 
+  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  const handlePrint = async (barcodes) => {
+    if (!printLabel || barcodes.length === 0) return;
+
+    setPrintStatus("printing");
+
+    let okCount = 0;
+
+    for (const bc of barcodes) {
+      console.log("VOY A IMPRIMIR", bc.codigo ?? bc);
+
+      try {
+        await printBarcode(bc.codigo ?? bc);
+
+        console.log("IMPRIMIO", bc.codigo ?? bc);
+
+        await sleep(2000);
+
+        console.log("TERMINO ESPERA", bc.codigo ?? bc);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    if (okCount === barcodes.length) setPrintStatus("ok");
+    else if (okCount === 0) setPrintStatus("failed");
+    else setPrintStatus("partial");
+  };
+
   const handleAddItem = () => {
     if (!sheetUrl) {
       if (!newItemName.trim() || !newItemPrice.toString().trim()) {
@@ -112,14 +142,19 @@ function ItemsFormModal({
     setLoading(true);
     try {
       let itemsToAdd;
+      let result;
       if (!sheetUrl) {
-        itemsToAdd = items.map((item) => ({
+        const itemsToAdd = items.map((item) => ({
           nombre: item.nombre,
           precio: item.precio.toString(),
           proveedora: selectedProvider?.id,
           orgId: selectedProvider?.organization_id,
           providerName: selectedProvider?.first_name,
         }));
+
+        result = await addInventoryItem(itemsToAdd);
+
+        await handlePrint(result?.barcodes || []);
       } else {
         const SHEET_ID = sheetUrl?.match(/\/d\/([^/]+)/)?.[1];
         const SHEET_NAME = "LOCAL MAXI";
@@ -127,28 +162,18 @@ function ItemsFormModal({
           `https://opensheet.elk.sh/${SHEET_ID}/${SHEET_NAME}`,
         );
         const data = await response.json();
-        itemsToAdd = data.map((row) => ({
+        console.log("Datos", data);
+        const itemsToAdd = data.map((row) => ({
           nombre: row.Nombre,
           precio: Number(row.Precio * 1000),
           proveedora: selectedProvider?.id,
           orgId: selectedProvider?.organization_id,
           providerName: selectedProvider?.first_name || selectedProvider?.name,
         }));
-      }
 
-      const result = await addInventoryItem(itemsToAdd);
-      const barcodes = result?.barcodes || [];
+        result = await addInventoryItem(itemsToAdd);
 
-      // Si el checkbox está activo y hay códigos, disparar impresión
-      if (printLabel && barcodes.length > 0) {
-        setPrintStatus("printing");
-        const results = await Promise.allSettled(
-          barcodes.map((bc) => printBarcode(bc.codigo ?? bc)),
-        );
-        const okCount = results.filter((r) => r.status === "fulfilled").length;
-        if (okCount === barcodes.length) setPrintStatus("ok");
-        else if (okCount === 0) setPrintStatus("failed");
-        else setPrintStatus("partial");
+        await handlePrint(result?.barcodes || []);
       }
 
       setItems([]);
@@ -173,7 +198,7 @@ function ItemsFormModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="modal-container modal-md">
+      <div className="modal-container modal-md !overflow-auto">
         <div className="modal-header">
           <div>
             <h2 className="modal-title">Agregar Productos</h2>

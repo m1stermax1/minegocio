@@ -4,7 +4,7 @@ import ProvidersPage from "./pages/ProvidersPage.jsx";
 import SalesPage from "./pages/SalesPage.jsx";
 import PaymentsPage from "./pages/PaymentsPage.jsx";
 import BillingsPage from "./pages/BillingsPage.jsx";
-import SafePage from "./pages/SafePage.jsx";
+import SafePage from "./pages/safePage.jsx";
 
 import "./styles.css";
 import Login from "./pages/Login.jsx";

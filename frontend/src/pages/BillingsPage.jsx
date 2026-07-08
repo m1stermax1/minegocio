@@ -94,9 +94,10 @@ export default function BillingsPage() {
       setInvoiceError("");
       setInvoiceSuccess("");
 
+
       if (!sheetUrl.trim()) {
         const pendingRows = (invoices || [])
-          .filter((invoice) => normalizeInvoiceStatus(invoice.estadoFactura || invoice.status) === "PENDING")
+          .filter((invoice) => normalizeInvoiceStatus(invoice.status) === "PENDING")
           .map((invoice) => ({
             facturaId: invoice.facturaId || invoice.id || invoice.factura_id,
             id: invoice.id,
@@ -129,8 +130,11 @@ export default function BillingsPage() {
       }
 
       const preview = await issueInvoicesFromGoogleSheets(sheetUrl.trim(), true);
+
       const count = preview?.count ?? preview?.preview?.productCount ?? 0;
+
       setInvoicePreview(preview);
+
       if (!count) {
         setInvoiceError("No se encontraron productos para facturar en esa hoja.");
         return;
@@ -256,7 +260,7 @@ export default function BillingsPage() {
             </div>
 
             <form onSubmit={handleInvoiceSubmit}>
-              <div className="modal-body" style={{ display: "grid", gap: "1rem" }}>
+              <div className="modal-body" style={{ display: "grid", gap: "1rem", height: "500px", overflow: "scroll" }}>
                 <div className="alert alert-info">
                   Las columnas deben venir en este orden: producto, precio, provincia, dni/cuit, dirección, fecha.
                 </div>

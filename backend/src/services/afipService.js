@@ -2,19 +2,13 @@ import fs from "fs";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
-import Afip from "@afipsdk/afip.js";
-
+import { Arca } from "@arcasdk/core";
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const CERT_PATH = process.env.TEST_CERT_PATH_KEY;
-const KEY_PATH = process.env.TEST_KEY_PATH_ID;
-const CUIT = process.env.ARCA_CUIT;
-
-// console.log("Usando certificado:", CERT_PATH);
-// console.log("Usando clave:", KEY_PATH);
+const CUIT = process?.env?.ARCA_CUIT; 
 
 function computeTaxFields(totalAmount) {
   const total = Number(totalAmount) || 0;
@@ -23,20 +17,12 @@ function computeTaxFields(totalAmount) {
   return { base, iva, total };
 }
 
-// const afip = new Afip({
-//   CUIT,
-//   cert: fs.readFileSync(CERT_PATH, "utf8"),
-//   key: fs.readFileSync(KEY_PATH, "utf8"),
-//   production: false,
-//   access_token: process.env.AFIP_ACCESS_TOKEN,
-// });
-
 export async function issueFacturaC({
   facturaId,
   montoTotal,
   items = [],
   cuit = CUIT,
-  puntoVenta = 1,
+  puntoVenta = 11,
   clienteDocTipo = 99,
   clienteDocNro = 0,
   concepto = 1,
@@ -51,8 +37,8 @@ export async function issueFacturaC({
   const date = new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
     .toISOString()
     .split("T")[0];
-
   const data = {
+    CantReg: 1,
     Concepto: concepto,
     DocTipo: clienteDocTipo,
     DocNro: clienteDocNro,
@@ -89,16 +75,16 @@ export async function issueFacturaC({
   // const keyPath = process.env.KEY_PATH_ID || process.env.TEST_KEY_PATH_ID;
 
   // TEST
-    const certPath = process.env.TEST_CERT_PATH_KEY;
+  const certPath = process.env.TEST_CERT_PATH_KEY;
   const keyPath = process.env.TEST_KEY_PATH_ID;
-
 
   if (!certPath || !keyPath) {
     return {
       success: true,
       mocked: true,
       facturaId,
-      message: "No hay credenciales ARCA configuradas; se devolvió un resultado simulado.",
+      message:
+        "No hay credenciales ARCA configuradas; se devolvió un resultado simulado.",
       data,
     };
   }
@@ -111,20 +97,26 @@ export async function issueFacturaC({
       success: true,
       mocked: true,
       facturaId,
-      message: "No se encontró el certificado o la clave ARCA; se devolvió un resultado simulado.",
+      message:
+        "No se encontró el certificado o la clave ARCA; se devolvió un resultado simulado.",
       data,
     };
   }
 
-  const afip = new Afip({
-    CUIT: cuit,
+  const arca = new Arca({
+    cuit: cuit,
     cert: fs.readFileSync(certFilePath, "utf8"),
     key: fs.readFileSync(keyFilePath, "utf8"),
-    production: false,
-    access_token: process.env.AFIP_ACCESS_TOKEN,
   });
 
-  const result = await afip.ElectronicBilling.createNextVoucher(data);
+  // console.log("certPath USADO:", certPath);
+  // console.log("keyFilePath USADO:", keyFilePath);
+  // console.log("CUIT USADO:", cuit);
+  // console.log("DATA USADO:", data);
+  const result = await arca.electronicBillingService.createNextVoucher(data);
+
+console.dir(result, { depth: null });
+  console.log("Factura emitida:", result);
+
   return { success: true, mocked: false, facturaId, result };
 }
-

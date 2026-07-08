@@ -1,0 +1,38 @@
+{
+  "success": true,
+  "mocked": true,
+  "facturaId": "GS-1783468171081-1",
+  "message": "No se encontró el certificado o la clave ARCA; se devolvió un resultado simulado.",
+  "data": {
+    "CantReg": 1,
+    "Concepto": 1,
+    "DocTipo": 99,
+    "DocNro": 0,
+    "MonId": "PES",
+    "MonCotiz": 1,
+    "ImpTotal": 25000,
+    "ImpTotConc": 0,
+    "ImpNeto": 25000,
+    "ImpOpEx": 0,
+    "ImpIVA": 0,
+    "ImpTrib": 0,
+    "PtoVta": 11,
+    "CbteTipo": 11,
+    "CondicionIVAReceptorId": 3,
+    "CbteFch": 20260707,
+    "Observaciones": "Factura C emitida a consumidor final desde monotributista",
+    "Cliente": {
+      "nombre": "Consumidor Final",
+      "provincia": "",
+      "domicilio": "",
+      "documento": 0
+    },
+    "Items": [
+      {
+        "descripcion": "Producto",
+        "precio": 25000,
+        "cantidad": 1
+      }
+    ]
+  }
+}

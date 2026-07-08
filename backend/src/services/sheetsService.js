@@ -147,20 +147,26 @@ export async function parseGoogleSheetInvoiceData(sheetUrl) {
     throw new Error("Falta la URL del Google Sheet");
   }
 
+
   const spreadsheetId = sheetUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/)?.[1] ||
     sheetUrl.match(/[?&]id=([a-zA-Z0-9-_]+)/)?.[1];
+
 
   if (!spreadsheetId) {
     throw new Error("No se pudo extraer el ID del Google Sheet");
   }
 
   const { sheets } = await getSheetsClient(spreadsheetId);
+
+
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId,
     range: "A:Z",
   });
-  
+
   const rows = response?.data?.values || [];
+  
+  console.log("rows desde el parseGoogle", rows);
   if (!rows.length) return [];
 
   const headers = rows[0].map((header) => header?.toString() ?? "");

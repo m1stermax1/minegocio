@@ -11,9 +11,9 @@ const router = express.Router();
 
 router.get("/", authMiddleware, async (req, res) => {
   try {
-        const organizationId = req.user?.organization_id;
-        const page = Number(req.query.page) || 1;
-        const limit = Number(req.query.limit) || 20;
+    const organizationId = req.user?.organization_id;
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 20;
     const result = await getProviders(organizationId, page, limit);
     res.json({
       success: true,
@@ -32,7 +32,8 @@ router.get("/", authMiddleware, async (req, res) => {
 
 router.post("/add", async (req, res) => {
   try {
-    const { getOrganizationId, nombre, apellido, telefono, bankalias } = req.body;
+    const { getOrganizationId, nombre, apellido, telefono, bankalias } =
+      req.body;
     console.log("Body: ", req.body);
 
     const { data, error } = await supabase

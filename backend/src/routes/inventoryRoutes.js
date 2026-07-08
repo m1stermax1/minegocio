@@ -145,6 +145,7 @@ async function generateBarcodeAndPrint(code) {
     });
   });
 
+
   fs.unlinkSync(filePath);
 
   return {
@@ -152,8 +153,6 @@ async function generateBarcodeAndPrint(code) {
     code,
   };
 }
-
-
 
 router.get("/", authMiddleware, async (req, res) => {
   try {
@@ -261,13 +260,36 @@ router.post("/facturas/desde-tabla", authMiddleware, async (req, res) => {
     const { rows = [], status = "OK" } = req.body || {};
 
     if (!Array.isArray(rows) || rows.length === 0) {
-      return res.status(400).json({ error: "No hay registros para actualizar." });
+      return res
+        .status(400)
+        .json({ error: "No hay registros para actualizar." });
+    }
+
+    console.log("Rows de la tabla", rows);
+
+    for (const [index, row] of rows.entries()) {
+      const invoiceResult = await issueFacturaC({
+        facturaId: `GS-${Date.now()}-${index + 1}`,
+        montoTotal: Number(row.precio) || 0,
+        items: [
+          {
+            descripcion: "producto",
+            precio: Number(row.precio) || 0,
+          },
+        ],
+        clienteNombre: "Consumidor Final",
+        clienteProvincia: row?.provincia || '',
+        clienteDomicilio: row?.direccion || '',
+        clienteDoc: row?.dniCuit || '',
+        tipoFactura: "C",
+        monotributista: true,
+      });
     }
 
     const updatedRows = [];
     for (const row of rows) {
       const facturaId = row?.facturaId || row?.id || row?.factura_id;
-      const currentStatus = String(row?.estadoFactura || row?.status || "").trim().toUpperCase();
+      const currentStatus = String(row?.status || "").trim().toUpperCase();
 
       if (!facturaId || currentStatus !== "PENDING") {
         continue;
@@ -298,7 +320,9 @@ router.post("/facturas/desde-tabla", authMiddleware, async (req, res) => {
     });
   } catch (error) {
     console.error("Error al actualizar facturas desde la tabla:", error);
-    return res.status(500).json({ error: error.message || "No se pudieron actualizar las facturas" });
+    return res.status(500).json({
+      error: error.message || "No se pudieron actualizar las facturas",
+    });
   }
 });
 
@@ -307,13 +331,17 @@ router.post("/facturas/google-sheets", authMiddleware, async (req, res) => {
     const { sheetUrl, preview = false } = req.body || {};
 
     if (!sheetUrl) {
-      return res.status(400).json({ error: "Se requiere una URL de Google Sheets" });
+      return res
+        .status(400)
+        .json({ error: "Se requiere una URL de Google Sheets" });
     }
-
     const products = await parseGoogleSheetInvoiceData(sheetUrl);
+    console.log("Product de inventoryRoutes", products);
 
     if (!products.length) {
-      return res.status(400).json({ error: "No se encontraron productos para facturar en la hoja" });
+      return res.status(400).json({
+        error: "No se encontraron productos para facturar en la hoja",
+      });
     }
 
     if (preview) {
@@ -332,7 +360,12 @@ router.post("/facturas/google-sheets", authMiddleware, async (req, res) => {
       const invoiceResult = await issueFacturaC({
         facturaId: `GS-${Date.now()}-${index + 1}`,
         montoTotal: Number(product.precio) || 0,
-        items: [{ descripcion: product.producto, precio: Number(product.precio) || 0 }],
+        items: [
+          {
+            descripcion: product.producto,
+            precio: Number(product.precio) || 0,
+          },
+        ],
         clienteNombre: "Consumidor Final",
         clienteProvincia: product.provincia,
         clienteDomicilio: product.direccion,
@@ -342,12 +375,12 @@ router.post("/facturas/google-sheets", authMiddleware, async (req, res) => {
       });
 
       invoices.push({
-        producto: product.producto,
-        precio: product.precio,
-        provincia: product.provincia,
-        dniCuit: product.dniCuit,
-        direccion: product.direccion,
-        fecha: product.fecha,
+        producto: product?.producto,
+        precio: product?.precio,
+        provincia: product?.provincia,
+        dniCuit: product?.dniCuit,
+        direccion: product?.direccion,
+        fecha: product?.fecha,
         invoiceResult,
       });
     }
@@ -355,14 +388,33 @@ router.post("/facturas/google-sheets", authMiddleware, async (req, res) => {
     return res.json({ success: true, count: invoices.length, invoices });
   } catch (error) {
     console.error("Error al facturar desde Google Sheets:", error);
-    return res.status(500).json({ error: error.message || "No se pudo facturar" });
+    return res
+      .status(500)
+      .json({ error: error.message || "No se pudo facturar" });
   }
 });
 
+  // await new Promise((resolve) => setTimeout(resolve, 2000));
+
+
 router.post("/print-barcode", async (req, res) => {
-  const codigo = req.body?.barcode;
-  // console.log("Codigo", codigo)
-  await generateBarcodeAndPrint(codigo);
+  try {
+    const codigo = req.body?.barcode;
+
+    await generateBarcodeAndPrint(codigo);
+
+    return res.json({
+      success: true,
+      barcode: codigo,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      error: String(error),
+    });
+  }
 });
 
 router.delete("/", authMiddleware, async (req, res) => {
@@ -377,7 +429,11 @@ router.delete("/", authMiddleware, async (req, res) => {
       });
     }
 
-    const result = await deleteInventoryItems(ids, organizationId, onlyAvailable);
+    const result = await deleteInventoryItems(
+      ids,
+      organizationId,
+      onlyAvailable,
+    );
 
     if (!result.success) {
       return res.status(400).json(result);
