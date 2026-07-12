@@ -39,7 +39,8 @@ function ProvidersPage() {
   const loadInventory = async () => {
     try {
       setLoadingInventory(true);
-      const data = await fetchInventory(); // no pagination needed for modal
+      const data = await fetchInventory(null, null, null, true);
+      console.log("Fetch Inventory", data) // no pagination needed for modal
       setInventory(data?.data ?? []);
     } catch (error) {
       console.error("Error cargando inventario:", error);

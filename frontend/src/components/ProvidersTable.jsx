@@ -20,16 +20,20 @@ export default function ProvidersTable({
   const [error, setError] = useState("");
 
   const getProviderId = (provider) => `${provider.id || ""}`.trim();
+  const normalizeProviderId = (value) => `${value ?? ""}`.trim().toLowerCase();
 
   const inventoryData = Array.isArray(inventoryItems)
     ? inventoryItems
     : inventoryItems?.data ?? [];
 
+    console.log("Inventory Data", inventoryData)
+
   const relatedItemsByProvider = useMemo(() => {
     return inventoryData.reduce((acc, item) => {
-      const providerId = item.provider_id;
-      if (!acc[providerId]) acc[providerId] = [];
-      acc[providerId].push(item);
+      const providerKey = normalizeProviderId(item.provider_id);
+      if (!providerKey) return acc;
+      if (!acc[providerKey]) acc[providerKey] = [];
+      acc[providerKey].push(item);
       return acc;
     }, {});
   }, [inventoryData]);
@@ -37,7 +41,9 @@ export default function ProvidersTable({
   const providerRows = useMemo(() => {
     return providers.map((provider) => {
       const fullId = getProviderId(provider);
-      const relatedItems = relatedItemsByProvider[fullId] || [];
+      const providerLookupKey = normalizeProviderId(fullId);
+      
+      const relatedItems = relatedItemsByProvider[providerLookupKey] || [];
       const totalPrice = relatedItems.reduce(
         (sum, item) => sum + (Number(item.price) || 0),
         0
@@ -45,6 +51,7 @@ export default function ProvidersTable({
       const soldCount = relatedItems.filter(
         (item) => (item.status || "").toUpperCase() === "SOLD",
       ).length;
+      console.log("Relatd Items", relatedItems)
       return {
         provider,
         relatedItems,
@@ -54,6 +61,8 @@ export default function ProvidersTable({
       };
     });
   }, [providers, relatedItemsByProvider]);
+
+
 
   const toggleProvider = (providerName) => {
     setExpandedProviders((prev) => {
@@ -103,7 +112,7 @@ export default function ProvidersTable({
 
   const impactCount = useMemo(() => {
     return Array.from(selected).reduce((sum, id) => {
-      return sum + (relatedItemsByProvider[id]?.length || 0);
+      return sum + (relatedItemsByProvider[normalizeProviderId(id)]?.length || 0);
     }, 0);
   }, [selected, relatedItemsByProvider]);
 

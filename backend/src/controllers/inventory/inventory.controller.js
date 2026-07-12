@@ -23,7 +23,7 @@ export const getInventory = async (
       if (error) {
         return { success: false, error: error.message };
       }
-      return { success: true, data, totalItems: count };
+      return { success: true, data, totalItems: count, total: count };
     }
 
     const from = (page - 1) * limit;
@@ -38,6 +38,7 @@ export const getInventory = async (
       success: true,
       data,
       totalItems: count,
+      total: count,
     };
   } catch (err) {
     return {

@@ -40,8 +40,26 @@ function InventoryPage() {
     try {
       setLoadingInventory(true);
       const res = await fetchInventory(page, limit, selectedProvider);
-      setInventoryItems(res.data?.data ?? []);
-      setTotalInventory(res.total ?? 0);
+      const payload =
+        res && typeof res === "object" && !Array.isArray(res) && res.data && typeof res.data === "object" && !Array.isArray(res.data)
+          ? res.data
+          : res;
+      const inventoryData = Array.isArray(payload?.data)
+        ? payload.data
+        : Array.isArray(payload)
+          ? payload
+          : Array.isArray(res?.data)
+            ? res.data
+            : [];
+      const totalItems =
+        payload?.totalItems ??
+        payload?.total ??
+        res?.totalItems ??
+        res?.total ??
+        0;
+
+      setInventoryItems(inventoryData);
+      setTotalInventory(totalItems);
     } catch (error) {
       console.error("Error cargando inventario:", error);
       setInventoryItems([]);
@@ -69,7 +87,7 @@ function InventoryPage() {
   useEffect(() => {
     loadProviders();
     loadInventory(currentPage, LIMIT, selectedProvider);
-  }, [currentPage]);
+  }, [currentPage, selectedProvider]);
 
   useEffect(() => {
     setCurrentPage(1);

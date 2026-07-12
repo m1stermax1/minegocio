@@ -44,8 +44,8 @@ describe('ProvidersTable', () => {
 
   it('muestra tabla con proveedoras', () => {
     renderTable();
-    expect(screen.getByText('María')).toBeInTheDocument();
-    expect(screen.getByText('Lucía')).toBeInTheDocument();
+    expect(screen.getByText(/María García/i)).toBeInTheDocument();
+    expect(screen.getByText(/Lucía Pérez/i)).toBeInTheDocument();
   });
 
   it('muestra conteo de productos por proveedora', () => {
@@ -167,5 +167,21 @@ describe('ProvidersTable', () => {
     expect(
       screen.queryByText(/2 proveedoras seleccionadas/i),
     ).not.toBeInTheDocument();
+  });
+
+  it('muestra los productos relacionados al expandir cuando el id del proveedor trae espacios', async () => {
+    render(
+      <ProvidersTable
+        providers={[{ id: 'p1', first_name: 'María', last_name: 'García', phone: '+5491144444444', organization_id: 'org-1' }]}
+        inventoryItems={{ data: [{ id: 1, barcode: 'INV-AAA', description: 'Remera', price: 1000, status: 'AVAILABLE', provider_id: ' p1 ', total_amount: 600, pago: 'no' }] }}
+        loading={false}
+        onDataChange={vi.fn()}
+      />,
+    );
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: /ver productos/i }));
+
+    expect(await screen.findByText('Remera')).toBeInTheDocument();
   });
 });
