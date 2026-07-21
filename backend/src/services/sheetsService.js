@@ -7,6 +7,7 @@ import dotenv from "dotenv";
 import { exec } from "child_process";
 import sharp from "sharp";
 import crypto from "crypto";
+import { parsePrice } from "../utils/parsePrice.js";
 
 dotenv.config();
 
@@ -194,13 +195,8 @@ export async function parseGoogleSheetInvoiceData(sheetUrl) {
 
   return rows.slice(1).reduce((acc, row) => {
     const producto = row?.[productIndex] ?? "";
-    const precioRaw = row?.[priceIndex] ?? "";
-    const precio = Number(
-      precioRaw
-        ?.toString()
-        .replace(/\./g, "")
-        .replace(/,/g, ".")
-    );
+      const precioRaw = row?.[priceIndex] ?? "";
+      const precio = parsePrice(precioRaw);
 
     const hasData = [producto, precioRaw, row?.[provinceIndex], row?.[dniIndex], row?.[addressIndex], row?.[dateIndex]].some((value) => value !== undefined && value !== "");
 
@@ -469,17 +465,17 @@ export async function setInventoryRowStatus(rowIndex, estado, metodoPago, precio
     const rowData = sheet.data?.[0]?.rowData?.[rowIndex];
     const precioSuggeridoCell = rowData?.values?.[2];
     const precioSuggeridoRaw = getCellText(precioSuggeridoCell);
-    const precioSuggeridoNum = Number(precioSuggeridoRaw) || 0;
+    const precioSuggeridoNum = parsePrice(precioSuggeridoRaw);
 
     const porcentajeDueñaCell = rowData?.values?.[6];
     const porcentajeDueñaRaw = getCellText(porcentajeDueñaCell);
-    const porcentajeDueñaNum = Number(porcentajeDueñaRaw) || 0;
+    const porcentajeDueñaNum = parsePrice(porcentajeDueñaRaw);
 
     const proveedoraCell = rowData?.values?.[10];
     const proveedoraRaw = getCellText(proveedoraCell);
     const isOwnProduct = !proveedoraRaw || ['mío', 'mio'].includes(proveedoraRaw.toLowerCase());
 
-    let precioVenta = precioVentaManual ? Number(precioVentaManual) : 0;
+    let precioVenta = precioVentaManual ? parsePrice(precioVentaManual) : 0;
 
     if (!precioVentaManual && effectiveMetodoPago) {
       if (effectiveMetodoPago === 'efectivo') {
@@ -706,7 +702,7 @@ export async function appendInventoryItems(items) {
       printed: true,
     });
 
-    const precioNumber = Number(item.precio) || 0;
+    const precioNumber = parsePrice(item.precio) || 0;
 
     const porcentajeDueña = precioNumber * 0.6;
 
@@ -831,7 +827,7 @@ export async function appendProviderPaymentOrders(items) {
   const PROVIDER_PERCENTAGE = 60;
 
   const values = providerItems.map((item) => {
-    const precioSugerido = Number(item.precio) || 0;
+    const precioSugerido = parsePrice(item.precio) || 0;
     const montoProveedora = precioSugerido * (PROVIDER_PERCENTAGE / 100);
 
     return [

@@ -44,10 +44,12 @@ export function useDashboard(refresh) {
         salesItems,
       } = await getDashboardData();
 
+      console.log("Providers", providers);
+
       setStats({
         inStockCount: dashboardData?.inStockCount || 0,
         soldCount: dashboardData?.soldCount || 0,
-        providersCount: providers?.data?.length || 0,
+        providersCount: providers?.total,
         totalSold: calculateMonthlyTotal(
           salesData?.data || []
         ),

@@ -10,7 +10,7 @@ export async function getDashboardData() {
   const [dashboardData, providers, salesData, salesItems] =
     await Promise.all([
       fetchDashboardCounts(),
-      fetchProviders(),
+      fetchProviders(1, 10, true),
       fetchSales(),
       fetchSalesItems(),
     ]);
@@ -28,7 +28,7 @@ export async function getInventory({ all = true } = {}) {
 }
 
 export async function getProviders() {
-  return await fetchProviders();
+  return await fetchProviders(1, 10, true);
 }
 
 export async function getSales() {

@@ -21,6 +21,7 @@ import {
   getPendingPayments,
   parseGoogleSheetInvoiceData,
 } from "../services/sheetsService.js";
+import { parsePrice } from "../utils/parsePrice.js";
 import { issueFacturaC } from "../services/afipService.js";
 import {
   sendWhatsAppMessage,
@@ -204,8 +205,8 @@ router.post("/add", async (req, res) => {
       });
     }
 
-    const precioNumero = Number(precio.replace(/,/g, "."));
-    if (Number.isNaN(precioNumero)) {
+    const precioNumero = parsePrice(precio);
+    if (!Number.isFinite(precioNumero)) {
       return res.status(400).json({ error: "Precio inválido" });
     }
 
@@ -270,11 +271,11 @@ router.post("/facturas/desde-tabla", authMiddleware, async (req, res) => {
     for (const [index, row] of rows.entries()) {
       const invoiceResult = await issueFacturaC({
         facturaId: `GS-${Date.now()}-${index + 1}`,
-        montoTotal: Number(row.precio) || 0,
+        montoTotal: parsePrice(row.precio),
         items: [
           {
             descripcion: "producto",
-            precio: Number(row.precio) || 0,
+            precio: parsePrice(row.precio),
           },
         ],
         clienteNombre: "Consumidor Final",
@@ -359,11 +360,11 @@ router.post("/facturas/google-sheets", authMiddleware, async (req, res) => {
     for (const [index, product] of products.entries()) {
       const invoiceResult = await issueFacturaC({
         facturaId: `GS-${Date.now()}-${index + 1}`,
-        montoTotal: Number(product.precio) || 0,
+        montoTotal: parsePrice(product.precio),
         items: [
           {
             descripcion: product.producto,
-            precio: Number(product.precio) || 0,
+            precio: parsePrice(product.precio),
           },
         ],
         clienteNombre: "Consumidor Final",
