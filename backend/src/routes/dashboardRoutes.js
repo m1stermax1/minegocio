@@ -13,7 +13,7 @@ router.get("/counts", authMiddleware, async (req, res) => {
     const nuevoInv = {
       ...inventory,
       totalItems: inventory?.data?.length,
-      inStockCount: inventory?.data?.filter((item) => item?.status == 'AVAILABLE')?.length,
+      inStockCount: inventory?.totalItems,
       soldCount: inventory?.data?.filter((item) => item?.status == 'SOLD')?.length,
       profit: inventory?.data?.filter((item) => item?.status == 'SOLD'),
       profile: "test" || ""
