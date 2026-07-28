@@ -56,7 +56,7 @@ function ProvidersPage() {
 
   useEffect(() => {
     loadProviders(currentPage);
-    loadInventory();
+    // loadInventory();
   }, [currentPage]);
 
   const handleProviderAdded = async () => {
@@ -67,6 +67,8 @@ function ProvidersPage() {
   const handleDataChange = () => {
     loadProviders(currentPage);
   };
+
+  console.log("PRoviders page:", providers)
 
   return (
     <div className="page">

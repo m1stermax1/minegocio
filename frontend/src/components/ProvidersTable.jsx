@@ -2,7 +2,8 @@ import { Fragment, useMemo, useState } from "react";
 import ProvidersFormModal from "./ProvidersFormModal.jsx";
 import ItemsFormModal from "./ItemsFormModal.jsx";
 import ConfirmDeleteModal from "./ConfirmDeleteModal.jsx";
-import { deleteProviders, deleteProvider } from "../services/api.js";
+import { deleteProviders, deleteProvider, fetchInventory } from "../services/api.js";
+import { data } from "react-router-dom";
 
 export default function ProvidersTable({
   providers = [],
@@ -18,6 +19,7 @@ export default function ProvidersTable({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
+  const [itemsByProvider, setItemsByProvider] = useState({});
 
   const getProviderId = (provider) => `${provider.id || ""}`.trim();
   const normalizeProviderId = (value) => `${value ?? ""}`.trim().toLowerCase();
@@ -26,45 +28,40 @@ export default function ProvidersTable({
     ? inventoryItems
     : inventoryItems?.data ?? [];
 
-    console.log("Inventory Data", inventoryData)
+  const relatedItemsByProvider = async (id) => {
+    try {
+      const data = await fetchInventory(null, null, id, false);
+      return data
+    } catch (error) {
+      console.log("Error", error);
+    }
 
-  const relatedItemsByProvider = useMemo(() => {
-    return inventoryData.reduce((acc, item) => {
-      const providerKey = normalizeProviderId(item.provider_id);
-      if (!providerKey) return acc;
-      if (!acc[providerKey]) acc[providerKey] = [];
-      acc[providerKey].push(item);
-      return acc;
-    }, {});
-  }, [inventoryData]);
+  }
 
   const providerRows = useMemo(() => {
     return providers.map((provider) => {
       const fullId = getProviderId(provider);
       const providerLookupKey = normalizeProviderId(fullId);
-      
-      const relatedItems = relatedItemsByProvider[providerLookupKey] || [];
-      const totalPrice = relatedItems.reduce(
-        (sum, item) => sum + (Number(item.price) || 0),
-        0
-      );
-      const soldCount = relatedItems.filter(
-        (item) => (item.status || "").toUpperCase() === "SOLD",
-      ).length;
-      console.log("Relatd Items", relatedItems)
+
+      // const totalPrice = relatedItems.reduce(
+      //   (sum, item) => sum + (Number(item.price) || 0),
+      //   0
+      // );
+      // const soldCount = relatedItems.filter(
+      //   (item) => (item.status || "").toUpperCase() === "SOLD",
+      // ).length;
       return {
         provider,
-        relatedItems,
-        productsCount: relatedItems.length,
-        soldCount,
-        totalGain: totalPrice * 0.6,
       };
     });
   }, [providers, relatedItemsByProvider]);
 
-
-
-  const toggleProvider = (providerName) => {
+  const toggleProvider = async (providerName, id) => {
+    if (true) {
+      const items = await relatedItemsByProvider(id);
+      setItemsByProvider(items?.data?.data);
+      console.log("ITems", itemsByProvider)
+    }
     setExpandedProviders((prev) => {
       const next = new Set(prev);
       if (next.has(providerName)) next.delete(providerName);
@@ -94,13 +91,15 @@ export default function ProvidersTable({
   const handleProviderAdded = () => onDataChange?.();
   const handleItemsAdded = () => onDataChange?.();
 
-  const toggleSelected = (id) => {
+  const toggleSelected = () => {
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
+
+
   };
 
   const toggleSelectAll = () => {
@@ -241,9 +240,8 @@ export default function ProvidersTable({
           <tbody>
             {providerRows.map((row, index) => {
               const provider = row.provider;
-              const displayName = `${provider.first_name || ""} ${
-                provider.last_name || ""
-              }`.trim() || "Sin nombre";
+              const displayName = `${provider.first_name || ""} ${provider.last_name || ""
+                }`.trim() || "Sin nombre";
               const isExpanded = expandedProviders.has(displayName);
               const id = getProviderId(provider);
               const isSelected = selected.has(id);
@@ -265,14 +263,14 @@ export default function ProvidersTable({
                     </td>
                     <td data-label="Nombre">{displayName}</td>
                     <td data-label="Teléfono">{provider.phone || "-"}</td>
-                    <td data-label="Productos">{row.productsCount}</td>
+                    <td data-label="Productos">{row?.inventory[0]?.count}</td>
                     <td data-label="Vendidas">{row.soldCount}</td>
                     <td data-label="Acciones">
                       <div className="flex justify-center gap-2">
                         <button
                           type="button"
                           className="btn btn-secondary btn-sm"
-                          onClick={() => toggleProvider(displayName)}
+                          onClick={() => toggleProvider(displayName, id)}
                         >
                           {isExpanded ? "Ocultar" : "Ver productos"}
                         </button>
@@ -291,19 +289,19 @@ export default function ProvidersTable({
                     <tr>
                       <td colSpan={6}>
                         <div style={{ padding: "0.75rem 0" }}>
-                          {row.relatedItems.length > 0 ? (
+                          {itemsByProvider.length > 0 ? (
                             <table className="data-table">
                               <thead>
                                 <tr>
                                   <th data-label="Código">Código</th>
                                   <th data-label="Descripción">Descripción</th>
-                                  <th className="text-end">Valor para proveedora (60%)</th>
+                                  <th className="text-end">Valor para proveedora</th>
                                   <th data-label="Estado">Estado</th>
                                   <th data-label="Pagado">Pagado</th>
                                 </tr>
                               </thead>
                               <tbody>
-                                {row.relatedItems.map((item, itemIndex) => {
+                                {(itemsByProvider || []).map((item, itemIndex) => {
                                   const precioProveedora = Number(item.total_amount) || 0;
                                   return (
                                     <tr key={`${displayName}-${itemIndex}-${item.barcode || item.description}`}>
@@ -318,11 +316,10 @@ export default function ProvidersTable({
                                       </td>
                                       <td data-label="Estado">
                                         <span
-                                          className={`badge ${
-                                            (item.status || "").toUpperCase() === "SOLD"
-                                              ? "badge-danger"
-                                              : "badge-success"
-                                          }`}
+                                          className={`badge ${(item.status || "").toUpperCase() === "SOLD"
+                                            ? "badge-danger"
+                                            : "badge-success"
+                                            }`}
                                         >
                                           {item.status === "AVAILABLE"
                                             ? "En Stock"
@@ -333,11 +330,10 @@ export default function ProvidersTable({
                                       </td>
                                       <td data-label="Pagado">
                                         <span
-                                          className={`badge ${
-                                            (item.pago || "").toLowerCase() === "pagado"
-                                              ? "badge-success"
-                                              : "badge-warning"
-                                          }`}
+                                          className={`badge ${(item.pago || "").toLowerCase() === "pagado"
+                                            ? "badge-success"
+                                            : "badge-warning"
+                                            }`}
                                         >
                                           {item.pago || "no"}
                                         </span>

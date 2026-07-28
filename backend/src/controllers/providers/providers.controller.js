@@ -2,24 +2,27 @@ import { supabase } from "../../services/supabaseService.js";
 
 
 export async function getProviders(organizationId, page = 1, limit = 20) {
-    const from = (page - 1) * limit;
-    const to = page * limit - 1;
+  const from = (page - 1) * limit;
+  const to = page * limit - 1;
 
-    const { data, error, count } = await supabase
-        .from("providers")
-        .select("*", { count: "exact" })
-        .eq("organization_id", organizationId)
-        .range(from, to);
+  const { data, error, count } = await supabase
+    .from("providers")
+    .select(`
+    *,
+    inventory(count)
+  `, { count: "exact" })
+    .eq("organization_id", organizationId)
+    .range(from, to);
 
-    if (error) {
-        throw error;
-    }
+  if (error) {
+    throw error;
+  }
 
-    return { data: data ?? [], count: count ?? 0 };
+  return { data: data ?? [], count: count ?? 0 };
 }
 
 export async function addNewProvider(nombre, apellido, telefono, bankalias = '') {
-//   const { sheets, spreadsheetId } = await getSheetsClient();
+  //   const { sheets, spreadsheetId } = await getSheetsClient();
 
   const values = [[nombre, apellido, telefono, bankalias]];
 

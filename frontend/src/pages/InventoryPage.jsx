@@ -153,7 +153,7 @@ function InventoryPage() {
               <option value="">Todas las proveedoras</option>
               {providers?.data?.map((provider) => (
                 <option key={provider.id} value={provider.id}>
-                  {provider.first_name}
+                  {provider.first_name + ' ' + provider.last_name}
                 </option>
               ))}
             </select>
