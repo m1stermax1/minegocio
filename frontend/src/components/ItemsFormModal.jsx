@@ -165,7 +165,7 @@ function ItemsFormModal({
         console.log("Datos", data);
         const itemsToAdd = data.map((row) => ({
           nombre: row.Nombre,
-          precio: Number(row.Precio * 1000),
+          precio: Number(row.Precio.toString().replace(",", ".")) * 1000,
           proveedora: selectedProvider?.id,
           orgId: selectedProvider?.organization_id,
           providerName: selectedProvider?.first_name || selectedProvider?.name,

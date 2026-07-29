@@ -23,6 +23,8 @@ export default function DashboardModals({
   showCloseDayModal,
   setShowCloseDayModal,
 }) {
+
+  console.log("Inventario", inventory)
   return (
     <>
       <ProvidersFormModal

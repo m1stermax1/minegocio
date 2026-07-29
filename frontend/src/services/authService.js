@@ -6,7 +6,13 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:3001",
 });
 
-export async function registerUser({ name, email, password, businessName }) {
+export async function registerUser({
+  name,
+  email,
+  password,
+  businessName,
+  genre,
+}) {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -15,17 +21,12 @@ export async function registerUser({ name, email, password, businessName }) {
     throw error;
   }
 
-  const response = await fetch("http://localhost:3001/api/auth/register", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      userId: data.user.id,
-      name,
-      email,
-      businessName,
-    }),
+  const response = await api.post("/api/auth/register", {
+    userId: data.user.id,
+    name,
+    email,
+    businessName,
+    genre,
   });
 
   const result = await response.json();
@@ -49,5 +50,3 @@ export async function loginUser({ email, password }) {
 export async function logoutUser() {
   await supabase.auth.signOut();
 }
-
-

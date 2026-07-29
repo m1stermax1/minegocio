@@ -122,6 +122,7 @@ router.post("/register", async (req, res) => {
       name,
       email,
       businessName,
+      genre,
       createdAt,
     } = req.body;
 
@@ -131,6 +132,7 @@ router.post("/register", async (req, res) => {
         userId,
         email,
         businessName,
+        genre
       });
 
     res.json({

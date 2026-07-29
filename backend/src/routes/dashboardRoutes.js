@@ -10,10 +10,12 @@ router.get("/counts", authMiddleware, async (req, res) => {
     const organizationId = req.user?.organization_id
     const inventory = await getInventory(organizationId, 1, 10, null, true);
 
+    console.log("Inventario", inventory)
+
     const nuevoInv = {
       ...inventory,
       totalItems: inventory?.data?.length,
-      inStockCount: inventory?.data?.filter((item) => item?.status == 'AVAILABLE')?.length,
+      inStockCount: inventory?.total,
       soldCount: inventory?.data?.filter((item) => item?.status == 'SOLD')?.length,
       profit: inventory?.data?.filter((item) => item?.status == 'SOLD'),
       profile: "test" || ""

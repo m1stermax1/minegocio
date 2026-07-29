@@ -24,7 +24,13 @@ function ProvidersFormModal({ isOpen, onClose, onProviderAdded }) {
       const getOrgId = await getProfile();
       const getOrganizationId = getOrgId[0].organization_id;
 
-      await addProvider(getOrganizationId, nombre, apellido, telefono, bankalias);
+      await addProvider(
+        getOrganizationId,
+        nombre,
+        apellido,
+        telefono,
+        bankalias,
+      );
 
       setNombre("");
       setApellido("");
@@ -156,7 +162,11 @@ function ProvidersFormModal({ isOpen, onClose, onProviderAdded }) {
             >
               Cancelar
             </button>
-            <button type="submit" className="btn btn-primary" disabled={loading}>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={loading}
+            >
               {loading ? "Guardando..." : "✓ Guardar proveedora"}
             </button>
           </div>
