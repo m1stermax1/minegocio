@@ -25,6 +25,8 @@ function PeriodCard({ title, totals }) {
 export default function DashboardStats({ stats }) {
   if (!stats) return null;
 
+  console.log("Stats", stats)
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       <StatCard title="Productos en stock" value={stats.inStockCount} />

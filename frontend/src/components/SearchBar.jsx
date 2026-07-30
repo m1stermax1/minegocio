@@ -4,7 +4,7 @@ function SearchBar({ query, onChange }) {
       <label htmlFor="search-input" className="label-muted">
         Buscar producto
       </label>
-      <input
+      <input 
         id="search-input"
         value={query ?? ""}
         onChange={(event) => onChange?.(event.target.value)}

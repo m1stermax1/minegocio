@@ -4,7 +4,7 @@ import ItemsFormModal from "./ItemsFormModal.jsx";
 import ConfirmDeleteModal from "./ConfirmDeleteModal.jsx";
 import { deleteProviders, deleteProvider } from "../services/api.js";
 
-export default function ProvidersTable({
+export default function ProvidersTable({ 
   providers = [],
   inventoryItems = [],
   loading,
@@ -25,8 +25,6 @@ export default function ProvidersTable({
   const inventoryData = Array.isArray(inventoryItems)
     ? inventoryItems
     : inventoryItems?.data ?? [];
-
-    console.log("Inventory Data", inventoryData)
 
   const relatedItemsByProvider = useMemo(() => {
     return inventoryData.reduce((acc, item) => {
@@ -51,7 +49,6 @@ export default function ProvidersTable({
       const soldCount = relatedItems.filter(
         (item) => (item.status || "").toUpperCase() === "SOLD",
       ).length;
-      console.log("Relatd Items", relatedItems)
       return {
         provider,
         relatedItems,

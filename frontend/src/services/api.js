@@ -48,13 +48,13 @@ export async function fetchInventory(page, limit, selectedProdiver, all = false)
 //   return tiendaNube
 // };
 
-export async function fetchProviders(page = 1, limit = 10, all = false) {
+export async function fetchProviders(page = 1, limit = 10, all = false, searchQuery = "") {
   if (all) {
     // Fetch a large number to get all providers (adjust as needed)
     limit = 1000;
-    page = 1;
+    page = 1; 
   }
-  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  const params = new URLSearchParams({ page: String(page), limit: String(limit), query: searchQuery });
   const response = await api.get(`/providers?${params}`);
   return response.data;
 }
