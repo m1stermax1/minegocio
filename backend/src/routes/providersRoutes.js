@@ -14,7 +14,13 @@ router.get("/", authMiddleware, async (req, res) => {
     const organizationId = req.user?.organization_id;
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 20;
-    const result = await getProviders(organizationId, page, limit);
+    const searchProvider = req?.query?.searchQuery || "";
+    const result = await getProviders(
+      organizationId,
+      page,
+      limit,
+      searchProvider,
+    );
     res.json({
       success: true,
       data: result.data,
