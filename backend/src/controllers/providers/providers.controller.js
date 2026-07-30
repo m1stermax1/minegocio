@@ -1,18 +1,31 @@
 import { supabase } from "../../services/supabaseService.js";
 
 
-export async function getProviders(organizationId, page = 1, limit = 20) {
+export async function getProviders(
+  organizationId,
+  page = 1,
+  limit = 20,
+  searchQuery = "",
+) {
   const from = (page - 1) * limit;
   const to = page * limit - 1;
 
-  const { data, error, count } = await supabase
+  let query = supabase
     .from("providers")
     .select(`
     *,
     inventory(count)
   `, { count: "exact" })
-    .eq("organization_id", organizationId)
-    .range(from, to);
+    .eq("organization_id", organizationId);
+
+  const term = searchQuery.trim().replace(/[,%_()]/g, "\\$&");
+  if (term) {
+    query = query.or(
+      `first_name.ilike.%${term}%,last_name.ilike.%${term}%,phone.ilike.%${term}%`,
+    );
+  }
+
+  const { data, error, count } = await query.range(from, to);
 
   if (error) {
     throw error;

@@ -44,6 +44,7 @@ describe('ProvidersFormModal', () => {
     expect(screen.getByLabelText(/Apellido/)).toBeInTheDocument();
     expect(screen.getByLabelText(/Teléfono/)).toBeInTheDocument();
     expect(screen.getByLabelText(/Alias o CBU/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Porcentaje para la proveedora/)).toHaveValue(60);
     expect(screen.getByRole('button', { name: /Guardar proveedora/i })).toBeInTheDocument();
   });
 
@@ -68,6 +69,7 @@ describe('ProvidersFormModal', () => {
       'García',
       '+5491144444444',
       'maria.mp',
+      60,
     );
     expect(onProviderAdded).toHaveBeenCalled();
     expect(onClose).toHaveBeenCalled();

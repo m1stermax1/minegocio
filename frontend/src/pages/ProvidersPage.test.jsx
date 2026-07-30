@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ProvidersPage from './ProvidersPage.jsx';
 
@@ -10,7 +10,13 @@ vi.mock('../components/MobileHeader.jsx', () => ({
   default: ({ title }) => <div data-testid="mock-mobile-header">{title}</div>,
 }));
 vi.mock('../components/SearchBar.jsx', () => ({
-  default: () => <div data-testid="mock-search-bar" />,
+  default: ({ query, onChange }) => (
+    <input
+      data-testid="mock-search-bar"
+      value={query}
+      onChange={(event) => onChange(event.target.value)}
+    />
+  ),
 }));
 vi.mock('../components/ProvidersFormModal.jsx', () => ({
   default: () => null,
@@ -79,7 +85,7 @@ describe('ProvidersPage', () => {
     expect(btn).toBeInTheDocument();
   });
 
-  it('handleDataChange recarga proveedores e inventario', async () => {
+  it('buscar actualiza solamente la tabla de proveedoras', async () => {
     render(<ProvidersPage />);
 
     await waitFor(() => {
@@ -87,13 +93,30 @@ describe('ProvidersPage', () => {
       expect(fetchInventory).toHaveBeenCalledTimes(1);
     });
 
-    await act(async () => {
-      screen.getByRole('button', { name: /trigger-change/i }).click();
+    fireEvent.change(screen.getByTestId('mock-search-bar'), {
+      target: { value: 'Ana' },
     });
 
     await waitFor(() => {
       expect(fetchProviders).toHaveBeenCalledTimes(2);
-      expect(fetchInventory).toHaveBeenCalledTimes(2);
+      expect(fetchProviders).toHaveBeenLastCalledWith(1, 10, false, 'Ana');
+      expect(fetchInventory).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it('handleDataChange recarga solamente la tabla de proveedoras', async () => {
+    render(<ProvidersPage />);
+
+    await waitFor(() => {
+      expect(fetchProviders).toHaveBeenCalledTimes(1);
+      expect(fetchInventory).toHaveBeenCalledTimes(1);
+    });
+
+    screen.getByRole('button', { name: /trigger-change/i }).click();
+
+    await waitFor(() => {
+      expect(fetchProviders).toHaveBeenCalledTimes(2);
+      expect(fetchInventory).toHaveBeenCalledTimes(1);
     });
   });
 });

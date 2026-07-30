@@ -77,6 +77,7 @@ export async function addProvider(
   apellido,
   telefono,
   bankalias = "",
+  percentage = 60,
 ) {
   console.log("pase por el add provider");
   const response = await api.post("/providers/add", {
@@ -85,6 +86,7 @@ export async function addProvider(
     apellido,
     telefono,
     bankalias,
+    percentage,
   });
   console.log("aca hizo el post al endpoint");
   return response.data;

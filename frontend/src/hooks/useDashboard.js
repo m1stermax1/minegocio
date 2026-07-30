@@ -47,9 +47,10 @@ export function useDashboard(refresh) {
       console.log("Providers", providers);
 
       setStats({
+        totalItems: dashboardData?.totalItems ?? 0,
         inStockCount: dashboardData?.inStockCount || 0,
         soldCount: dashboardData?.soldCount || 0,
-        providersCount: providers?.total,
+        providersCount: providers?.total ?? providers?.data?.length ?? 0,
         totalSold: calculateMonthlyTotal(
           salesData?.data || []
         ),

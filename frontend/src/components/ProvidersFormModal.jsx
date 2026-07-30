@@ -7,12 +7,19 @@ function ProvidersFormModal({ isOpen, onClose, onProviderAdded }) {
   const [apellido, setApellido] = useState("");
   const [telefono, setTelefono] = useState("");
   const [bankalias, setbankalias] = useState("");
+  const [percentage, setPercentage] = useState("60");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    const percentageValue = Number(percentage);
+
+    if (!Number.isFinite(percentageValue) || percentageValue <= 0 || percentageValue > 100) {
+      setError("El porcentaje debe ser mayor a 0 y menor o igual a 100");
+      return;
+    }
 
     if (!nombre.trim() || !apellido.trim() || !telefono.trim()) {
       setError("Nombre, apellido y teléfono son obligatorios");
@@ -30,12 +37,14 @@ function ProvidersFormModal({ isOpen, onClose, onProviderAdded }) {
         apellido,
         telefono,
         bankalias,
+        percentageValue,
       );
 
       setNombre("");
       setApellido("");
       setTelefono("");
       setbankalias("");
+      setPercentage("60");
 
       if (onProviderAdded) await onProviderAdded();
       onClose();
@@ -150,6 +159,23 @@ function ProvidersFormModal({ isOpen, onClose, onProviderAdded }) {
                   disabled={loading}
                 />
               </div>
+            </div>
+            <div>
+              <label className="label" htmlFor="provider-percentage">
+                Porcentaje para la proveedora <span style={{ color: "var(--danger)" }}>*</span>
+              </label>
+              <input
+                id="provider-percentage"
+                type="number"
+                className="input"
+                value={percentage}
+                onChange={(e) => setPercentage(e.target.value)}
+                min="0.01"
+                max="100"
+                step="0.01"
+                placeholder="Ej: 60"
+                disabled={loading}
+              />
             </div>
           </div>
 

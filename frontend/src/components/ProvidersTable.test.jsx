@@ -56,6 +56,18 @@ describe('ProvidersTable', () => {
     expect(dataRows.length).toBe(2);
   });
 
+  it('muestra el total de inventario de cada proveedora', () => {
+    renderTable({
+      providers: [
+        { id: 'p1', first_name: 'Ana', last_name: 'Diaz', inventory: [{ count: 2 }] },
+        { id: 'p2', first_name: 'Belen', last_name: 'Paz', inventory: [{ count: 1 }] },
+      ],
+    });
+
+    expect(screen.getByText('2')).toBeInTheDocument();
+    expect(screen.getByText('1')).toBeInTheDocument();
+  });
+
   it('selecciona 2 proveedoras con checkbox y elimina con desvincular', async () => {
     const onDataChange = vi.fn();
     renderTable({ onDataChange });

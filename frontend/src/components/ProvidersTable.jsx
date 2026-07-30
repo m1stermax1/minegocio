@@ -28,7 +28,6 @@ export default function ProvidersTable({
     ? inventoryItems
     : inventoryItems?.data ?? [];
 
-<<<<<<< HEAD
   const relatedItemsByProvider = async (id) => {
     try {
       const data = await fetchInventory(null, null, id, false);
@@ -38,23 +37,12 @@ export default function ProvidersTable({
     }
 
   }
-=======
-  const relatedItemsByProvider = useMemo(() => {
-    return inventoryData.reduce((acc, item) => {
-      const providerKey = normalizeProviderId(item.provider_id);
-      if (!providerKey) return acc;
-      if (!acc[providerKey]) acc[providerKey] = [];
-      acc[providerKey].push(item);
-      return acc;
-    }, {});
-  }, [inventoryData]);
->>>>>>> a8e12951a2c8da9481a409b3d78eeff83dae4717
 
   const providerRows = useMemo(() => {
     return providers.map((provider) => {
       const fullId = getProviderId(provider);
       const providerLookupKey = normalizeProviderId(fullId);
-<<<<<<< HEAD
+      const productCount = Number(provider?.inventory?.[0]?.count ?? 0);
 
       // const totalPrice = relatedItems.reduce(
       //   (sum, item) => sum + (Number(item.price) || 0),
@@ -63,19 +51,9 @@ export default function ProvidersTable({
       // const soldCount = relatedItems.filter(
       //   (item) => (item.status || "").toUpperCase() === "SOLD",
       // ).length;
-=======
-      
-      const relatedItems = relatedItemsByProvider[providerLookupKey] || [];
-      const totalPrice = relatedItems.reduce(
-        (sum, item) => sum + (Number(item.price) || 0),
-        0
-      );
-      const soldCount = relatedItems.filter(
-        (item) => (item.status || "").toUpperCase() === "SOLD",
-      ).length;
->>>>>>> a8e12951a2c8da9481a409b3d78eeff83dae4717
       return {
         provider,
+        productCount: Number.isFinite(productCount) ? productCount : 0,
       };
     });
   }, [providers, relatedItemsByProvider]);
@@ -287,7 +265,8 @@ export default function ProvidersTable({
                     </td>
                     <td data-label="Nombre">{displayName}</td>
                     <td data-label="Teléfono">{provider.phone || "-"}</td>
-                    <td data-label="Productos">{row?.inventory[0]?.count}</td>
+                    {/* <td data-label="Productos">{row?.inventory[0]?.count}</td> */}
+                    <td data-label="Productos">{row.productCount}</td>
                     <td data-label="Vendidas">{row.soldCount}</td>
                     <td data-label="Acciones">
                       <div className="flex justify-center gap-2">

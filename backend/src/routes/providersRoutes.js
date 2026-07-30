@@ -14,7 +14,7 @@ router.get("/", authMiddleware, async (req, res) => {
     const organizationId = req.user?.organization_id;
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 20;
-    const searchProvider = req?.query?.searchQuery || "";
+    const searchProvider = req.query.query || "";
     const result = await getProviders(
       organizationId,
       page,
@@ -38,8 +38,15 @@ router.get("/", authMiddleware, async (req, res) => {
 
 router.post("/add", async (req, res) => {
   try {
-    const { getOrganizationId, nombre, apellido, telefono, bankalias } =
+    const { getOrganizationId, nombre, apellido, telefono, bankalias, percentage } =
       req.body;
+    const percentageValue = Number(percentage);
+    if (!Number.isFinite(percentageValue) || percentageValue <= 0 || percentageValue > 100) {
+      return res.status(400).json({
+        success: false,
+        error: "El porcentaje debe ser mayor a 0 y menor o igual a 100.",
+      });
+    }
     console.log("Body: ", req.body);
 
     const { data, error } = await supabase
@@ -51,6 +58,7 @@ router.post("/add", async (req, res) => {
           last_name: apellido,
           phone: telefono,
           bankalias: bankalias,
+          percentage: percentageValue,
           created_at: new Date().toISOString(),
         },
       ])

@@ -97,7 +97,8 @@ describe('DashboardPage', () => {
     // dashboardData con conteos completos (NO limitados a 10)
     getDashboardData.mockResolvedValue({
       dashboardData: {
-        inStockCount: 47, // simula que el total es 47, no 10
+        totalItems: 59,
+        inStockCount: 47,
         soldCount: 12,
       },
       providers: { data: [{ id: 'p1', first_name: 'María' }] },
@@ -116,14 +117,14 @@ describe('DashboardPage', () => {
     getProfile.mockResolvedValue([{ organization_id: 'org-1' }]);
   });
 
-  it('muestra el conteo TOTAL de productos en stock (no limitado a 10)', async () => {
+  it('muestra el conteo TOTAL de productos en inventario, incluidos los vendidos', async () => {
     renderDashboard();
 
-    // Espera a que stats.inStockCount = 47 aparezca en pantalla
+    // El total general incluye productos disponibles y vendidos.
     await waitFor(() => {
-      expect(screen.getByText('47')).toBeInTheDocument();
+      expect(screen.getByText('59')).toBeInTheDocument();
     });
-    expect(screen.getByText('Productos en stock')).toBeInTheDocument();
+    expect(screen.getByText('Productos en inventario')).toBeInTheDocument();
   });
 
   it('carga el inventario con all=true (sin paginación) para el modal de venta', async () => {
@@ -166,29 +167,29 @@ describe('DashboardPage', () => {
     renderDashboard();
 
     await waitFor(() => {
-      expect(screen.getByText('47')).toBeInTheDocument();
+      expect(screen.getByText('59')).toBeInTheDocument();
     });
 
-    // Backend ahora devuelve 48 después del refresh
+    // Backend ahora devuelve 60 productos después del refresh.
     getDashboardData.mockResolvedValueOnce({
-      dashboardData: { inStockCount: 48, soldCount: 12 },
+      dashboardData: { totalItems: 60, inStockCount: 48, soldCount: 12 },
       providers: { data: [{ id: 'p1', first_name: 'María' }] },
       salesData: { data: [] },
       salesItems: { data: [] },
     });
     getInventory.mockResolvedValueOnce({
-      data: Array.from({ length: 48 }, (_, i) => makeStockItem(i + 1)),
-      totalItems: 48,
+      data: Array.from({ length: 60 }, (_, i) => makeStockItem(i + 1)),
+      totalItems: 60,
     });
 
     const user = userEvent.setup();
     await user.click(screen.getByRole('button', { name: /Agregar producto/i }));
 
-    // Dispara onItemsAdded → loadInventory() + loadDashboard() → card "Productos en stock" pasa a 48
+    // Dispara onItemsAdded y actualiza el total del dashboard.
     await user.click(screen.getByText(/Mock add/i));
 
     await waitFor(() => {
-      expect(screen.getByText('48')).toBeInTheDocument();
+      expect(screen.getByText('60')).toBeInTheDocument();
     });
   });
 });

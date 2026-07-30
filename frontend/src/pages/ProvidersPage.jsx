@@ -1,10 +1,9 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 
 import Sidebar from "../components/Sidebar.jsx";
 import MobileHeader from "../components/MobileHeader.jsx";
 import ProvidersTable from "../components/ProvidersTable.jsx";
 import ProvidersFormModal from "./../components/ProvidersFormModal.jsx";
-import InventoryTable from "../components/InventoryTable.jsx"; // maybe not needed
 import { fetchProviders, fetchInventory } from "../services/api.js";
 import PaginationComponent from "../components/PaginationComponent.jsx";
 import SearchBar from "../components/SearchBar.jsx";
@@ -24,11 +23,10 @@ function ProvidersPage() {
   const [showProvidersModal, setShowProvidersModal] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const loadProviders = async (page) => {
+  const loadProviders = async (page, query = searchQuery) => {
     try {
       setLoadingProviders(true);
-      console.log("SEarch query", searchQuery)
-      const res = await fetchProviders(page, LIMIT, searchQuery);
+      const res = await fetchProviders(page, LIMIT, false, query.trim());
       setProviders(res.data ?? []);
       setTotalProviders(res.total ?? 0);
     } catch (error) {
@@ -58,45 +56,26 @@ function ProvidersPage() {
   };
 
   useEffect(() => {
-<<<<<<< HEAD
-    loadProviders(currentPage);
-    // loadInventory();
-  }, [currentPage]);
-=======
     loadProviders(currentPage, searchQuery);
-    loadInventory();
-    console.log("Pasa por aca? dentro del useEffect", providers);
   }, [currentPage, searchQuery]);
->>>>>>> a8e12951a2c8da9481a409b3d78eeff83dae4717
+
+  useEffect(() => {
+    loadInventory();
+  }, []);
+
+  const handleSearchChange = (query) => {
+    setCurrentPage(1);
+    setSearchQuery(query);
+  };
 
   const handleProviderAdded = async () => {
-    await loadProviders(currentPage); // refresh after add
+    await loadProviders(currentPage, searchQuery);
     alert("Proveedora agregada correctamente.");
   };
 
   const handleDataChange = () => {
-    loadProviders(currentPage);
+    loadProviders(currentPage, searchQuery);
   };
-
-<<<<<<< HEAD
-  console.log("PRoviders page:", providers)
-=======
-  // const filteredProviders = useMemo(() => {
-  //   let result = providers;
-  //   const query = searchQuery.trim().toLowerCase();
-
-  //   if (query) {
-  //     result = result.filter(
-  //       ({ first_name, last_name, phone }) =>
-  //         first_name?.toLowerCase().includes(query) ||
-  //         last_name?.toLowerCase().includes(query) ||
-  //         phone?.toLowerCase().includes(query),
-  //     );
-  //   }
-
-  //   return result;
-  // }, [providers, searchQuery]);
->>>>>>> a8e12951a2c8da9481a409b3d78eeff83dae4717
 
   return (
     <div className="page">
@@ -122,7 +101,12 @@ function ProvidersPage() {
 
         <section className="page-section">
           <div className="inventory-filters grid grid-cols-1 md:grid-cols-[1fr_max-content] gap-4 items-center mb-6">
-            <SearchBar query={searchQuery} onChange={setSearchQuery} />
+            <SearchBar
+              query={searchQuery}
+              onChange={handleSearchChange}
+              label="Buscar proveedora"
+              placeholder="Buscar por nombre, apellido o teléfono..."
+            />
             <button
               type="button"
               className="btn btn-primary"
