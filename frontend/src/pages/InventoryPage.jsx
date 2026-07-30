@@ -36,10 +36,10 @@ function InventoryPage() {
     window.setTimeout(() => setNotification(""), 3200);
   };
 
-  const loadInventory = async (page, limit, selectedProvider) => {
+  const loadInventory = async (page, limit, selectedProvider, query = searchQuery) => {
     try {
       setLoadingInventory(true);
-      const res = await fetchInventory(page, limit, selectedProvider);
+      const res = await fetchInventory(page, limit, selectedProvider, false, query.trim());
       const payload =
         res && typeof res === "object" && !Array.isArray(res) && res.data && typeof res.data === "object" && !Array.isArray(res.data)
           ? res.data
@@ -69,12 +69,11 @@ function InventoryPage() {
     }
   };
 
-  const loadProviders = async (page, limit,) => {
+  const loadProviders = async (page, limit) => {
     try {
       setLoadingProviders(true);
       // Fetch all providers for the filter dropdown
       const data = await fetchProviders(page, limit, true);
-      console.log("prov", providers)
       setProviders(data);
     } catch (error) {
       console.error("Error cargando proveedoras:", error);
@@ -86,8 +85,11 @@ function InventoryPage() {
 
   useEffect(() => {
     loadProviders();
-    loadInventory(currentPage, LIMIT, selectedProvider);
-  }, [currentPage, selectedProvider]);
+  }, []);
+
+  useEffect(() => {
+    loadInventory(currentPage, LIMIT, selectedProvider, searchQuery);
+  }, [currentPage, selectedProvider, searchQuery]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -96,30 +98,10 @@ function InventoryPage() {
   const handleAddItem = () => setShowItemsModal(true);
 
   const handleItemAdded = () => {
-    loadInventory(currentPage, LIMIT, selectedProvider);
+    loadInventory(currentPage, LIMIT, selectedProvider, searchQuery);
     showNotification("Item agregado correctamente a la lista.");
   };
 
-  const filteredInventory = useMemo(() => {
-    let result = inventoryItems;
-    const query = searchQuery.trim().toLowerCase();
-
-    if (query) {
-      result = result.filter(
-        ({ barcode, description }) =>
-          barcode?.toLowerCase().includes(query) ||
-          description?.toLowerCase().includes(query),
-      );
-    }
-
-    if (selectedProvider) {
-      result = result.filter((item) => item.provider_id === selectedProvider);
-    }
-
-    return result;
-  }, [inventoryItems, searchQuery, selectedProvider]);
-
-  console.log("Prov", providers)
   return (
     <div className="page">
       <Sidebar
@@ -170,7 +152,7 @@ function InventoryPage() {
 
           <InventoryTable
             ref={inventoryTableRef}
-            items={filteredInventory}
+            items={inventoryItems}
             loading={loadingInventory}
             onItemAdded={handleItemAdded}
             providers={providers}

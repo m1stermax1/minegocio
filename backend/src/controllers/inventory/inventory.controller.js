@@ -7,6 +7,7 @@ export const getInventory = async (
   limit = 10,
   selectedProvider,
   all = false,
+  searchQuery = "",
 ) => {
   try {
     let query = supabase
@@ -16,6 +17,11 @@ export const getInventory = async (
 
     if (selectedProvider) {
       query = query.eq("provider_id", selectedProvider);
+    }
+
+    const term = searchQuery.trim().replace(/[,%_()]/g, "\\$&");
+    if (term) {
+      query = query.or(`barcode.ilike.%${term}%,description.ilike.%${term}%`);
     }
 
     if (all) {
@@ -144,3 +150,37 @@ export const deleteInventoryItems = async (
     };
   }
 };
+
+export const updateInventoryItem = async (id, organizationId, updateData) => {
+  try {
+    const payload = {};
+    if (updateData.description !== undefined) payload.description = updateData.description.trim();
+    if (updateData.price !== undefined) payload.price = Number(updateData.price);
+    if (updateData.provider_id !== undefined) payload.provider_id = updateData.provider_id;
+    if (updateData.providerName !== undefined) payload.providerName = updateData.providerName;
+    if (updateData.status !== undefined) payload.status = updateData.status;
+
+    const { data, error } = await supabase
+      .from("inventory")
+      .update(payload)
+      .eq("id", id)
+      .eq("organization_id", organizationId)
+      .select();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return {
+      success: true,
+      data: data?.[0] || null,
+    };
+  } catch (err) {
+    return {
+      success: false,
+      error: err.message,
+    };
+  }
+};
+
+

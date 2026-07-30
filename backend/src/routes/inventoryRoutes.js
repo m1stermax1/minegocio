@@ -39,6 +39,7 @@ import {
   addItemToInventory,
   changeItemStatus,
   deleteInventoryItems,
+  updateInventoryItem,
 } from "../controllers/inventory/inventory.controller.js";
 import { supabase } from "../services/supabaseService.js";
 import authMiddleware from "./authMiddleware.js";
@@ -162,6 +163,7 @@ router.get("/", authMiddleware, async (req, res) => {
     const limit = Number(req.query.limit) || 20;
     const all = req.query.all === "true" || req.query.all === "1";
     const selectedProvider = req.query.provider_id || null;
+    const searchQuery = req.query.query || req.query.search || "";
 
     const inventory = await getInventory(
       organizationId,
@@ -169,6 +171,7 @@ router.get("/", authMiddleware, async (req, res) => {
       limit,
       selectedProvider,
       all,
+      searchQuery,
     );
 
     res.json(inventory);
@@ -251,9 +254,25 @@ router.patch("/:id/status", async (req, res) => {
 
   if (error) {
     return res.status(500).json(error);
-  }
+  }})
 
-  res.json(data);
+router.put("/:id", authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const organizationId = req.user?.organization_id;
+    const updateData = req.body;
+
+    const result = await updateInventoryItem(id, organizationId, updateData);
+
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
+
+    return res.json(result);
+  } catch (error) {
+    console.error("Error al actualizar item de inventario:", error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
 });
 
 router.post("/facturas/desde-tabla", authMiddleware, async (req, res) => {

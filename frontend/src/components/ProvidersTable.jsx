@@ -2,8 +2,8 @@ import { Fragment, useMemo, useState } from "react";
 import ProvidersFormModal from "./ProvidersFormModal.jsx";
 import ItemsFormModal from "./ItemsFormModal.jsx";
 import ConfirmDeleteModal from "./ConfirmDeleteModal.jsx";
+import ProviderDetailModal from "./ProviderDetailModal.jsx";
 import { deleteProviders, deleteProvider, fetchInventory } from "../services/api.js";
-import { data } from "react-router-dom";
 
 export default function ProvidersTable({ 
   providers = [],
@@ -15,11 +15,16 @@ export default function ProvidersTable({
   const [showProvidersModal, setShowProvidersModal] = useState(false);
   const [showItemsModal, setShowItemsModal] = useState(false);
   const [selectedProviderIdx, setSelectedProviderIdx] = useState(null);
+
+  // Modal para detalle y edición de proveedora
+  const [selectedProviderForDetail, setSelectedProviderForDetail] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+
   const [selected, setSelected] = useState(new Set());
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
-  const [itemsByProvider, setItemsByProvider] = useState({});
+  const [itemsByProvider, setItemsByProvider] = useState([]);
 
   const getProviderId = (provider) => `${provider.id || ""}`.trim();
   const normalizeProviderId = (value) => `${value ?? ""}`.trim().toLowerCase();
@@ -31,52 +36,51 @@ export default function ProvidersTable({
   const relatedItemsByProvider = async (id) => {
     try {
       const data = await fetchInventory(null, null, id, false);
-      return data
-    } catch (error) {
-      console.log("Error", error);
+      return data;
+    } catch (err) {
+      console.log("Error cargando productos de proveedora:", err);
     }
+  };
 
-  }
+  const relatedItemsByProviderMap = useMemo(() => {
+    const map = {};
+    inventoryData.forEach((item) => {
+      const pId = normalizeProviderId(item.provider_id);
+      if (!map[pId]) map[pId] = [];
+      map[pId].push(item);
+    });
+    return map;
+  }, [inventoryData]);
 
   const providerRows = useMemo(() => {
     return providers.map((provider) => {
       const fullId = getProviderId(provider);
-      const providerLookupKey = normalizeProviderId(fullId);
-      const productCount = Number(provider?.inventory?.[0]?.count ?? 0);
-
-      // const totalPrice = relatedItems.reduce(
-      //   (sum, item) => sum + (Number(item.price) || 0),
-      //   0
-      // );
-      // const soldCount = relatedItems.filter(
-      //   (item) => (item.status || "").toUpperCase() === "SOLD",
-      // ).length;
+      const normId = normalizeProviderId(fullId);
+      const countFromProp = relatedItemsByProviderMap[normId]?.length;
+      const countFromQuery = Number(provider?.inventory?.[0]?.count ?? 0);
+      const productCount = countFromProp !== undefined ? countFromProp : countFromQuery;
       return {
         provider,
         productCount: Number.isFinite(productCount) ? productCount : 0,
       };
     });
-  }, [providers, relatedItemsByProvider]);
+  }, [providers, relatedItemsByProviderMap]);
 
   const toggleProvider = async (providerName, id) => {
-    if (true) {
-      const items = await relatedItemsByProvider(id);
-      setItemsByProvider(items?.data?.data);
-      console.log("ITems", itemsByProvider)
+    const normId = normalizeProviderId(id);
+    let items = relatedItemsByProviderMap[normId];
+    if (!items || items.length === 0) {
+      const res = await relatedItemsByProvider(id);
+      items = res?.data?.data || res?.data || res || [];
     }
+    setItemsByProvider(items);
+
     setExpandedProviders((prev) => {
       const next = new Set(prev);
       if (next.has(providerName)) next.delete(providerName);
       else next.add(providerName);
       return next;
     });
-  };
-
-  const formatPrice = (value) => {
-    const cleaned = value?.toString().trim();
-    if (!cleaned) return "-";
-    const amount = Number(cleaned);
-    return Number.isFinite(amount) ? `$ ${amount.toLocaleString("es-AR")}` : "-";
   };
 
   const handleAddItemClick = (providerIdx) => {
@@ -93,15 +97,13 @@ export default function ProvidersTable({
   const handleProviderAdded = () => onDataChange?.();
   const handleItemsAdded = () => onDataChange?.();
 
-  const toggleSelected = () => {
+  const toggleSelected = (id) => {
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
-
-
   };
 
   const toggleSelectAll = () => {
@@ -113,9 +115,15 @@ export default function ProvidersTable({
 
   const impactCount = useMemo(() => {
     return Array.from(selected).reduce((sum, id) => {
-      return sum + (relatedItemsByProvider[normalizeProviderId(id)]?.length || 0);
+      const normId = normalizeProviderId(id);
+      const itemsCountFromProp = relatedItemsByProviderMap[normId]?.length;
+      if (itemsCountFromProp !== undefined) {
+        return sum + itemsCountFromProp;
+      }
+      const p = providers.find((prov) => normalizeProviderId(prov.id) === normId);
+      return sum + Number(p?.inventory?.[0]?.count ?? 0);
     }, 0);
-  }, [selected, relatedItemsByProvider]);
+  }, [selected, providers, relatedItemsByProviderMap]);
 
   const handleDeleteClick = () => {
     setError("");
@@ -152,7 +160,6 @@ export default function ProvidersTable({
     return <div className="table-state">Cargando proveedoras...</div>;
   }
 
-
   if (providerRows.length === 0) {
     return (
       <div>
@@ -171,9 +178,6 @@ export default function ProvidersTable({
       </div>
     );
   }
-
-  // We need to compute providerNames for empty check
-  const providerNames = providerRows.map((r) => getProviderId(r.provider));
 
   const allSelected =
     providerRows.length > 0 && selected.size === providerRows.length;
@@ -242,8 +246,9 @@ export default function ProvidersTable({
           <tbody>
             {providerRows.map((row, index) => {
               const provider = row.provider;
-              const displayName = `${provider.first_name || ""} ${provider.last_name || ""
-                }`.trim() || "Sin nombre";
+              const displayName = `${provider.first_name || ""} ${
+                provider.last_name || ""
+              }`.trim() || "Sin nombre";
               const isExpanded = expandedProviders.has(displayName);
               const id = getProviderId(provider);
               const isSelected = selected.has(id);
@@ -265,11 +270,20 @@ export default function ProvidersTable({
                     </td>
                     <td data-label="Nombre">{displayName}</td>
                     <td data-label="Teléfono">{provider.phone || "-"}</td>
-                    {/* <td data-label="Productos">{row?.inventory[0]?.count}</td> */}
                     <td data-label="Productos">{row.productCount}</td>
-                    <td data-label="Vendidas">{row.soldCount}</td>
+                    <td data-label="Vendidas">{row.soldCount || 0}</td>
                     <td data-label="Acciones">
-                      <div className="flex justify-center gap-2">
+                      <div className="flex justify-center gap-2 flex-wrap">
+                        <button
+                          type="button"
+                          className="btn btn-primary btn-sm"
+                          onClick={() => {
+                            setSelectedProviderForDetail(provider);
+                            setShowDetailModal(true);
+                          }}
+                        >
+                          ✏️ Editar
+                        </button>
                         <button
                           type="button"
                           className="btn btn-secondary btn-sm"
@@ -279,7 +293,7 @@ export default function ProvidersTable({
                         </button>
                         <button
                           type="button"
-                          className="btn btn-primary btn-sm"
+                          className="btn btn-secondary btn-sm"
                           onClick={() => handleAddItemClick(index)}
                         >
                           + Producto
@@ -292,20 +306,22 @@ export default function ProvidersTable({
                     <tr>
                       <td colSpan={6}>
                         <div style={{ padding: "0.75rem 0" }}>
-                          {itemsByProvider.length > 0 ? (
+                          {Array.isArray(itemsByProvider) && itemsByProvider.length > 0 ? (
                             <table className="data-table">
                               <thead>
                                 <tr>
                                   <th data-label="Código">Código</th>
                                   <th data-label="Descripción">Descripción</th>
-                                  <th className="text-end">Valor para proveedora</th>
+                                  <th className="text-end">Valor para proveedora ({provider.percentage ?? 0}%)</th>
                                   <th data-label="Estado">Estado</th>
                                   <th data-label="Pagado">Pagado</th>
                                 </tr>
                               </thead>
                               <tbody>
-                                {(itemsByProvider || []).map((item, itemIndex) => {
-                                  const precioProveedora = Number(item.total_amount) || 0;
+                                {itemsByProvider.map((item, itemIndex) => {
+                                  const porcentaje = Number(provider.percentage ?? 0);
+                                  const precioBase = Number(item.price ?? item.selling_price ?? 0);
+                                  const precioProveedora = precioBase * (porcentaje / 100);
                                   return (
                                     <tr key={`${displayName}-${itemIndex}-${item.barcode || item.description}`}>
                                       <td data-label="Código">{item.barcode || "-"}</td>
@@ -360,6 +376,7 @@ export default function ProvidersTable({
             })}
           </tbody>
         </table>
+
         <ProvidersFormModal
           isOpen={showProvidersModal}
           onClose={handleProvidersModalClose}
@@ -371,6 +388,15 @@ export default function ProvidersTable({
           onItemsAdded={handleItemsAdded}
           defaultProviderId={selectedProviderIdx}
           providers={providers}
+        />
+        <ProviderDetailModal
+          isOpen={showDetailModal}
+          provider={selectedProviderForDetail}
+          onClose={() => {
+            setShowDetailModal(false);
+            setSelectedProviderForDetail(null);
+          }}
+          onProviderUpdated={onDataChange}
         />
       </div>
 

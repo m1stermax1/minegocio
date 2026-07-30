@@ -887,14 +887,16 @@ html, body, #root {
     width: 100%;
   }
 
-  /* SalesModal two-column layout colapsa */
-  .sales-summary-grid {
-    flex-direction: column;
+  /* SalesModal two-column grid colapsa en mobile */
+  .sales-modal-grid {
+    grid-template-columns: 1fr !important;
   }
 
-  .sales-summary-grid > * {
-    width: 100% !important;
-    max-width: none !important;
+  .sales-modal-sidebar {
+    border-left: none !important;
+    padding-left: 0 !important;
+    border-top: 1px solid var(--border);
+    padding-top: 1rem;
   }
 }
 

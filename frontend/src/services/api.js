@@ -14,7 +14,7 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
-export async function fetchInventory(page, limit, selectedProdiver, all = false) {
+export async function fetchInventory(page, limit, selectedProdiver, all = false, searchQuery = "") {
   const params = new URLSearchParams();
   if (all) {
     params.set("all", "true");
@@ -23,6 +23,7 @@ export async function fetchInventory(page, limit, selectedProdiver, all = false)
     if (limit != null) params.set("limit", String(limit));
   }
   if (selectedProdiver) params.set("provider_id", selectedProdiver);
+  if (searchQuery) params.set("query", searchQuery);
 
   const qs = params.toString();
   const url = qs ? `/inventory?${qs}` : "/inventory";
@@ -245,10 +246,14 @@ export async function createInvoices(payload) {
   return response.data;
 };
 
-export async function changeInventoryItem(payload) {
-  console.log("Payload", payload)
-  const response = await api.post(`/inventory/${payload?.inventory_id}`);
+export async function updateInventoryItem(id, payload) {
+  const response = await api.put(`/inventory/${id}`, payload);
   return response.data;
-};
+}
+
+export async function updateProvider(id, payload) {
+  const response = await api.put(`/providers/${id}`, payload);
+  return response.data;
+}
 
 export default api;

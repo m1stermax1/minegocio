@@ -8,6 +8,7 @@ import {
   deleteInventoryItems,
 } from "../services/api.js";
 import ConfirmDeleteModal from "./ConfirmDeleteModal.jsx";
+import ItemDetailModal from "./ItemDetailModal.jsx";
 
 const InventoryTable = forwardRef(function InventoryTable(
   { items, loading, onItemAdded, providers = [] },
@@ -21,6 +22,10 @@ const InventoryTable = forwardRef(function InventoryTable(
   ]);
   const [generatedBarcodes, setGeneratedBarcodes] = useState([]);
   const [showModal, setShowModal] = useState(false);
+
+  // Modal para detalle y edición individual de producto
+  const [detailItem, setDetailItem] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   // Selección múltiple + delete (deben estar ANTES de cualquier return condicional)
   const [selected, setSelected] = useState(new Set());
@@ -313,13 +318,25 @@ const InventoryTable = forwardRef(function InventoryTable(
                     </span>
                   </td>
                   <td data-label="Acciones">
-                    <button
-                      type="button"
-                      className="btn btn-secondary btn-sm"
-                      onClick={() => handleBarcodeImpresion(item.barcode)}
-                    >
-                      Imprimir Etiqueta
-                    </button>
+                    <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-sm"
+                        onClick={() => {
+                          setDetailItem(item);
+                          setShowDetailModal(true);
+                        }}
+                      >
+                        ✏️ Editar
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => handleBarcodeImpresion(item.barcode)}
+                      >
+                        Imprimir Etiqueta
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );
@@ -469,6 +486,17 @@ const InventoryTable = forwardRef(function InventoryTable(
           </ul>
         </div>
       )}
+
+      <ItemDetailModal
+        isOpen={showDetailModal}
+        item={detailItem}
+        providers={providers}
+        onClose={() => {
+          setShowDetailModal(false);
+          setDetailItem(null);
+        }}
+        onItemUpdated={onItemAdded}
+      />
       </div>
     </div>
   );

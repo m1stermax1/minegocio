@@ -2,6 +2,7 @@ import express from "express";
 import {
   getProviders,
   deleteProviders,
+  updateProvider,
 } from "../controllers/providers/providers.controller.js";
 import { getUsers } from "../controllers/users/users.controller.js";
 import { supabase } from "../services/supabaseService.js";
@@ -128,6 +129,25 @@ router.delete("/:id", authMiddleware, async (req, res) => {
       success: false,
       error: error.message,
     });
+  }
+})
+
+router.put("/:id", authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const organizationId = req.user?.organization_id;
+    const updateData = req.body;
+
+    const result = await updateProvider(id, organizationId, updateData);
+
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
+
+    return res.json(result);
+  } catch (error) {
+    console.error("Error al actualizar proveedora:", error);
+    return res.status(500).json({ success: false, error: error.message });
   }
 });
 
