@@ -5,6 +5,7 @@ export async function createUserOrganization({
     name,
     email,
     businessName,
+    genre
 }) {
     console.log("Creating organization for user:", { userId, name, email, businessName });
     const { data: organization, error: organizationError } =
@@ -33,6 +34,7 @@ export async function createUserOrganization({
                 name,
                 organization_id: organization.id,
                 role: "OWNER",
+                genre
             })
             .select()
             .single();

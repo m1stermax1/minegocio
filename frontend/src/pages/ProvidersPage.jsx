@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 
 import Sidebar from "../components/Sidebar.jsx";
 import MobileHeader from "../components/MobileHeader.jsx";
@@ -7,12 +7,15 @@ import ProvidersFormModal from "./../components/ProvidersFormModal.jsx";
 import InventoryTable from "../components/InventoryTable.jsx"; // maybe not needed
 import { fetchProviders, fetchInventory } from "../services/api.js";
 import PaginationComponent from "../components/PaginationComponent.jsx";
+import SearchBar from "../components/SearchBar.jsx";
 
 function ProvidersPage() {
   const [providers, setProviders] = useState([]);
   const [totalProviders, setTotalProviders] = useState(0);
   const [loadingProviders, setLoadingProviders] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+
+  const [searchQuery, setSearchQuery] = useState("");
   const LIMIT = 10;
 
   const [inventory, setInventory] = useState([]);
@@ -24,7 +27,8 @@ function ProvidersPage() {
   const loadProviders = async (page) => {
     try {
       setLoadingProviders(true);
-      const res = await fetchProviders(page, LIMIT);
+      console.log("SEarch query", searchQuery)
+      const res = await fetchProviders(page, LIMIT, searchQuery);
       setProviders(res.data ?? []);
       setTotalProviders(res.total ?? 0);
     } catch (error) {
@@ -40,7 +44,6 @@ function ProvidersPage() {
     try {
       setLoadingInventory(true);
       const data = await fetchInventory(null, null, null, true);
-      console.log("Fetch Inventory", data) // no pagination needed for modal
       setInventory(data?.data ?? []);
     } catch (error) {
       console.error("Error cargando inventario:", error);
@@ -55,9 +58,16 @@ function ProvidersPage() {
   };
 
   useEffect(() => {
+<<<<<<< HEAD
     loadProviders(currentPage);
     // loadInventory();
   }, [currentPage]);
+=======
+    loadProviders(currentPage, searchQuery);
+    loadInventory();
+    console.log("Pasa por aca? dentro del useEffect", providers);
+  }, [currentPage, searchQuery]);
+>>>>>>> a8e12951a2c8da9481a409b3d78eeff83dae4717
 
   const handleProviderAdded = async () => {
     await loadProviders(currentPage); // refresh after add
@@ -68,7 +78,25 @@ function ProvidersPage() {
     loadProviders(currentPage);
   };
 
+<<<<<<< HEAD
   console.log("PRoviders page:", providers)
+=======
+  // const filteredProviders = useMemo(() => {
+  //   let result = providers;
+  //   const query = searchQuery.trim().toLowerCase();
+
+  //   if (query) {
+  //     result = result.filter(
+  //       ({ first_name, last_name, phone }) =>
+  //         first_name?.toLowerCase().includes(query) ||
+  //         last_name?.toLowerCase().includes(query) ||
+  //         phone?.toLowerCase().includes(query),
+  //     );
+  //   }
+
+  //   return result;
+  // }, [providers, searchQuery]);
+>>>>>>> a8e12951a2c8da9481a409b3d78eeff83dae4717
 
   return (
     <div className="page">
@@ -94,6 +122,7 @@ function ProvidersPage() {
 
         <section className="page-section">
           <div className="inventory-filters grid grid-cols-1 md:grid-cols-[1fr_max-content] gap-4 items-center mb-6">
+            <SearchBar query={searchQuery} onChange={setSearchQuery} />
             <button
               type="button"
               className="btn btn-primary"

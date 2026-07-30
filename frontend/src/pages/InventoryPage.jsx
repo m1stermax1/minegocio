@@ -144,7 +144,7 @@ function InventoryPage() {
 
         <section className="page-section">
           <div className="inventory-filters grid grid-cols-1 md:grid-cols-[1fr_220px_max-content] gap-4 items-center mb-6">
-            <SearchBar query={searchQuery} onChange={setSearchQuery} />
+            <SearchBar query={searchQuery} onChange={setSearchQuery} /> 
             <select
               value={selectedProvider}
               onChange={(e) => setSelectedProvider(e.target.value)}
