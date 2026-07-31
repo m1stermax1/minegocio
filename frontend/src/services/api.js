@@ -165,7 +165,7 @@ export async function deleteInventoryItems({ ids, onlyAvailable = true } = {}) {
   return response.data;
 }
 
-export async function createSalesItem(payload) {
+export async function createSalesItem(payload) { 
   const response = await api.post("/sales/add-sale-item", payload);
   return response.data;
 }

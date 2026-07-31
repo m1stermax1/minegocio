@@ -82,7 +82,7 @@ router.post("/add-sale-item", async (req, res) => {
       product_id: item?.id,
       quantity: 1,
       unit_price: item?.price,
-      profit: item?.profile_id ? (item?.paymentMethod == 'efectivo' ? item?.price - item?.price * 0.1 : item?.paymentMethod == 'transferencia' ? item?.price - item?.price * 0.05 : '') : (item?.paymentMethod == 'efectivo' ? item?.price - item?.price * 0.1 : item?.paymentMethod == 'transferencia' ? item?.price - item?.price * 0.05 : '') - (item?.price * 0.6),
+      profit: item?.profile_id ? (item?.paymentMethod == 'efectivo' ? item?.price - item?.price * 0.1 : item?.paymentMethod == 'transferencia' ? item?.price - item?.price * 0.05 : '') : (item?.paymentMethod == 'efectivo' ? item?.price - item?.price * 0.1 : item?.paymentMethod == 'transferencia' ? item?.price - item?.price * 0.05 : '') - (item?.price * ((item?.percentage ?? 60) / 100)),
       description: item?.description,
       payment_method: item?.paymentMethod
     }));

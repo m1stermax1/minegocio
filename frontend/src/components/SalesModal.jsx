@@ -45,7 +45,7 @@ export default function SalesModal({
   }, [inventoryItems, searchTerm, selectedItems]);
 
   const totalAmount = selectedItems.reduce((sum, item) => {
-    const value = Number(item?.profile == null ? item.price : item.price * 0.6) || 0;
+    const value = Number(item?.profile == null ? item.price : item.price * ((item?.percentage ?? 60) / 100)) || 0;
     return sum + value;
   }, 0);
 
@@ -112,7 +112,13 @@ export default function SalesModal({
         metodoPago: paymentMethod,
       });
 
-      const updatedItems = selectedItems.map((item) => ({ ...item, paymentMethod }));
+      const updatedItems = selectedItems.map((item) => {
+        const itemWithPayment = { ...item, paymentMethod };
+        if (!item?.profile_id && item?.provider?.percentage) {
+          itemWithPayment.percentage = item.provider.percentage;
+        }
+        return itemWithPayment;
+      });
       await createSalesItem({
         orgId: perfil[0]?.organization_id,
         saleId: salesCreated?.data[0]?.id,
