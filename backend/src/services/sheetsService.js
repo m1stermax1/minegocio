@@ -824,18 +824,21 @@ export async function appendProviderPaymentOrders(items) {
   }
 
   const fecha = new Date().toLocaleDateString("sv-SE");
-  const PROVIDER_PERCENTAGE = 60;
 
   const values = providerItems.map((item) => {
     const precioSugerido = parsePrice(item.precio) || 0;
-    const montoProveedora = precioSugerido * (PROVIDER_PERCENTAGE / 100);
+    const providerPercentage = Number(
+      item.provider_percentage ?? item.percentage ?? item.provider?.percentage ?? 60,
+    );
+    const percentageValue = Number.isFinite(providerPercentage) && providerPercentage > 0 ? providerPercentage : 60;
+    const montoProveedora = precioSugerido * (percentageValue / 100);
 
     return [
       fecha,
       item.codigo || "",
       item.descripcion || "",
       item.proveedora || "",
-      `${PROVIDER_PERCENTAGE}%`,
+      `${percentageValue}%`,
       precioSugerido,
       montoProveedora,
       "pendiente",

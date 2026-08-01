@@ -74,18 +74,66 @@ router.post("/add", async (req, res) => {
 
 router.post("/add-sale-item", async (req, res) => {
   try {
-    const payload = req.body;
+    const organizationId = req.body?.orgId;
+    const items = Array.isArray(req.body?.items) ? req.body.items : [];
 
-    const salesItems = req.body?.items?.map((item) => ({
-      organization_id: req.body.orgId,
-      sale_id: req.body?.saleId,
-      product_id: item?.id,
-      quantity: 1,
-      unit_price: item?.price,
-      profit: item?.profile_id ? (item?.paymentMethod == 'efectivo' ? item?.price - item?.price * 0.1 : item?.paymentMethod == 'transferencia' ? item?.price - item?.price * 0.05 : '') : (item?.paymentMethod == 'efectivo' ? item?.price - item?.price * 0.1 : item?.paymentMethod == 'transferencia' ? item?.price - item?.price * 0.05 : '') - (item?.price * ((item?.percentage ?? 60) / 100)),
-      description: item?.description,
-      payment_method: item?.paymentMethod
-    }));
+    const providerIds = [...new Set(items
+      .map((item) => item?.provider_id || item?.providerId)
+      .filter(Boolean))];
+
+    let providerPercentages = {};
+    if (providerIds.length > 0) {
+      const { data: providersData, error: providersError } = await supabase
+        .from("providers")
+        .select("id, percentage")
+        .in("id", providerIds)
+        .eq("organization_id", organizationId);
+
+      if (!providersError) {
+        providerPercentages = Object.fromEntries(
+          (providersData || []).map((provider) => [
+            String(provider.id),
+            Number(provider.percentage ?? 0),
+          ]),
+        );
+      }
+    }
+
+    const salesItems = await Promise.all(
+      items.map(async (item) => {
+        const price = Number(item?.price || 0);
+        const paymentMethod = item?.paymentMethod || req.body?.paymethod || "";
+        const providerId = item?.provider_id || item?.providerId;
+        const providerPercentage = Number(
+          item?.provider_percentage ??
+            item?.percentage ??
+            providerPercentages[String(providerId)] ??
+            0,
+        );
+        const paymentDiscount =
+          paymentMethod === "efectivo"
+            ? 0.1
+            : paymentMethod === "transferencia"
+              ? 0.05
+              : 0;
+
+        const grossProfit = price - price * paymentDiscount;
+        const providerShare =
+          providerPercentage > 0 ? price * (providerPercentage / 100) : 0;
+        const profit = item?.profile_id ? grossProfit : grossProfit - providerShare;
+
+        return {
+          organization_id: organizationId,
+          sale_id: req.body?.saleId,
+          product_id: item?.id,
+          quantity: 1,
+          unit_price: price,
+          profit,
+          description: item?.description,
+          payment_method: paymentMethod,
+        };
+      }),
+    );
 
     const { data, error } = await supabase
       .from("sale_items")

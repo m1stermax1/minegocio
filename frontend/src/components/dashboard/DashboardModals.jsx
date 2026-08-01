@@ -52,6 +52,7 @@ export default function DashboardModals({
         }
         inventoryItems={inventory?.data}
         onSaleCreated={onSaleCreated}
+        providers={providers}
       />
 
       <CloseDayModal

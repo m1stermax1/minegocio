@@ -83,8 +83,45 @@ router.post("/add", async (req, res) => {
       description,
       barcode,
       profile,
+      price,
+      provider_percentage,
     } = req.body;
     console.log("Body: ", req.body);
+
+    let providerPercentage = Number(provider_percentage ?? 0);
+    let totalAmount = Number(total_amout ?? 0);
+
+    if (providerId) {
+      const { data: providerData, error: providerError } = await supabase
+        .from("providers")
+        .select("percentage")
+        .eq("id", providerId)
+        .eq("organization_id", orgId)
+        .maybeSingle();
+
+      if (!providerError && providerData?.percentage != null) {
+        providerPercentage = Number(providerData.percentage);
+      }
+    }
+
+    if (providerPercentage > 0) {
+      const priceValue = Number(price ?? 0);
+
+      if (priceValue > 0) {
+        totalAmount = priceValue * (providerPercentage / 100);
+      } else if (inventory_id) {
+        const { data: inventoryData, error: inventoryError } = await supabase
+          .from("inventory")
+          .select("price")
+          .eq("id", inventory_id)
+          .eq("organization_id", orgId)
+          .maybeSingle();
+
+        if (!inventoryError && inventoryData?.price != null) {
+          totalAmount = Number(inventoryData.price) * (providerPercentage / 100);
+        }
+      }
+    }
 
     const { data, error } = await supabase
       .from("payments")
@@ -94,7 +131,7 @@ router.post("/add", async (req, res) => {
         description: description,
         organization_id: orgId,
         provider_id: providerId,
-        total_amount: total_amout,
+        total_amount: totalAmount,
         payment_date: new Date().toISOString(),
         profile_id: profile,
       })

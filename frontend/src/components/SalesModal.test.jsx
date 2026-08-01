@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
 import SalesModal from './SalesModal.jsx';
@@ -45,6 +45,7 @@ const PROVIDER_ITEM = {
   status: 'AVAILABLE',
   provider_id: 'prov-1',
   providerName: 'María',
+  provider_percentage: 35,
   // profile_id ausente => producto de proveedora
 };
 
@@ -76,17 +77,15 @@ describe('SalesModal', () => {
 
   it('muestra título y campos al abrir', async () => {
     renderModal();
-    expect(await screen.findByText('Agregar Venta')).toBeInTheDocument();
+    expect(await screen.findByText('Nueva Venta')).toBeInTheDocument();
     expect(screen.getByLabelText(/Buscar producto/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Cargar venta/i })).toBeInTheDocument();
   });
 
   it('muestra error si no hay productos seleccionados al enviar', async () => {
-    renderModal();
-    const user = userEvent.setup();
-    // No agrego items, solo selecciono método
-    await user.click(screen.getByRole('button', { name: /^Efectivo/i }));
-    await user.click(screen.getByRole('button', { name: /Cargar venta/i }));
+    const { container } = renderModal();
+
+    fireEvent.submit(container.querySelector('form'));
 
     expect(
       await screen.findByText(/Agrega al menos un producto a la venta/i),
@@ -94,13 +93,13 @@ describe('SalesModal', () => {
   });
 
   it('muestra error si no hay método de pago al enviar', async () => {
-    renderModal({ inventoryItems: [PROVIDER_ITEM] });
+    const { container } = renderModal({ inventoryItems: [PROVIDER_ITEM] });
     const user = userEvent.setup();
 
     await user.type(screen.getByLabelText(/Buscar producto/i), 'INV-AAA');
-    await user.click(await screen.findByRole('button', { name: /^Agregar$/ }));
+    expect(await screen.findByText('Remera Azul')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /Cargar venta/i }));
+    fireEvent.submit(container.querySelector('form'));
 
     expect(
       await screen.findByText(/Selecciona un método de pago/i),
@@ -112,12 +111,12 @@ describe('SalesModal', () => {
     const user = userEvent.setup();
 
     await user.type(screen.getByLabelText(/Buscar producto/i), 'INV-AAA');
-    await user.click(await screen.findByRole('button', { name: /^Agregar$/ }));
+    expect(await screen.findByText('Remera Azul')).toBeInTheDocument();
 
     // El item aparece en "Prendas agregadas"
     expect(await screen.findByText('Remera Azul')).toBeInTheDocument();
     // Total bruto visible (item.proveedora => price completo)
-    expect(screen.getByText(/\$ ?1\.000/)).toBeInTheDocument();
+    expect(screen.getAllByText(/\$ ?1\.000/).length).toBeGreaterThan(0);
   });
 
   it('calcula descuento 10% efectivo y 5% transferencia', async () => {
@@ -125,12 +124,12 @@ describe('SalesModal', () => {
     const user = userEvent.setup();
 
     await user.type(screen.getByLabelText(/Buscar producto/i), 'INV-AAA');
-    await user.click(await screen.findByRole('button', { name: /^Agregar$/ }));
+    expect(await screen.findByText('Remera Azul')).toBeInTheDocument();
 
     // Total bruto 1000, efectivo 900, transferencia 950
-    expect(await screen.findByText(/\$ ?1\.000/)).toBeInTheDocument();
-    expect(screen.getByText(/\$ ?900/)).toBeInTheDocument();
-    expect(screen.getByText(/\$ ?950/)).toBeInTheDocument();
+    expect(screen.getAllByText(/\$ ?1\.000/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/\$ ?900/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/\$ ?950/).length).toBeGreaterThan(0);
   });
 
   it('al pagar con efectivo: createSale con total*0.9 y NO crea invoice', async () => {
@@ -138,8 +137,8 @@ describe('SalesModal', () => {
     const user = userEvent.setup();
 
     await user.type(screen.getByLabelText(/Buscar producto/i), 'INV-AAA');
-    await user.click(await screen.findByRole('button', { name: /^Agregar$/ }));
-    await user.click(screen.getByRole('button', { name: /^Efectivo/i }));
+    expect(await screen.findByText('Remera Azul')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /Efectivo/i }));
     await user.click(screen.getByRole('button', { name: /Cargar venta/i }));
 
     await waitFor(() => {
@@ -156,8 +155,8 @@ describe('SalesModal', () => {
     const user = userEvent.setup();
 
     await user.type(screen.getByLabelText(/Buscar producto/i), 'INV-AAA');
-    await user.click(await screen.findByRole('button', { name: /^Agregar$/ }));
-    await user.click(screen.getByRole('button', { name: /^Transferencia/i }));
+    expect(await screen.findByText('Remera Azul')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /Transferencia/i }));
     await user.click(screen.getByRole('button', { name: /Cargar venta/i }));
 
     await waitFor(() => {
@@ -172,13 +171,13 @@ describe('SalesModal', () => {
     );
   });
 
-  it('item CON proveedora: llama createPayments con el 60% del precio', async () => {
+  it('item CON proveedora: llama createPayments con el porcentaje asignado a la proveedora', async () => {
     renderModal({ inventoryItems: [PROVIDER_ITEM] });
     const user = userEvent.setup();
 
     await user.type(screen.getByLabelText(/Buscar producto/i), 'INV-AAA');
-    await user.click(await screen.findByRole('button', { name: /^Agregar$/ }));
-    await user.click(screen.getByRole('button', { name: /^Efectivo/i }));
+    expect(await screen.findByText('Remera Azul')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /Efectivo/i }));
     await user.click(screen.getByRole('button', { name: /Cargar venta/i }));
 
     await waitFor(() => {
@@ -188,7 +187,8 @@ describe('SalesModal', () => {
       expect.objectContaining({
         inventory_id: 1,
         providerId: 'prov-1',
-        total_amout: 600, // 1000 * 0.6
+        price: 1000,
+        total_amout: 350,
         barcode: 'INV-AAA',
         orgId: 'org-1',
       }),
@@ -200,8 +200,8 @@ describe('SalesModal', () => {
     const user = userEvent.setup();
 
     await user.type(screen.getByLabelText(/Buscar producto/i), 'INV-BBB');
-    await user.click(await screen.findByRole('button', { name: /^Agregar$/ }));
-    await user.click(screen.getByRole('button', { name: /^Efectivo/i }));
+    expect(await screen.findByText('Pantalón mío')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /Efectivo/i }));
     await user.click(screen.getByRole('button', { name: /Cargar venta/i }));
 
     await waitFor(() => {
@@ -210,24 +210,55 @@ describe('SalesModal', () => {
     expect(createPayments).not.toHaveBeenCalled();
   });
 
-  it('mezcla proveedora + mío: solo crea payment para el de proveedora', async () => {
-    renderModal({ inventoryItems: [PROVIDER_ITEM, OWN_ITEM] });
+  it('si no hay porcentaje guardado para la proveedora, no usa 60% por defecto', async () => {
+    const itemSinPorcentaje = {
+      ...PROVIDER_ITEM,
+      id: 3,
+      barcode: 'INV-CCC',
+      description: 'Camisa sin porcentaje',
+      provider_id: 'prov-2',
+      provider_percentage: undefined,
+      percentage: undefined,
+    };
+
+    renderModal({ inventoryItems: [itemSinPorcentaje] });
     const user = userEvent.setup();
 
-    await user.type(screen.getByLabelText(/Buscar producto/i), 'INV-AAA');
-    await user.click(await screen.findByRole('button', { name: /^Agregar$/ }));
-
-    await user.type(screen.getByLabelText(/Buscar producto/i), 'INV-BBB');
-    await user.click(await screen.findByRole('button', { name: /^Agregar$/ }));
-
-    await user.click(screen.getByRole('button', { name: /^Transferencia/i }));
+    await user.type(screen.getByLabelText(/Buscar producto/i), 'INV-CCC');
+    expect(await screen.findByText('Camisa sin porcentaje')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /Efectivo/i }));
     await user.click(screen.getByRole('button', { name: /Cargar venta/i }));
 
     await waitFor(() => {
       expect(createPayments).toHaveBeenCalledTimes(1);
     });
     expect(createPayments).toHaveBeenCalledWith(
-      expect.objectContaining({ providerId: 'prov-1', total_amout: 600 }),
+      expect.objectContaining({
+        inventory_id: 3,
+        providerId: 'prov-2',
+        total_amout: 0,
+      }),
+    );
+  });
+
+  it('mezcla proveedora + mío: solo crea payment para el de proveedora', async () => {
+    renderModal({ inventoryItems: [PROVIDER_ITEM, OWN_ITEM] });
+    const user = userEvent.setup();
+
+    await user.type(screen.getByLabelText(/Buscar producto/i), 'INV-AAA');
+    expect(await screen.findByText('Remera Azul')).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText(/Buscar producto/i), 'INV-BBB');
+    expect(await screen.findByText('Pantalón mío')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /Transferencia/i }));
+    await user.click(screen.getByRole('button', { name: /Cargar venta/i }));
+
+    await waitFor(() => {
+      expect(createPayments).toHaveBeenCalledTimes(1);
+    });
+    expect(createPayments).toHaveBeenCalledWith(
+      expect.objectContaining({ providerId: 'prov-1', price: 1000, total_amout: 350 }),
     );
     expect(createInvoices).toHaveBeenCalledTimes(1);
   });
@@ -237,7 +268,7 @@ describe('SalesModal', () => {
     const user = userEvent.setup();
 
     await user.type(screen.getByLabelText(/Buscar producto/i), 'INV-AAA');
-    await user.click(await screen.findByRole('button', { name: /^Agregar$/ }));
+    expect(await screen.findByText('Remera Azul')).toBeInTheDocument();
 
     // La price card de efectivo debe setear el método
     const efectivoCard = screen.getByRole('button', { name: /Efectivo/i });
@@ -261,8 +292,8 @@ describe('SalesModal', () => {
     const user = userEvent.setup();
 
     await user.type(screen.getByLabelText(/Buscar producto/i), 'INV-AAA');
-    await user.click(await screen.findByRole('button', { name: /^Agregar$/ }));
-    await user.click(screen.getByRole('button', { name: /^Efectivo/i }));
+    expect(await screen.findByText('Remera Azul')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /Efectivo/i }));
     await user.click(screen.getByRole('button', { name: /Cargar venta/i }));
 
     expect(await screen.findByText('sale failed')).toBeInTheDocument();

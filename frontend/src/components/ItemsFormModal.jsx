@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import {
   addInventoryItem,
   fetchProviders,
-  fetchProfiles,
   printBarcode,
 } from "../services/api.js";
+import { getProfile } from "../services/users.js";
 
 function ItemsFormModal({
   isOpen,
@@ -24,22 +24,22 @@ function ItemsFormModal({
   const [sheetUrl, setSheetUrl] = useState("");
   const [printLabel, setPrintLabel] = useState(true);
   const [printStatus, setPrintStatus] = useState(""); // "", "printing", "ok", "partial", "failed"
+  const [currentProfile, setCurrentProfile] = useState(null);
 
   useEffect(() => {
     if (!isOpen) return;
-    if (parentProviders?.data?.length > 0) {
-      setProviders(parentProviders);
-      return;
-    }
+
     (async () => {
       try {
-        const data = await fetchProviders();
-        setProviders(data || []);
-        const profiles = await fetchProfiles();
-        const filterProfileByOwner = profiles?.filter(
-          (profile) => profile?.role == "ADMIN" || profile.role == "OWNER",
-        )[0];
-        setSelectedProvider(filterProfileByOwner);
+        if (parentProviders?.data?.length > 0) {
+          setProviders(parentProviders);
+        } else {
+          const data = await fetchProviders();
+          setProviders(data || []);
+        }
+
+        const profileData = await getProfile();
+        setCurrentProfile(profileData?.[0] || null);
       } catch (err) {
         console.error("Error cargando proveedoras:", err);
       }
@@ -137,7 +137,7 @@ function ItemsFormModal({
     e.preventDefault();
     setError("");
     setPrintStatus("");
-    if (!selectedProvider) return setError("Selecciona una proveedora");
+    if (!selectedProvider && !currentProfile) return setError("Selecciona una proveedora");
     if (!items?.length && !sheetUrl) return setError("Agrega al menos un item");
     setLoading(true);
     try {
@@ -147,9 +147,10 @@ function ItemsFormModal({
         const itemsToAdd = items.map((item) => ({
           nombre: item.nombre,
           precio: item.precio.toString(),
-          proveedora: selectedProvider?.id,
-          orgId: selectedProvider?.organization_id,
+          proveedora: selectedProvider?.id ?? null,
+          orgId: selectedProvider?.organization_id ?? currentProfile?.organization_id,
           providerName: selectedProvider?.first_name,
+          profile_id: currentProfile?.id ?? null,
         }));
 
         result = await addInventoryItem(itemsToAdd);
@@ -166,9 +167,10 @@ function ItemsFormModal({
         const itemsToAdd = data.map((row) => ({
           nombre: row.Nombre,
           precio: Number(row.Precio.toString().replace(",", ".")) * 1000,
-          proveedora: selectedProvider?.id,
-          orgId: selectedProvider?.organization_id,
+          proveedora: selectedProvider?.id ?? null,
+          orgId: selectedProvider?.organization_id ?? currentProfile?.organization_id,
           providerName: selectedProvider?.first_name || selectedProvider?.name,
+          profile_id: currentProfile?.id ?? null,
         }));
 
         result = await addInventoryItem(itemsToAdd);
@@ -179,7 +181,7 @@ function ItemsFormModal({
       setItems([]);
       setNewItemName("");
       setNewItemPrice("");
-      setSelectedProvider("");
+      setSelectedProvider(null);
       onItemsAdded?.();
       const whatsappLink = generateWhatsAppLink();
       window.open(whatsappLink, "_blank");

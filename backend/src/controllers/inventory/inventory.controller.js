@@ -64,7 +64,7 @@ export const addItemToInventory = async (preparedItems) => {
       status: "AVAILABLE",
       providerName: item?.providerName,
       barcode: item?.barcode,
-      profile_id: item?.profile,
+      profile_id: item?.profile || null,
     }));
 
     const { data, error } = await supabase

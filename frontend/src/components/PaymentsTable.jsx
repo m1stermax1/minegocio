@@ -45,6 +45,23 @@ export default function PaymentsTable({
   const calculateProviderTotal = (items) =>
     items.reduce((sum, item) => sum + (Number(item.total_amount) || 0), 0);
 
+  const getProviderPercentage = (providerId, item) => {
+    const providerData = providerById[providerId];
+    const fromItem = Number(item?.provider_percentage ?? item?.percentage ?? 0);
+    if (fromItem > 0) return fromItem;
+
+    const fromProvider = Number(providerData?.percentage ?? 0);
+    if (fromProvider > 0) return fromProvider;
+
+    return 60;
+  };
+
+  const getProviderAmount = (providerId, item) => {
+    const price = Number(item?.precioSugerido ?? item?.precio ?? 0);
+    const percentage = getProviderPercentage(providerId, item);
+    return price * (percentage / 100);
+  };
+
   const handleContactToProvider = async (providerId, items) => {
     const providerData = providerById[providerId];
     const phone = providerData?.telefono || "+5491160332587";
@@ -52,13 +69,13 @@ export default function PaymentsTable({
     const productsText = items
       .map((item) => {
         const description = item.descripcion || item.description || item.codigo || item.barcode || "Producto";
-        const providerAmount = Number(item.total_amount) || Number(item.precioSugerido) * 0.6 || Number(item.precio) * 0.6 || 0;
+        const providerAmount = Number(item.total_amount) || getProviderAmount(providerId, item);
         return `• ${description} - $${providerAmount.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
       })
       .join("\n");
 
     const totalProvider = items.reduce(
-      (sum, item) => sum + (Number(item.total_amount) || Number(item.precioSugerido) * 0.6 || Number(item.precio) * 0.6 || 0),
+      (sum, item) => sum + (Number(item.total_amount) || getProviderAmount(providerId, item)),
       0,
     );
 
@@ -112,7 +129,10 @@ export default function PaymentsTable({
           <tbody>
             {providerIds.map((providerId) => {
               const items = paymentsByProvider[providerId];
-              const totalProvider = calculateProviderTotal(items);
+              const totalProvider = items.reduce(
+                (sum, item) => sum + (Number(item.total_amount) || getProviderAmount(providerId, item)),
+                0,
+              );
               const allPaid = items.every(
                 (item) => (item.estado || "").toLowerCase() === "pagado",
               );
@@ -184,13 +204,13 @@ export default function PaymentsTable({
                               <tr>
                                 <th>Código</th>
                                 <th>Descripción</th>
-                                <th className="text-end">Valor para proveedora (60%)</th>
+                                <th className="text-end">Valor para proveedora</th>
                                 <th>Estado</th>
                               </tr>
                             </thead>
                             <tbody>
                               {items.map((item, itemIndex) => {
-                                const precioProveedora = Number(item.total_amount) || 0;
+                                const precioProveedora = Number(item.total_amount) || getProviderAmount(providerId, item);
                                 return (
                                   <tr key={`${providerId}-${itemIndex}`}>
                                     <td>{item.barcode || "-"}</td>

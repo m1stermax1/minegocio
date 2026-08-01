@@ -42,13 +42,14 @@ router.post("/add", async (req, res) => {
     const { getOrganizationId, nombre, apellido, telefono, bankalias, percentage } =
       req.body;
     const percentageValue = Number(percentage);
-    if (!Number.isFinite(percentageValue) || percentageValue <= 0 || percentageValue > 100) {
+    if (typeof percentage !== 'string' || percentage.trim() === '' || 
+    Number.isNaN(parseFloat(percentage)) || parseFloat(percentage) <= 0 || 
+    parseFloat(percentage) > 100) {
       return res.status(400).json({
         success: false,
         error: "El porcentaje debe ser mayor a 0 y menor o igual a 100.",
       });
     }
-    console.log("Body: ", req.body);
 
     const { data, error } = await supabase
       .from("providers")

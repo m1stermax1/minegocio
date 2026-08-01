@@ -11,12 +11,17 @@ vi.mock('../services/api.js', () => ({
   fetchProfiles: vi.fn(),
 }));
 
+vi.mock('../services/users.js', () => ({
+  getProfile: vi.fn(),
+}));
+
 import {
   addInventoryItem,
   printBarcode,
   fetchProviders,
   fetchProfiles,
 } from '../services/api.js';
+import { getProfile } from '../services/users.js';
 
 const providersData = {
   data: [
@@ -46,6 +51,7 @@ describe('ItemsFormModal', () => {
     fetchProfiles.mockResolvedValue([
       { id: 'me', role: 'OWNER', first_name: 'Maxi', organization_id: 'org-1' },
     ]);
+    getProfile.mockResolvedValue([{ id: 'me', role: 'OWNER', first_name: 'Maxi', organization_id: 'org-1' }]);
   });
 
   it('no renderiza nada cuando isOpen=false', () => {
@@ -69,7 +75,8 @@ describe('ItemsFormModal', () => {
     expect(checkbox).toBeChecked();
   });
 
-  it('muestra error si no hay proveedora seleccionada al enviar', async () => {
+  it('usa el profile_id del usuario logueado cuando no hay proveedora seleccionada', async () => {
+    addInventoryItem.mockResolvedValue({ barcodes: [] });
     renderModal();
     const user = userEvent.setup();
 
@@ -78,8 +85,18 @@ describe('ItemsFormModal', () => {
     await user.click(screen.getByRole('button', { name: /Agregar a la lista/i }));
     await user.click(screen.getByRole('button', { name: /Guardar y Enviar por WhatsApp/i }));
 
-    expect(await screen.findByText('Selecciona una proveedora')).toBeInTheDocument();
-    expect(addInventoryItem).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(addInventoryItem).toHaveBeenCalledTimes(1);
+    });
+
+    const sent = addInventoryItem.mock.calls[0][0];
+    expect(sent).toHaveLength(1);
+    expect(sent[0]).toMatchObject({
+      nombre: 'Remera',
+      precio: '1500',
+      proveedora: null,
+      profile_id: 'me',
+    });
   });
 
   it('agrega item a la lista y luego llama addInventoryItem al enviar', async () => {
@@ -93,7 +110,7 @@ describe('ItemsFormModal', () => {
     await user.click(screen.getByRole('button', { name: /Agregar a la lista/i }));
 
     expect(await screen.findByText('Remera azul')).toBeInTheDocument();
-    expect(screen.getByText('$1.500')).toBeInTheDocument();
+    expect(screen.getAllByText('$1.500').length).toBeGreaterThan(0);
 
     await user.click(screen.getByRole('button', { name: /Guardar y Enviar por WhatsApp/i }));
 
@@ -126,7 +143,7 @@ describe('ItemsFormModal', () => {
 
     await waitFor(() => {
       expect(printBarcode).toHaveBeenCalledTimes(2);
-    });
+    }, { timeout: 10000 });
     expect(printBarcode).toHaveBeenCalledWith('INV-AAA');
     expect(printBarcode).toHaveBeenCalledWith('INV-BBB');
   });

@@ -20,6 +20,7 @@ export default function SalesModal({
   inventoryItems = [],
   onSaleCreated,
   isLoadingInventory,
+  providers = [],
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedItems, setSelectedItems] = useState([]);
@@ -45,7 +46,7 @@ export default function SalesModal({
   }, [inventoryItems, searchTerm, selectedItems]);
 
   const totalAmount = selectedItems.reduce((sum, item) => {
-    const value = Number(item?.profile == null ? item.price : item.price * ((item?.percentage ?? 60) / 100)) || 0;
+    const value = Number(item?.price || 0);
     return sum + value;
   }, 0);
 
@@ -58,6 +59,29 @@ export default function SalesModal({
       : paymentMethod === "transferencia"
         ? transferenciaTotal
         : totalAmount;
+
+  const getProviderPercentage = (item) => {
+    const fromItem = Number(item?.provider_percentage ?? item?.percentage ?? 0);
+    if (fromItem > 0) return fromItem;
+
+    const providerId = item?.provider_id ?? item?.providerId;
+    if (providerId) {
+      const provider = Array.isArray(providers)
+        ? providers.find((entry) => String(entry?.id) === String(providerId))
+        : null;
+      const fromProvider = Number(provider?.percentage ?? 0);
+      if (fromProvider > 0) return fromProvider;
+    }
+
+    return 0;
+  };
+
+  const getProviderAmount = (item) => {
+    const price = Number(item?.price || 0);
+    const providerPercentage = getProviderPercentage(item);
+    if (!providerPercentage || providerPercentage <= 0) return 0;
+    return price * (providerPercentage / 100);
+  };
 
   const handleAddItem = (item) => {
     setError("");
@@ -112,13 +136,7 @@ export default function SalesModal({
         metodoPago: paymentMethod,
       });
 
-      const updatedItems = selectedItems.map((item) => {
-        const itemWithPayment = { ...item, paymentMethod };
-        if (!item?.profile_id && item?.provider?.percentage) {
-          itemWithPayment.percentage = item.provider.percentage;
-        }
-        return itemWithPayment;
-      });
+      const updatedItems = selectedItems.map((item) => ({ ...item, paymentMethod }));
       await createSalesItem({
         orgId: perfil[0]?.organization_id,
         saleId: salesCreated?.data[0]?.id,
@@ -133,12 +151,17 @@ export default function SalesModal({
 
       for (const element of selectedItems) {
         if (!element?.profile_id) {
+          const providerPercentage = getProviderPercentage(element);
+          const providerAmount = getProviderAmount(element);
+
           await createPayments({
             inventory_id: element?.id,
             description: element?.description,
             orgId: perfil[0]?.organization_id,
-            total_amout: element.price * 0.6,
+            total_amout: providerAmount,
+            price: Number(element?.price || 0),
             providerId: element?.provider_id,
+            provider_percentage: providerPercentage || undefined,
             barcode: element.barcode,
           });
         }

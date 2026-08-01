@@ -216,11 +216,11 @@ router.post("/add", async (req, res) => {
     preparedItems.push({
       nombre,
       precio: precioNumero,
-      proveedora,
+      proveedora: proveedora || null,
       orgId,
       providerName,
       barcode: codigo,
-      profile,
+      profile: profile || null,
     });
 
     generatedBarcodes.push({ codigo });
