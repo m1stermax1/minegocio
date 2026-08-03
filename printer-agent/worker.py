@@ -33,7 +33,7 @@ while True:
             printer.print_image(image)
 
             requests.patch(
-                f"{API_URL}/inventory/print-jobs/{job['id']}",
+                f"https://minegocio-18kr.onrender.com/inventory/print-jobs/{job['id']}",
                 json={
                     "status": "completed"
                 }
