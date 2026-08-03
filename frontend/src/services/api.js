@@ -136,9 +136,15 @@ export async function createSale(payload) {
   return response.data;
 }
 
-export async function printBarcode(barcode) {
-  console.log("Barcode", barcode)
-  const response = await api.post("/inventory/print-barcode", {barcode: barcode});
+// export async function printBarcode(barcode) {
+//   console.log("Barcode", barcode)
+//   const response = await api.post("/inventory/print-barcode", {barcode: barcode});
+//   return response;
+// }
+
+export async function printLabel(item) {
+  const response = await api.post("/inventory/print-jobs", {productId: item?.id})
+
   return response;
 }
 

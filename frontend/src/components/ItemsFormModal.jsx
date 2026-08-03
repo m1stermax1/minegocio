@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import {
   addInventoryItem,
   fetchProviders,
-  printBarcode,
+  // printBarcode,
 } from "../services/api.js";
 import { getProfile } from "../services/users.js";
 

@@ -3,9 +3,10 @@ import {
   fetchProviders,
   addInventoryItem,
   sendWhatsAppMessage,
-  printBarcode,
+  // printBarcode,
   deleteInventoryItem,
   deleteInventoryItems,
+  printLabel
 } from "../services/api.js";
 import ConfirmDeleteModal from "./ConfirmDeleteModal.jsx";
 import ItemDetailModal from "./ItemDetailModal.jsx";
@@ -151,9 +152,13 @@ const InventoryTable = forwardRef(function InventoryTable(
     }
   };
 
-  const handleBarcodeImpresion = async (barcode) => {
-    await printBarcode(barcode);
+  const handlePrintLabel = async (product) => {
+    await printLabel(product)
   };
+
+  // const handleBarcodeImpresion = async (barcode) => {
+  //   await printBarcode(barcode);
+  // };
 
   const toggleSelected = (id) => {
     setSelected((prev) => {
@@ -203,11 +208,10 @@ const InventoryTable = forwardRef(function InventoryTable(
     {
       value: "available",
       label: "Solo borrar los disponibles",
-      description: `Mantiene los items ya vendidos. ${
-        impact.sold > 0
-          ? `${impact.sold} vendido(s) se conservarán.`
-          : "Ninguno vendido entre los seleccionados."
-      }`,
+      description: `Mantiene los items ya vendidos. ${impact.sold > 0
+        ? `${impact.sold} vendido(s) se conservarán.`
+        : "Ninguno vendido entre los seleccionados."
+        }`,
     },
     {
       value: "all",
@@ -264,239 +268,239 @@ const InventoryTable = forwardRef(function InventoryTable(
       )}
 
       <div className="table-wrapper">
-      {hasItems ? (
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th style={{ width: "2.5rem" }}>
-                <input
-                  type="checkbox"
-                  aria-label="Seleccionar todos los items"
-                  checked={allSelected}
-                  onChange={toggleSelectAll}
-                />
-              </th>
-              <th data-label="Nombre">Nombre</th>
-              <th data-label="Precio">Precio</th>
-              <th data-label="Proveedor">Proveedor</th>
-              <th data-label="Estado">Estado</th>
-              <th data-label="Acciones">Acciones</th>
-            </tr>
-          </thead>
+        {hasItems ? (
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th style={{ width: "2.5rem" }}>
+                  <input
+                    type="checkbox"
+                    aria-label="Seleccionar todos los items"
+                    checked={allSelected}
+                    onChange={toggleSelectAll}
+                  />
+                </th>
+                <th data-label="Nombre">Nombre</th>
+                <th data-label="Precio">Precio</th>
+                <th data-label="Proveedor">Proveedor</th>
+                <th data-label="Estado">Estado</th>
+                <th data-label="Acciones">Acciones</th>
+              </tr>
+            </thead>
 
-          <tbody>
-            {tableItems.map((item, index) => {
-              const id = `${item.id}`;
-              const isSelected = selected.has(id);
-              return (
-                <tr
-                  key={`${item.id}-${index}`}
-                  style={{
-                    background: isSelected ? "var(--primary-soft)" : undefined,
-                  }}
-                >
-                  <td data-label="Selección">
-                    <input
-                      type="checkbox"
-                      aria-label={`Seleccionar ${item.description || item.barcode}`}
-                      checked={isSelected}
-                      onChange={() => toggleSelected(id)}
-                    />
-                  </td>
-                  <td data-label="Nombre">{formatText(item.description)}</td>
-                  <td data-label="Precio">{formatInventoryPrice(item.price)}</td>
-                  <td data-label="Proveedor">{formatText(item.providerName)}</td>
-                  <td data-label="Estado">
-                    <span
-                      className={`badge ${
-                        item.status?.toLowerCase() === "sold"
-                          ? "badge-danger"
-                          : "badge-success"
-                      }`}
-                    >
-                      {item.status === "AVAILABLE" ? "En Stock" : "Vendido"}
-                    </span>
-                  </td>
-                  <td data-label="Acciones">
-                    <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                      <button
-                        type="button"
-                        className="btn btn-primary btn-sm"
-                        onClick={() => {
-                          setDetailItem(item);
-                          setShowDetailModal(true);
-                        }}
-                      >
-                        ✏️ Editar
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-secondary btn-sm"
-                        onClick={() => handleBarcodeImpresion(item.barcode)}
-                      >
-                        Imprimir Etiqueta
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      ) : (
-        <div className="empty-state">No se encontraron productos.</div>
-      )}
-
-      <ConfirmDeleteModal
-        isOpen={confirmDelete}
-        onClose={() => setConfirmDelete(false)}
-        onConfirm={handleDeleteConfirm}
-        title="Eliminar productos"
-        count={selected.size}
-        entityLabel="item"
-        impactSummary={
-          impact.sold > 0
-            ? `De los ${impact.total} items seleccionados, ${impact.sold} ya están vendidos.`
-            : `Los ${impact.total} items seleccionados están en stock.`
-        }
-        actions={deleteActions}
-        loading={deleting}
-      />
-
-      {showModal && (
-        <div className="modal-backdrop">
-          <div className="modal-container modal-md">
-            <div className="modal-header">
-              <div>
-                <h2 className="modal-title">Agregar productos manuales</h2>
-                <p className="modal-subtitle">
-                  Carga uno o varios productos a la vez.
-                </p>
-              </div>
-              <button
-                type="button"
-                className="btn btn-ghost btn-icon"
-                onClick={closeModal}
-                aria-label="Cerrar"
-              >
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit}>
-              <div className="modal-body" style={{ display: "grid", gap: "1rem" }}>
-                {formError && <div className="alert alert-error">{formError}</div>}
-
-                {pendingItems.map((item, index) => (
-                  <div
-                    key={index}
+            <tbody>
+              {tableItems.map((item, index) => {
+                const id = `${item.id}`;
+                const isSelected = selected.has(id);
+                return (
+                  <tr
+                    key={`${item.id}-${index}`}
                     style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr 140px 1fr max-content",
-                      gap: "0.5rem",
-                      alignItems: "end",
+                      background: isSelected ? "var(--primary-soft)" : undefined,
                     }}
                   >
-                    <div>
-                      <label className="label-muted">Nombre del producto</label>
+                    <td data-label="Selección">
                       <input
-                        className="input"
-                        value={item.nombre}
-                        onChange={(e) => handleItemChange(index, "nombre", e.target.value)}
+                        type="checkbox"
+                        aria-label={`Seleccionar ${item.description || item.barcode}`}
+                        checked={isSelected}
+                        onChange={() => toggleSelected(id)}
                       />
-                    </div>
-                    <div>
-                      <label className="label-muted">Precio</label>
-                      <input
-                        className="input"
-                        type="number"
-                        step="0.01"
-                        value={item.precio}
-                        onChange={(e) => handleItemChange(index, "precio", e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="label-muted">Proveedora</label>
-                      <select
-                        className="select"
-                        value={item.proveedora}
-                        onChange={(e) =>
-                          handleItemChange(index, "proveedora", e.target.value)
-                        }
+                    </td>
+                    <td data-label="Nombre">{formatText(item.description)}</td>
+                    <td data-label="Precio">{formatInventoryPrice(item.price)}</td>
+                    <td data-label="Proveedor">{formatText(item.providerName)}</td>
+                    <td data-label="Estado">
+                      <span
+                        className={`badge ${item.status?.toLowerCase() === "sold"
+                          ? "badge-danger"
+                          : "badge-success"
+                          }`}
                       >
-                        <option value="">Selecciona</option>
-                        {providers?.data?.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.first_name} {p.last_name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <button
-                      type="button"
-                      className="btn btn-ghost btn-icon"
-                      onClick={() => removePendingItemRow(index)}
-                      aria-label="Eliminar fila"
-                      disabled={pendingItems.length <= 1}
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
+                        {item.status === "AVAILABLE" ? "En Stock" : "Vendido"}
+                      </span>
+                    </td>
+                    <td data-label="Acciones">
+                      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                        <button
+                          type="button"
+                          className="btn btn-primary btn-sm"
+                          onClick={() => {
+                            setDetailItem(item);
+                            setShowDetailModal(true);
+                          }}
+                        >
+                          ✏️ Editar
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-sm"
+                          // onClick={() => handleBarcodeImpresion(item.barcode)}
+                          onClick={() => handlePrintLabel(item)}
+                        >
+                          Imprimir Etiqueta
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        ) : (
+          <div className="empty-state">No se encontraron productos.</div>
+        )}
 
+        <ConfirmDeleteModal
+          isOpen={confirmDelete}
+          onClose={() => setConfirmDelete(false)}
+          onConfirm={handleDeleteConfirm}
+          title="Eliminar productos"
+          count={selected.size}
+          entityLabel="item"
+          impactSummary={
+            impact.sold > 0
+              ? `De los ${impact.total} items seleccionados, ${impact.sold} ya están vendidos.`
+              : `Los ${impact.total} items seleccionados están en stock.`
+          }
+          actions={deleteActions}
+          loading={deleting}
+        />
+
+        {showModal && (
+          <div className="modal-backdrop">
+            <div className="modal-container modal-md">
+              <div className="modal-header">
+                <div>
+                  <h2 className="modal-title">Agregar productos manuales</h2>
+                  <p className="modal-subtitle">
+                    Carga uno o varios productos a la vez.
+                  </p>
+                </div>
                 <button
                   type="button"
-                  className="btn btn-secondary"
-                  onClick={addPendingItemRow}
-                >
-                  + Agregar otra fila
-                </button>
-              </div>
-
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
+                  className="btn btn-ghost btn-icon"
                   onClick={closeModal}
-                  disabled={isSaving}
+                  aria-label="Cerrar"
                 >
-                  Cancelar
-                </button>
-                <button type="submit" className="btn btn-primary" disabled={isSaving}>
-                  {isSaving ? "Guardando..." : "Guardar y enviar"}
+                  ✕
                 </button>
               </div>
-            </form>
+
+              <form onSubmit={handleSubmit}>
+                <div className="modal-body" style={{ display: "grid", gap: "1rem" }}>
+                  {formError && <div className="alert alert-error">{formError}</div>}
+
+                  {pendingItems.map((item, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr 140px 1fr max-content",
+                        gap: "0.5rem",
+                        alignItems: "end",
+                      }}
+                    >
+                      <div>
+                        <label className="label-muted">Nombre del producto</label>
+                        <input
+                          className="input"
+                          value={item.nombre}
+                          onChange={(e) => handleItemChange(index, "nombre", e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="label-muted">Precio</label>
+                        <input
+                          className="input"
+                          type="number"
+                          step="0.01"
+                          value={item.precio}
+                          onChange={(e) => handleItemChange(index, "precio", e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="label-muted">Proveedora</label>
+                        <select
+                          className="select"
+                          value={item.proveedora}
+                          onChange={(e) =>
+                            handleItemChange(index, "proveedora", e.target.value)
+                          }
+                        >
+                          <option value="">Selecciona</option>
+                          {providers?.data?.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.first_name} {p.last_name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-icon"
+                        onClick={() => removePendingItemRow(index)}
+                        aria-label="Eliminar fila"
+                        disabled={pendingItems.length <= 1}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={addPendingItemRow}
+                  >
+                    + Agregar otra fila
+                  </button>
+                </div>
+
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={closeModal}
+                    disabled={isSaving}
+                  >
+                    Cancelar
+                  </button>
+                  <button type="submit" className="btn btn-primary" disabled={isSaving}>
+                    {isSaving ? "Guardando..." : "Guardar y enviar"}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {generatedBarcodes.length > 0 && (
-        <div className="card" style={{ marginTop: "1rem" }}>
-          <p className="modal-title">Códigos de barra generados</p>
-          <ul style={{ marginTop: "0.5rem", paddingLeft: "1rem" }}>
-            {generatedBarcodes.map((barcode) => (
-              <li key={barcode.codigo}>
-                <strong>{barcode.codigo}</strong> —{" "}
-                <a href={barcode.url} target="_blank" rel="noreferrer">
-                  Descargar SVG
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+        {generatedBarcodes.length > 0 && (
+          <div className="card" style={{ marginTop: "1rem" }}>
+            <p className="modal-title">Códigos de barra generados</p>
+            <ul style={{ marginTop: "0.5rem", paddingLeft: "1rem" }}>
+              {generatedBarcodes.map((barcode) => (
+                <li key={barcode.codigo}>
+                  <strong>{barcode.codigo}</strong> —{" "}
+                  <a href={barcode.url} target="_blank" rel="noreferrer">
+                    Descargar SVG
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
-      <ItemDetailModal
-        isOpen={showDetailModal}
-        item={detailItem}
-        providers={providers}
-        onClose={() => {
-          setShowDetailModal(false);
-          setDetailItem(null);
-        }}
-        onItemUpdated={onItemAdded}
-      />
+        <ItemDetailModal
+          isOpen={showDetailModal}
+          item={detailItem}
+          providers={providers}
+          onClose={() => {
+            setShowDetailModal(false);
+            setDetailItem(null);
+          }}
+          onItemUpdated={onItemAdded}
+        />
       </div>
     </div>
   );

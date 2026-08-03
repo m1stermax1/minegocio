@@ -254,7 +254,8 @@ router.patch("/:id/status", async (req, res) => {
 
   if (error) {
     return res.status(500).json(error);
-  }})
+  }
+})
 
 router.put("/:id", authMiddleware, async (req, res) => {
   try {
@@ -414,7 +415,7 @@ router.post("/facturas/google-sheets", authMiddleware, async (req, res) => {
   }
 });
 
-  // await new Promise((resolve) => setTimeout(resolve, 2000));
+// await new Promise((resolve) => setTimeout(resolve, 2000));
 
 
 router.post("/print-barcode", async (req, res) => {
@@ -435,6 +436,93 @@ router.post("/print-barcode", async (req, res) => {
       error: String(error),
     });
   }
+});
+
+router.post("/print-jobs", async (req, res) => {
+
+  try {
+
+    const { productId } = req.body;
+
+
+    const { data: product, error } = await supabase
+      .from("inventory")
+      .select("*")
+      .eq("id", productId)
+      .single();
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    const { data: job, error: jobError } = await supabase
+      .from("print_jobs")
+      .insert({
+        product_id: product.id,
+        name: product.name,
+        barcode: product.barcode,
+        price: product.price,
+        status: "pending"
+      })
+      .select()
+      .single();
+
+
+    if (jobError) {
+      throw jobError;
+    }
+
+
+    res.json({
+      success: true,
+      job
+    });
+
+
+  } catch (error) {
+
+    console.error(error);
+
+    res.status(500).json({
+      error: error.message
+    });
+
+  }
+
+});
+
+router.get("/print-jobs/pending", async (req,res)=>{
+
+  try {
+
+    const { data, error } = await supabase
+      .from("print_jobs")
+      .select("*")
+      .eq("status","pending")
+      .order("created_at", { ascending:true })
+      .limit(1);
+
+
+    if(error){
+      throw error;
+    }
+
+
+    res.json(data[0] || null);
+
+
+  } catch(error){
+
+    console.error(error);
+
+    res.status(500).json({
+      error:error.message
+    });
+
+  }
+
 });
 
 router.delete("/", authMiddleware, async (req, res) => {
