@@ -525,6 +525,35 @@ router.get("/print-jobs/pending", async (req,res)=>{
 
 });
 
+router.patch("/print-jobs/:id", async (req, res) => {
+  try {
+
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const { error } = await supabase
+      .from("print_jobs")
+      .update({
+        status,
+        printed_at: new Date().toISOString(),
+      })
+      .eq("id", id);
+
+    if (error) throw error;
+
+    res.json({
+      success: true,
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      error: error.message,
+    });
+
+  }
+});
+
 router.delete("/", authMiddleware, async (req, res) => {
   try {
     const organizationId = req.user?.organization_id;
